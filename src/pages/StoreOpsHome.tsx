@@ -155,7 +155,7 @@ const generateMockInsights = (): EnhancedInsightItem[] => [
     id: '4',
     type: 'positive',
     headline: 'Customer Satisfaction Up',
-    context: 'NPS improved in North region — scale best practices',
+    context: 'VoC Score improved in North region — scale best practices',
     signal: '+12 points',
     trend: 'up',
     actionHint: 'View regional breakdown',
@@ -675,10 +675,10 @@ export const StoreOpsHome: React.FC = () => {
   ];
 
   const regionalData = [
-    { region: 'North', nps: 78, change: +12, stores: 8, topStore: 'Store #2156' },
-    { region: 'South', nps: 72, change: +5, stores: 6, topStore: 'Store #3421' },
-    { region: 'East', nps: 68, change: +3, stores: 5, topStore: 'Store #1892' },
-    { region: 'West', nps: 65, change: -2, stores: 5, topStore: 'Store #4521' },
+    { region: 'North', vocScore: 78, change: +12, stores: 8, topStore: 'Store #2156' },
+    { region: 'South', vocScore: 72, change: +5, stores: 6, topStore: 'Store #3421' },
+    { region: 'East', vocScore: 68, change: +3, stores: 5, topStore: 'Store #1892' },
+    { region: 'West', vocScore: 65, change: -2, stores: 5, topStore: 'Store #4521' },
   ];
 
   const topPerformers = [
@@ -964,7 +964,7 @@ export const StoreOpsHome: React.FC = () => {
             severity: 'warning',
             title: '"Messy Aisles" — Top Rising Theme',
             description: 'Mentions up +34% over last 2 weeks. Correlates with declining SEA Cleanliness scores and negative sales trajectory.',
-            impactSummary: '3 stores affected · NPS impact risk',
+            impactSummary: '3 stores affected · VoC Score impact risk',
             stores: [
               { id: '4532', name: 'Murfreesboro Plaza #4532', status: 'warning', detail: '+22% mentions · SEA Cleanliness score dropped 8pts', manager: 'Marcus Hill' },
               { id: '2198', name: 'Chattanooga Riverside #2198', status: 'warning', detail: '+18% mentions · 2 failed cleanliness audits', manager: 'Brandon Cole' },
@@ -1189,7 +1189,7 @@ export const StoreOpsHome: React.FC = () => {
               <div className="ai-brief-section">
                 <h3 className="ai-brief-section-title"><StarBorderOutlined sx={{ fontSize: 14 }}/> Customer Experience</h3>
                 <ul className="ai-brief-bullets">
-                  <li>NPS improved to <strong>72 (+12 pts QoQ)</strong>. North region stores leading, with "helpful staff" as the top positive VoC theme. Store #2156 top rated at 84.</li>
+                  <li>VoC Score improved to <strong>72 (+12 pts QoQ)</strong>. North region stores leading, with "helpful staff" as the top positive VoC theme. Store #2156 top rated at 84.</li>
                   <li>Negative VoC theme <strong>"Messy Aisles"</strong> is trending up +34% — this is flagged as a Rising Risk in your Alerts section with a detailed breakdown.</li>
                 </ul>
               </div>
@@ -1204,7 +1204,7 @@ export const StoreOpsHome: React.FC = () => {
               </div>
 
               <p className="ai-brief-closing">
-                Overall, the district is in a strong position. Primary attention areas: resolve the Murfreesboro Plaza supply chain issue and address the rising "Messy Aisles" customer concern before it impacts NPS trajectory.
+                Overall, the district is in a strong position. Primary attention areas: resolve the Murfreesboro Plaza supply chain issue and address the rising "Messy Aisles" customer concern before it impacts VoC Score trajectory.
               </p>
             </div>
           </div>
@@ -1577,10 +1577,10 @@ export const StoreOpsHome: React.FC = () => {
                 <span className="kpi-snapshot-badge positive">+3% WoW</span>
               </div>
               <div className="kpi-snapshot-item">
-                <div className="kpi-snapshot-item-icon nps"><StarBorderOutlined sx={{ fontSize: 16 }}/></div>
+                <div className="kpi-snapshot-item-icon voc"><StarBorderOutlined sx={{ fontSize: 16 }}/></div>
                 <div className="kpi-snapshot-item-data">
                   <span className="kpi-snapshot-value">72</span>
-                  <span className="kpi-snapshot-label">NPS</span>
+                  <span className="kpi-snapshot-label">VoC Score</span>
                 </div>
                 <span className="kpi-snapshot-badge positive">+12 QoQ</span>
               </div>
@@ -1638,7 +1638,7 @@ export const StoreOpsHome: React.FC = () => {
                 <div className="ai-brief-section">
                   <h3 className="ai-brief-section-title"><StarBorderOutlined sx={{ fontSize: 14 }}/> Customer Experience</h3>
                   <ul className="ai-brief-bullets">
-                    <li>NPS improved to <strong>72 (+12 pts QoQ)</strong>. North region stores leading, with "helpful staff" as the top positive VoC theme. Store #2156 top rated at 84.</li>
+                    <li>VoC Score improved to <strong>72 (+12 pts QoQ)</strong>. North region stores leading, with "helpful staff" as the top positive VoC theme. Store #2156 top rated at 84.</li>
                     <li>Negative VoC theme <strong>"Messy Aisles"</strong> is trending up +34% — this is flagged as a Rising Risk in your Alerts section with a detailed breakdown.</li>
                   </ul>
                 </div>
@@ -1653,7 +1653,7 @@ export const StoreOpsHome: React.FC = () => {
                 </div>
 
                 <p className="ai-brief-closing">
-                  Overall, the district is in a strong position. Primary attention areas: resolve the Murfreesboro Plaza supply chain issue and address the rising "Messy Aisles" customer concern before it impacts NPS trajectory.
+                  Overall, the district is in a strong position. Primary attention areas: resolve the Murfreesboro Plaza supply chain issue and address the rising "Messy Aisles" customer concern before it impacts VoC Score trajectory.
                 </p>
               </div>
             </div>
@@ -2142,7 +2142,7 @@ export const StoreOpsHome: React.FC = () => {
               </button>
             </div>
             <div className="action-modal-subtitle">
-              <span>Customer Satisfaction (NPS) by Region</span>
+              <span>Customer Satisfaction (VoC Score) by Region</span>
             </div>
             <div className="action-modal-content">
               <div className="regional-list">
@@ -2153,9 +2153,9 @@ export const StoreOpsHome: React.FC = () => {
                       <span className="regional-stores">{region.stores} stores</span>
                     </div>
                     <div className="regional-stats">
-                      <div className="regional-nps">
-                        <span className="nps-value">{region.nps}</span>
-                        <span className="nps-label">NPS Score</span>
+                      <div className="regional-voc">
+                        <span className="voc-value">{region.vocScore}</span>
+                        <span className="voc-label">VoC Score</span>
                       </div>
                       <div className={`regional-change ${region.change >= 0 ? 'positive' : 'negative'}`}>
                         {region.change >= 0 ? <TrendingUpOutlined sx={{ fontSize: 14 }}/> : <TrendingDownOutlined sx={{ fontSize: 14 }}/>}
@@ -2164,7 +2164,7 @@ export const StoreOpsHome: React.FC = () => {
                     </div>
                     <div className="regional-progress">
                       <div className="progress-bar">
-                        <div className="progress-fill" style={{ width: `${region.nps}%` }}></div>
+                        <div className="progress-fill" style={{ width: `${region.vocScore}%` }}></div>
                       </div>
                     </div>
                     <div className="regional-top">

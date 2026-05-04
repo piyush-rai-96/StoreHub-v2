@@ -1119,8 +1119,8 @@ export const DistrictIntelligence: React.FC = () => {
           title: 'Customer Experience',
           icon: 'customer',
           bullets: [
-            'NPS improved to <strong>72 (+12 pts QoQ)</strong> district-wide, but this masks a divergence: stores without triage issues are at NPS 81, while Clarksville Crossing / Johnson City Mall average NPS 61.',
-            '"Messy Aisles" is now the <strong>#1 negative VoC theme</strong> (+34% WoW, +22% overall). If not addressed within 2 weeks, NPS modeling projects a <strong>-6pt district-wide impact</strong>.',
+            'VoC Score improved to <strong>72 (+12 pts QoQ)</strong> district-wide, but this masks a divergence: stores without triage issues are at VoC Score 81, while Clarksville Crossing / Johnson City Mall average VoC Score 61.',
+            '"Messy Aisles" is now the <strong>#1 negative VoC theme</strong> (+34% WoW, +22% overall). If not addressed within 2 weeks, VoC Score modeling projects a <strong>-6pt district-wide impact</strong>.',
             'Positive signal: "Helpful staff" remains the top positive theme. Staff friendliness scores are stable across all stores — the issue is purely operational (cleanliness, stocking), not service attitude.',
           ],
         },

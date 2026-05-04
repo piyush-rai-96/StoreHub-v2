@@ -502,7 +502,7 @@ const getStoreBrief = (store: DistrictStore): AIDailyBriefData => {
         icon: 'triage',
         bullets: [
           '<strong>SEA Auto-Fail</strong>: Fire exit blocked in Zone B — <strong>regulatory exposure</strong>. Must be cleared before close today; otherwise risk store closure.',
-          '<strong>VoC Crisis</strong>: "Messy Aisles" and "Staff Unavailable" complaints up <strong>+38%</strong> in 2 weeks. Net Promoter Score dropped 14 pts.',
+          '<strong>VoC Crisis</strong>: "Messy Aisles" and "Staff Unavailable" complaints up <strong>+38%</strong> in 2 weeks. VoC Score dropped 14 pts.',
           '<strong>OOS Surge</strong>: 14 SKUs out-of-stock, 4 shipments delayed. Estimated revenue impact €4,200 this week alone.',
           '<strong>Sales Miss</strong>: 4 consecutive weeks of comp sales -12%. Apparel leading the decline.',
         ],

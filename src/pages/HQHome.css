@@ -153,7 +153,7 @@
 .hq-pulse-icon.stores { background: var(--ia-color-primary-soft); color: var(--ia-color-primary-pressed); }
 .hq-pulse-icon.tasks { background: var(--ia-color-warning-bg); color: var(--ia-color-warning-text); }
 .hq-pulse-icon.compliance { background: var(--ia-color-success-bg); color: var(--ia-color-success); }
-.hq-pulse-icon.nps { background: var(--ia-color-primary-soft); color: var(--ia-color-primary); }
+.hq-pulse-icon.voc { background: var(--ia-color-primary-soft); color: var(--ia-color-primary); }
 
 .hq-pulse-data {
   display: flex;

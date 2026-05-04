@@ -749,7 +749,7 @@ export const HQHome: React.FC = () => {
                 <span className="kpi-snapshot-badge positive">+1.8% WoW</span>
               </div>
               <div className="kpi-snapshot-item">
-                <div className="kpi-snapshot-item-icon nps"><StarBorderOutlined sx={{ fontSize: 16 }}/></div>
+                <div className="kpi-snapshot-item-icon voc"><StarBorderOutlined sx={{ fontSize: 16 }}/></div>
                 <div className="kpi-snapshot-item-data">
                   <span className="kpi-snapshot-value">73</span>
                   <span className="kpi-snapshot-label">District Perf. Index</span>
