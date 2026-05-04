@@ -322,8 +322,10 @@ const analyticsResponses: Record<string, { answer: string; kpiCards: { label: st
 };
 
 
-// ── Skill Config ──
-const skills: { id: SkillMode; label: string; icon: React.ReactNode; description: string; placeholder: string; suggestions: string[] }[] = [
+// ── Skill Config (full catalogue — filtered per role inside the component) ──
+type SkillDef = { id: SkillMode; label: string; icon: React.ReactNode; description: string; placeholder: string; suggestions: string[] };
+
+const ALL_SKILLS: SkillDef[] = [
   {
     id: 'knowledge',
     label: 'Knowledge Center',
@@ -354,8 +356,23 @@ const skills: { id: SkillMode; label: string; icon: React.ReactNode; description
     icon: <BoltOutlined sx={{ fontSize: 16 }}/>,
     description: 'Create tasks & assignments via natural language',
     placeholder: 'Tell me what task to create...',
+    // Default suggestions (ADMIN / HQ) — overridden per role below
     suggestions: ['Create a planogram rule for brand blocking in Apparel', 'Create a planogram rule for price tier adjacency', 'Schedule planogram reset for next Monday', 'Create urgent task for fire exit clearance'],
   },
+];
+
+// Per-role Actions suggestions
+const ACTIONS_SUGGESTIONS_SM = [
+  'Create urgent task for fire exit clearance',
+  'Schedule a stock count for this weekend',
+  'Assign a cleaning task to the overnight team',
+  'Create a product recall follow-up task',
+];
+const ACTIONS_SUGGESTIONS_DM = [
+  'Create a localization task for Women\'s Wall planogram',
+  'Schedule planogram localization reset for District 14',
+  'Create urgent task for fire exit clearance',
+  'Assign a compliance follow-up task to store managers',
 ];
 
 
@@ -447,6 +464,24 @@ const districtGapsActionPlanResponse = {
 // ── Component ──
 export const AICopilot: React.FC = () => {
   const { user } = useAuth();
+  const role = user?.role ?? 'SM';
+
+  // ── Role-filtered skill list ─────────────────────────────────────────────
+  // Rules:
+  //   POG Audit  — hidden for SM
+  //   Actions    — shown to all, but suggestions differ; planogram creation guarded
+  const visibleSkills = useMemo((): SkillDef[] => {
+    return ALL_SKILLS
+      .filter(s => !(s.id === 'pog' && role === 'SM'))
+      .map(s => {
+        if (s.id === 'actions') {
+          if (role === 'SM') return { ...s, suggestions: ACTIONS_SUGGESTIONS_SM };
+          if (role === 'DM') return { ...s, suggestions: ACTIONS_SUGGESTIONS_DM };
+        }
+        return s;
+      });
+  }, [role]);
+
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -499,7 +534,7 @@ export const AICopilot: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentMessages = messages[activeSkill];
-  const currentSkill = skills.find(s => s.id === activeSkill)!;
+  const currentSkill = (visibleSkills.find(s => s.id === activeSkill) ?? visibleSkills[0])!;
 
   const greetingFirstName = firstNameFromDisplayName(user?.name);
   const timePeriod = timeOfDayPeriod();
@@ -512,6 +547,14 @@ export const AICopilot: React.FC = () => {
     inputRef.current?.focus();
   }, [activeSkill]);
 
+  // If the currently active skill is not available for this role (e.g. SM opened POG
+  // via deep-link before role resolved), fall back to knowledge.
+  useEffect(() => {
+    if (!visibleSkills.find(s => s.id === activeSkill)) {
+      setActiveSkill('knowledge');
+    }
+  }, [visibleSkills, activeSkill]);
+
   // ── History helpers ─────────────────────────────────────────────────────────
 
   /** Snapshot current skill's messages into savedConversations and clear the thread. */
@@ -522,7 +565,7 @@ export const AICopilot: React.FC = () => {
     const title = firstUser
       ? firstUser.content.slice(0, 70) + (firstUser.content.length > 70 ? '…' : '')
       : 'Conversation';
-    const skill = skills.find(s => s.id === skillToClear)!;
+    const skill = ALL_SKILLS.find(s => s.id === skillToClear)!;
     setSavedConversations(prev => [{
       id: `conv-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       title,
@@ -1067,6 +1110,37 @@ export const AICopilot: React.FC = () => {
   const simulateActionAgentic = (userQuery: string) => {
     setIsProcessing(true);
     const q = userQuery.toLowerCase();
+
+    // ── Role-based planogram task guards ────────────────────────────────────
+    const isPlanogramQuery = q.includes('planogram') || q.includes('pog rule') || q.includes('pog reset');
+    const isLocalizationQuery = q.includes('locali');
+
+    if (role === 'SM' && isPlanogramQuery) {
+      const blockedMsg: ChatMessage = {
+        id: generateId(),
+        role: 'assistant',
+        content: '⚠️ **Access Restricted** — Planogram task creation is not available to Store Managers.\n\nPlanogram-related tasks (rule creation, resets, and compliance actions) are managed by District Managers and HQ. If you have a store-level concern, please reach out to your District Manager or raise it via the Operations Queue.',
+        timestamp: new Date(),
+        skill: 'actions',
+      };
+      setMessages(prev => ({ ...prev, actions: [...prev.actions, blockedMsg] }));
+      setIsProcessing(false);
+      return;
+    }
+
+    if (role === 'DM' && isPlanogramQuery && !isLocalizationQuery) {
+      const restrictedMsg: ChatMessage = {
+        id: generateId(),
+        role: 'assistant',
+        content: '⚠️ **Limited Access** — As a District Manager you can create Planogram tasks only when they relate to **Planogram Localization**.\n\nOther planogram task types (master resets, rule creation for brand blocking, price tier adjacency, etc.) are managed by HQ. To create a localization task, try: _"Create a localization task for Women\'s Wall planogram"_.',
+        timestamp: new Date(),
+        skill: 'actions',
+      };
+      setMessages(prev => ({ ...prev, actions: [...prev.actions, restrictedMsg] }));
+      setIsProcessing(false);
+      return;
+    }
+    // ── end guards ──────────────────────────────────────────────────────────
 
     // POG Rule creation flow
     if (q.includes('planogram rule') || q.includes('pog rule')) {
@@ -2486,7 +2560,7 @@ export const AICopilot: React.FC = () => {
             <div className="cop-skill-row cop-skill-row--panel">
               {/* Premium skill cards — replaces plain Select dropdown */}
               <div className="cop-skill-cards">
-                {skills.map(skill => (
+                {visibleSkills.map(skill => (
                   <button
                     key={skill.id}
                     type="button"
