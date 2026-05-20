@@ -2358,7 +2358,7 @@ export const StoreCenter: React.FC = () => {
         <div className="sc-deepdive-section sc-alert-section">
           <div className="sc-section-header">
             <div className="sc-section-title-row">
-              <WarningAmberOutlined sx={{ fontSize: 20 }} className="sc-alert-title-icon"/>
+              <WarningAmberOutlined sx={{ fontSize: 20, color: '#f59e0b' }}/>
               <h3>Operational Alerts</h3>
             </div>
             <span className="sc-section-subtitle">
@@ -2371,33 +2371,72 @@ export const StoreCenter: React.FC = () => {
               const priorityClass = bucket.priority === 'High' ? 'sc-alert-priority--high'
                 : bucket.priority === 'Medium' ? 'sc-alert-priority--medium'
                 : 'sc-alert-priority--low';
+              const accentColor = bucket.priority === 'High' ? '#ef4444'
+                : bucket.priority === 'Medium' ? '#f59e0b'
+                : 'var(--ia-color-primary)';
               const bucketIcon =
                 bucket.id === 'boh-sync' ? <InventoryOutlined sx={{ fontSize: 18 }}/>
                 : bucket.id === 'phantom-stock' ? <ErrorOutlined sx={{ fontSize: 18 }}/>
                 : <GridOnOutlined sx={{ fontSize: 18 }}/>;
               return (
-                <div key={bucket.id} className="sc-alert-bucket" onClick={() => { setAlertDrawer(bucket); setSelectedIssues(new Set()); }}>
-                  <div className="sc-alert-bucket-top">
-                    <div className="sc-alert-bucket-icon">{bucketIcon}</div>
-                    <span className={`sc-alert-priority-badge ${priorityClass}`}>{bucket.priority}</span>
+                <Card
+                  key={bucket.id}
+                  onClick={() => { setAlertDrawer(bucket); setSelectedIssues(new Set()); }}
+                  sx={{
+                    padding: 0,
+                    maxWidth: '100%',
+                    minHeight: 'unset',
+                    width: '100%',
+                    borderRadius: '12px',
+                    border: '1px solid var(--ia-color-border)',
+                    boxShadow: '0 1px 3px rgba(15,23,42,0.05)',
+                    cursor: 'pointer',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    transition: 'all 0.15s ease',
+                    '&:hover': {
+                      boxShadow: '0 6px 20px rgba(15,23,42,0.1)',
+                      borderColor: 'var(--ia-color-border-strong)',
+                      transform: 'translateY(-2px)',
+                    },
+                  }}
+                >
+                  {/* Colour accent top bar */}
+                  <div style={{ height: 3, background: accentColor, flexShrink: 0 }} />
+
+                  <div style={{ padding: '16px 18px 14px', display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
+                    {/* Icon + priority */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div className="sc-alert-bucket-icon">{bucketIcon}</div>
+                      <span className={`sc-alert-priority-badge ${priorityClass}`}>{bucket.priority}</span>
+                    </div>
+
+                    <div>
+                      <h4 className="sc-alert-bucket-name">{bucket.name}</h4>
+                      <p className="sc-alert-bucket-desc">{bucket.shortDesc}</p>
+                    </div>
+
+                    {/* Metric chips */}
+                    <div className="sc-alert-bucket-metrics">
+                      {bucket.metrics.map(m => (
+                        <div key={m.label} className="sc-alert-metric-chip">
+                          <span className="sc-alert-metric-val">{m.value}</span>
+                          <span className="sc-alert-metric-lbl">{m.label}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Review CTA */}
+                    <div className="sc-alert-bucket-footer">
+                      <button className="sc-alert-review-btn"
+                        onClick={e => { e.stopPropagation(); setAlertDrawer(bucket); setSelectedIssues(new Set()); }}>
+                        Review
+                        <KeyboardArrowRight sx={{ fontSize: 16 }}/>
+                      </button>
+                    </div>
                   </div>
-                  <h4 className="sc-alert-bucket-name">{bucket.name}</h4>
-                  <p className="sc-alert-bucket-desc">{bucket.shortDesc}</p>
-                  <div className="sc-alert-bucket-metrics">
-                    {bucket.metrics.map(m => (
-                      <div key={m.label} className="sc-alert-metric-chip">
-                        <span className="sc-alert-metric-val">{m.value}</span>
-                        <span className="sc-alert-metric-lbl">{m.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="sc-alert-bucket-footer">
-                    <button className="sc-alert-review-btn" onClick={e => { e.stopPropagation(); setAlertDrawer(bucket); setSelectedIssues(new Set()); }}>
-                      Review
-                      <KeyboardArrowRight sx={{ fontSize: 16 }}/>
-                    </button>
-                  </div>
-                </div>
+                </Card>
               );
             })}
           </div>

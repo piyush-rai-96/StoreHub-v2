@@ -3632,62 +3632,15 @@
    ALERT BUCKETS — Operational Alerts Section
    ═══════════════════════════════════════════════════════ */
 
-.sc-alert-section { margin-top: 4px; }
-.sc-alert-title-icon { color: var(--ia-color-warning, #f59e0b) !important; }
+/* ── Alert Section spacing: extra breathing room above ── */
+.sc-alert-section { margin-top: 32px !important; }
 
 /* ── Bucket Grid ── */
 .sc-alert-buckets-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
-  margin-top: 4px;
-}
-
-/* ── Single Bucket Card ── */
-.sc-alert-bucket {
-  background: var(--ia-color-surface);
-  border: 1px solid var(--ia-color-border);
-  border-radius: 12px;
-  padding: 18px 18px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  cursor: pointer;
-  transition: box-shadow 0.15s, border-color 0.15s, transform 0.12s;
-  position: relative;
-  overflow: hidden;
-}
-.sc-alert-bucket::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: var(--ia-color-border);
-  border-radius: 12px 12px 0 0;
-  transition: background 0.15s;
-}
-.sc-alert-bucket:hover {
-  box-shadow: 0 4px 16px rgba(15,23,42,0.09);
-  border-color: var(--ia-color-border-strong);
-  transform: translateY(-1px);
-}
-
-/* High priority top accent */
-.sc-alert-bucket:has(.sc-alert-priority--high)::before {
-  background: #ef4444;
-}
-.sc-alert-bucket:has(.sc-alert-priority--medium)::before {
-  background: #f59e0b;
-}
-.sc-alert-bucket:has(.sc-alert-priority--low)::before {
-  background: var(--ia-color-primary);
-}
-
-/* Top row: icon + priority badge */
-.sc-alert-bucket-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  padding: 0 24px 24px;
 }
 .sc-alert-bucket-icon {
   width: 34px;
