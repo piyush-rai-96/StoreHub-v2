@@ -632,6 +632,9 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  background: linear-gradient(180deg, var(--ia-color-commercial-soft) 0%, transparent 72%);
+  border-radius: 12px;
+  padding: 4px;
 }
 
 .pulse-card {
@@ -1057,42 +1060,42 @@
 }
 
 .kpi-stat-pill.kpi-stat-positive {
-  background: #e8f0fe;
-  border-color: #c5d6f1;
+  background: var(--ia-color-execution-soft);
+  border-color: var(--ia-color-execution-border);
 }
 
 .kpi-stat-pill.kpi-stat-positive .kpi-stat-value {
-  color: #1a5276;
+  color: var(--ia-color-execution);
 }
 
 .kpi-stat-pill.kpi-stat-positive .kpi-stat-label {
-  color: #2e6d92;
+  color: var(--ia-color-execution-text);
 }
 
 .kpi-stat-pill.kpi-stat-warning {
-  background: #edf2fb;
-  border-color: #c9d8ed;
+  background: var(--ia-color-ops-soft);
+  border-color: var(--ia-color-ops-border);
 }
 
 .kpi-stat-pill.kpi-stat-warning .kpi-stat-value {
-  color: #2c5282;
+  color: var(--ia-color-ops);
 }
 
 .kpi-stat-pill.kpi-stat-warning .kpi-stat-label {
-  color: #3e6b9a;
+  color: var(--ia-color-ops-text);
 }
 
 .kpi-stat-pill.kpi-stat-negative {
-  background: #e6ecf5;
-  border-color: #bfcee0;
+  background: var(--ia-color-customer-soft);
+  border-color: var(--ia-color-customer-border);
 }
 
 .kpi-stat-pill.kpi-stat-negative .kpi-stat-value {
-  color: #1e3a5f;
+  color: var(--ia-color-customer);
 }
 
 .kpi-stat-pill.kpi-stat-negative .kpi-stat-label {
-  color: #3d5a80;
+  color: var(--ia-color-customer-text);
 }
 
 /* KPI Cards Grid */
@@ -1117,7 +1120,7 @@
 /* ===== Individual KPI Tile — Corporate ===== */
 /* .kpi-tile outer shell — migrated to Impact UI Card (sx prop handles background, border, radius, shadow, hover, active) */
 
-/* Category label — clean, minimal */
+/* Category label — colored pill per KPI family */
 .kpi-tile-category {
   display: inline-flex;
   align-items: center;
@@ -1127,11 +1130,10 @@
   letter-spacing: 0.8px;
   text-transform: uppercase;
   margin-bottom: 6px;
-  color: var(--ia-color-text-secondary);
-  padding: 0;
-  background: none;
-  border-radius: 0;
+  padding: 3px 8px;
+  border-radius: 6px;
   width: fit-content;
+  border: 1px solid transparent;
 }
 
 .kpi-tile-category svg {
@@ -1139,12 +1141,57 @@
   height: 11px;
 }
 
-/* Per-category icon tints (label stays neutral) */
-.kpi-tile-category--commercial svg { color: var(--ia-color-primary-pressed); }
-.kpi-tile-category--customer svg { color: #9f1239; }
-.kpi-tile-category--execution svg { color: #0e7490; }
-.kpi-tile-category--profitability svg { color: var(--ia-color-warning-text); }
-.kpi-tile-category--operations svg { color: var(--ia-color-text-secondary); }
+.kpi-tile-category--commercial {
+  background: var(--ia-color-commercial-soft);
+  color: var(--ia-color-commercial-text);
+  border-color: var(--ia-color-commercial-border);
+}
+.kpi-tile-category--commercial svg { color: var(--ia-color-commercial); }
+
+.kpi-tile-category--customer {
+  background: var(--ia-color-customer-soft);
+  color: var(--ia-color-customer-text);
+  border-color: var(--ia-color-customer-border);
+}
+.kpi-tile-category--customer svg { color: var(--ia-color-customer); }
+
+.kpi-tile-category--execution {
+  background: var(--ia-color-execution-soft);
+  color: var(--ia-color-execution-text);
+  border-color: var(--ia-color-execution-border);
+}
+.kpi-tile-category--execution svg { color: var(--ia-color-execution); }
+
+.kpi-tile-category--profitability {
+  background: var(--ia-color-profitability-soft);
+  color: var(--ia-color-profitability-text);
+  border-color: var(--ia-color-profitability-border);
+}
+.kpi-tile-category--profitability svg { color: var(--ia-color-profitability); }
+
+.kpi-tile-category--operations {
+  background: var(--ia-color-ops-soft);
+  color: var(--ia-color-ops-text);
+  border-color: var(--ia-color-ops-border);
+}
+.kpi-tile-category--operations svg { color: var(--ia-color-ops); }
+
+/* Colored top accent on KPI cards */
+[data-kpi-category="commercial"] {
+  border-top: 3px solid var(--ia-color-commercial) !important;
+}
+[data-kpi-category="customer"] {
+  border-top: 3px solid var(--ia-color-customer) !important;
+}
+[data-kpi-category="execution"] {
+  border-top: 3px solid var(--ia-color-execution) !important;
+}
+[data-kpi-category="profitability"] {
+  border-top: 3px solid var(--ia-color-profitability) !important;
+}
+[data-kpi-category="operations"] {
+  border-top: 3px solid var(--ia-color-ops) !important;
+}
 
 /* Primary value */
 .kpi-tile-value-row {

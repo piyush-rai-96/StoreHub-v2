@@ -60,13 +60,34 @@ interface AlertIssueRow {
   bohQty: number;
   shelfQty: number;
   weeklyOpportunity?: number;
+  /** Phantom Stock: min(on-hand, expected weekly demand) × ASP; null = no demand signal */
+  recoveryEstimate?: number | null;
+  zeroSalesDays?: number;
   confidenceScore?: number;
 }
 
 type AlertBucketType = 'boh-sync' | 'phantom-stock' | 'pog-compliance';
 type AlertPriority = 'High' | 'Medium' | 'Low';
 
-interface AlertMetric { label: string; value: string }
+interface AlertMetric { label: string; value: string; tooltip?: string }
+
+const PHANTOM_RECOVERY_TOOLTIP =
+  'Estimated sales that may be recovered if phantom stock is resolved. Since current sales are zero, this is calculated using historical demand, forecasted demand, or similar-store performance — not current sales.';
+
+function phantomSkuRecovery(
+  onHand: number,
+  expectedWeeklyDemand?: number,
+  avgPrice?: number,
+): number | null {
+  if (!expectedWeeklyDemand || expectedWeeklyDemand <= 0 || !avgPrice || avgPrice <= 0) return null;
+  return Math.min(onHand, expectedWeeklyDemand) * avgPrice;
+}
+
+function formatPhantomRecoveryTotal(total: number | null): string {
+  if (total == null || total <= 0) return 'Recovery estimate unavailable';
+  if (total >= 1000) return `$${(total / 1000).toFixed(1)}K`;
+  return `$${Math.round(total)}`;
+}
 
 interface AlertBucket {
   id: AlertBucketType;
@@ -1049,13 +1070,16 @@ const BOH_ITEMS = [
   { itemName: 'Pringles Original 200g', sku: '661203', dept: 'Snacks', aisle: 'Aisle 7', bay: 'Bay 2', bohQty: 20, opp: 130 },
 ];
 
-const PHANTOM_ITEMS = [
-  { itemName: 'Heinz Ketchup 1L', sku: '334512', dept: 'Condiments', zeroDays: 22, units: 60, opp: 210 },
-  { itemName: 'Hellmann\'s Mayo 900ml', sku: '221847', dept: 'Condiments', zeroDays: 19, units: 48, opp: 175 },
-  { itemName: 'Quaker Oats 1kg', sku: '509341', dept: 'Breakfast', zeroDays: 31, units: 72, opp: 290 },
-  { itemName: 'Uncle Ben\'s Rice 2kg', sku: '401228', dept: 'Grains', zeroDays: 25, units: 36, opp: 155 },
-  { itemName: 'Tropicana OJ 1.75L', sku: '773920', dept: 'Beverages', zeroDays: 18, units: 24, opp: 240 },
-  { itemName: 'Skippy PB Chunky 1kg', sku: '889012', dept: 'Spreads', zeroDays: 28, units: 18, opp: 120 },
+const PHANTOM_ITEMS: {
+  itemName: string; sku: string; dept: string; zeroDays: number; units: number;
+  expectedWeeklyDemand?: number; avgPrice?: number;
+}[] = [
+  { itemName: 'Heinz Ketchup 1L', sku: '334512', dept: 'Condiments', zeroDays: 22, units: 60, expectedWeeklyDemand: 22, avgPrice: 4.85 },
+  { itemName: 'Hellmann\'s Mayo 900ml', sku: '221847', dept: 'Condiments', zeroDays: 19, units: 48, expectedWeeklyDemand: 16, avgPrice: 5.20 },
+  { itemName: 'Quaker Oats 1kg', sku: '509341', dept: 'Breakfast', zeroDays: 31, units: 72, expectedWeeklyDemand: 28, avgPrice: 6.10 },
+  { itemName: 'Uncle Ben\'s Rice 2kg', sku: '401228', dept: 'Grains', zeroDays: 25, units: 36, expectedWeeklyDemand: 14, avgPrice: 5.45 },
+  { itemName: 'Tropicana OJ 1.75L', sku: '773920', dept: 'Beverages', zeroDays: 18, units: 24, expectedWeeklyDemand: 20, avgPrice: 4.95 },
+  { itemName: 'Skippy PB Chunky 1kg', sku: '889012', dept: 'Spreads', zeroDays: 28, units: 18 },
 ];
 
 const POG_ITEMS = [
@@ -1076,8 +1100,6 @@ function getAlertBuckets(store: StoreMeta): AlertBucket[] {
   const bohUnits = 134 + Math.round(r('boh-units') * 40);
   const bohOpp = Math.round((1800 + r('boh-opp') * 600) / 100) * 100;
   const phantomCount = 4 + Math.round(r('ph-cnt') * 3);
-  const phantomUnits = 240 + Math.round(r('ph-units') * 120);
-  const phantomOpp = Math.round((2100 + r('ph-opp') * 700) / 100) * 100;
   const pogCount = 7 + Math.round(r('pog-cnt') * 4);
   const pogBays = 4 + Math.round(r('pog-bays') * 2);
 
@@ -1096,18 +1118,38 @@ function getAlertBuckets(store: StoreMeta): AlertBucket[] {
     confidenceScore: Math.round((0.82 + r(`boh-conf-${i}`) * 0.15) * 100),
   }));
 
-  const phantomIssues: AlertIssueRow[] = PHANTOM_ITEMS.slice(0, phantomCount).map((it, i) => ({
-    id: `ph-${i}`,
-    itemName: it.itemName,
-    sku: it.sku,
-    department: it.dept,
-    store: store.name,
-    issue: `${it.zeroDays + Math.round(r(`ph-days-${i}`) * 5)} zero-sales days`,
-    bohQty: it.units + Math.round(r(`ph-units-${i}`) * 20),
-    shelfQty: it.units + Math.round(r(`ph-units-${i}`) * 20),
-    weeklyOpportunity: it.opp + Math.round(r(`ph-opp-${i}`) * 60),
-    confidenceScore: Math.round((0.74 + r(`ph-conf-${i}`) * 0.18) * 100),
-  }));
+  const phantomIssues: AlertIssueRow[] = PHANTOM_ITEMS.slice(0, phantomCount).map((it, i) => {
+    const onHand = it.units + Math.round(r(`ph-units-${i}`) * 20);
+    const zeroDays = it.zeroDays + Math.round(r(`ph-days-${i}`) * 5);
+    const weeklyDemand = it.expectedWeeklyDemand
+      ? it.expectedWeeklyDemand + Math.round(r(`ph-demand-${i}`) * 4)
+      : undefined;
+    const asp = it.avgPrice ? it.avgPrice + r(`ph-asp-${i}`) * 0.4 : undefined;
+    return {
+      id: `ph-${i}`,
+      itemName: it.itemName,
+      sku: it.sku,
+      department: it.dept,
+      store: store.name,
+      issue: `${zeroDays} zero-sales days`,
+      bohQty: onHand,
+      shelfQty: onHand,
+      zeroSalesDays: zeroDays,
+      recoveryEstimate: phantomSkuRecovery(onHand, weeklyDemand, asp),
+      confidenceScore: Math.round((0.74 + r(`ph-conf-${i}`) * 0.18) * 100),
+    };
+  });
+
+  const phantomUnits = phantomIssues.reduce((sum, row) => sum + row.bohQty, 0);
+  const phantomAvgZeroDays = phantomIssues.length
+    ? Math.round(phantomIssues.reduce((sum, row) => sum + (row.zeroSalesDays ?? 0), 0) / phantomIssues.length)
+    : 0;
+  const phantomRecoveryParts = phantomIssues
+    .map(row => row.recoveryEstimate)
+    .filter((v): v is number => v != null && v > 0);
+  const phantomRecoveryTotal = phantomRecoveryParts.length > 0
+    ? phantomRecoveryParts.reduce((sum, v) => sum + v, 0)
+    : null;
 
   const pogIssues: AlertIssueRow[] = POG_ITEMS.slice(0, pogCount).map((it, i) => ({
     id: `pog-${i}`,
@@ -1144,10 +1186,14 @@ function getAlertBuckets(store: StoreMeta): AlertBucket[] {
       fullDesc: 'High inventory records with zero recent sales, indicating stock may be trapped in the backroom or not reaching the shelf. Review and verify physical shelf placement.',
       priority: 'Medium',
       metrics: [
-        { label: 'Affected SKUs', value: `${phantomCount} SKUs` },
+        { label: 'Affected SKUs', value: String(phantomCount) },
         { label: 'Units on Hand', value: `${phantomUnits} units` },
-        { label: 'Avg Zero-Sales Days', value: `${21 + Math.round(r('ph-avg-days') * 10)} days` },
-        { label: 'Weekly Opportunity', value: `$${(phantomOpp / 1000).toFixed(1)}K` },
+        { label: 'Avg Zero-Sales Days', value: `${phantomAvgZeroDays} days` },
+        {
+          label: 'Potential Sales Recovery',
+          value: formatPhantomRecoveryTotal(phantomRecoveryTotal),
+          tooltip: PHANTOM_RECOVERY_TOOLTIP,
+        },
       ],
       issues: phantomIssues,
     },
@@ -1482,7 +1528,13 @@ export const StoreCenter: React.FC = () => {
       skuId: issue.sku,
       priority: bucket.priority as 'High' | 'Medium' | 'Low',
       reason: issue.issue,
-      impact: issue.weeklyOpportunity ? `$${issue.weeklyOpportunity}/week sales opportunity` : 'Planogram compliance',
+      impact: bucket.id === 'phantom-stock'
+        ? (issue.recoveryEstimate != null
+          ? `$${issue.recoveryEstimate}/wk potential sales recovery (est.)`
+          : 'Phantom stock — recovery estimate unavailable')
+        : issue.weeklyOpportunity
+        ? `$${issue.weeklyOpportunity}/week sales opportunity`
+        : 'Planogram compliance',
       status: 'Pending',
       assignedTo: null,
       dueDate: dueDateStr,
@@ -2356,10 +2408,10 @@ export const StoreCenter: React.FC = () => {
 
         {/* ── Alert Buckets ──────────────────────────────── */}
         <div className="sc-deepdive-section sc-alert-section">
-          <div className="sc-section-header">
+          <div className="sc-section-header sc-alerts-section-header">
             <div className="sc-section-title-row">
               <WarningAmberOutlined sx={{ fontSize: 20, color: 'var(--ia-color-warning)' }}/>
-              <h3>Operational Alerts</h3>
+              <h3>Alerts</h3>
             </div>
             <span className="sc-section-subtitle">
               Grouped issues requiring review — {alertBuckets.reduce((s, b) => s + b.issues.length, 0)} items across {alertBuckets.length} alert types
@@ -2387,9 +2439,9 @@ export const StoreCenter: React.FC = () => {
                     maxWidth: '100%',
                     minHeight: 'unset',
                     width: '100%',
-                    borderRadius: '12px',
+                    borderRadius: '14px',
                     border: '1px solid var(--ia-color-border)',
-                    boxShadow: '0 1px 3px rgba(15,23,42,0.05)',
+                    boxShadow: '0 2px 8px rgba(15,23,42,0.06)',
                     cursor: 'pointer',
                     overflow: 'hidden',
                     display: 'flex',
@@ -2403,9 +2455,9 @@ export const StoreCenter: React.FC = () => {
                   }}
                 >
                   {/* Colour accent top bar */}
-                  <div style={{ height: 3, background: accentColor, flexShrink: 0 }} />
+                  <div style={{ height: 4, background: accentColor, flexShrink: 0 }} />
 
-                  <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
+                  <div className="sc-alert-bucket-body">
                     {/* Icon + priority */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div className="sc-alert-bucket-icon">{bucketIcon}</div>
@@ -2420,7 +2472,11 @@ export const StoreCenter: React.FC = () => {
                     {/* Metric chips */}
                     <div className="sc-alert-bucket-metrics">
                       {bucket.metrics.map(m => (
-                        <div key={m.label} className="sc-alert-metric-chip">
+                        <div
+                          key={m.label}
+                          className={`sc-alert-metric-chip${m.tooltip ? ' sc-alert-metric-chip--tip' : ''}${m.value === 'Recovery estimate unavailable' ? ' sc-alert-metric-chip--muted-val' : ''}`}
+                          title={m.tooltip}
+                        >
                           <span className="sc-alert-metric-val">{m.value}</span>
                           <span className="sc-alert-metric-lbl">{m.label}</span>
                         </div>
@@ -2453,7 +2509,7 @@ export const StoreCenter: React.FC = () => {
                     <span className={`sc-alert-priority-badge ${alertDrawer.priority === 'High' ? 'sc-alert-priority--high' : alertDrawer.priority === 'Medium' ? 'sc-alert-priority--medium' : 'sc-alert-priority--low'}`}>
                       {alertDrawer.priority} Priority
                     </span>
-                    <span className="sc-alert-drawer-type">Operational Alert</span>
+                    <span className="sc-alert-drawer-type">Alert</span>
                   </div>
                   <h2 className="sc-alert-drawer-name">{alertDrawer.name}</h2>
                   <p className="sc-alert-drawer-sub">{alertDrawer.fullDesc}</p>
@@ -2475,16 +2531,25 @@ export const StoreCenter: React.FC = () => {
 
               {/* Bulk actions */}
               <div className="sc-alert-drawer-actions">
-                <span className="sc-alert-drawer-count">
-                  {alertDrawer.issues.length} issues · {createdTaskIds.size > 0 ? `${[...createdTaskIds].filter(id => alertDrawer.issues.find(i => i.id === id)).length} tasks created` : 'No tasks yet'}
-                </span>
+                <div className="sc-alert-drawer-count-block">
+                  <span className="sc-alert-drawer-count">{alertDrawer.issues.length} issues</span>
+                  {(() => {
+                    const createdHere = [...createdTaskIds].filter(id => alertDrawer.issues.find(i => i.id === id)).length;
+                    const reviewedHere = [...reviewedIssues].filter(id => alertDrawer.issues.find(i => i.id === id)).length;
+                    return (
+                      <span className="sc-alert-drawer-count-sub">
+                        {createdHere > 0 ? `${createdHere} task${createdHere > 1 ? 's' : ''} created` : reviewedHere > 0 ? `${reviewedHere} marked reviewed` : 'No actions yet'}
+                      </span>
+                    );
+                  })()}
+                </div>
                 <div className="sc-alert-drawer-action-btns">
                   <Button variant="outlined" color="primary" size="small"
                     onClick={() => {
-                      const allIds = new Set(alertDrawer.issues.map(i => i.id));
-                      setSelectedIssues(selectedIssues.size === alertDrawer.issues.length ? new Set() : allIds);
+                      const actionableIds = new Set(alertDrawer.issues.filter(i => !createdTaskIds.has(i.id)).map(i => i.id));
+                      setSelectedIssues(selectedIssues.size === actionableIds.size ? new Set() : actionableIds);
                     }}>
-                    {selectedIssues.size === alertDrawer.issues.length ? 'Deselect All' : 'Select All'}
+                    {selectedIssues.size > 0 ? 'Deselect All' : 'Select All'}
                   </Button>
                   {selectedIssues.size > 0 && (
                     <Button variant="contained" color="primary" size="small"
@@ -2506,7 +2571,10 @@ export const StoreCenter: React.FC = () => {
                   const isReviewed = reviewedIssues.has(issue.id);
                   const isBoh = alertDrawer.id === 'boh-sync';
                   return (
-                    <div key={issue.id} className={`sc-alert-issue-row${isSelected ? ' sc-alert-issue-row--selected' : ''}${isCreated ? ' sc-alert-issue-row--done' : ''}`}>
+                    <div
+                      key={issue.id}
+                      className={`sc-alert-issue-row${isSelected ? ' sc-alert-issue-row--selected' : ''}${isCreated ? ' sc-alert-issue-row--done' : ''}${isReviewed && !isCreated ? ' sc-alert-issue-row--reviewed' : ''}`}
+                    >
                       {/* Checkbox */}
                       <div className="sc-alert-issue-select" onClick={() => {
                         if (isCreated) return;
@@ -2524,16 +2592,23 @@ export const StoreCenter: React.FC = () => {
                       </div>
 
                       <div className="sc-alert-issue-body">
+                        {/* Title row */}
                         <div className="sc-alert-issue-top">
-                          <div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
                             <span className="sc-alert-issue-name">{issue.itemName}</span>
                             <span className="sc-alert-issue-sku">SKU: {issue.sku} · {issue.department}</span>
                           </div>
-                          {issue.confidenceScore && (
-                            <span className="sc-alert-issue-conf">AI {issue.confidenceScore}%</span>
-                          )}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                            {isReviewed && !isCreated && (
+                              <span className="sc-alert-reviewed-badge">Reviewed</span>
+                            )}
+                            {issue.confidenceScore && (
+                              <span className="sc-alert-issue-conf">AI {issue.confidenceScore}%</span>
+                            )}
+                          </div>
                         </div>
 
+                        {/* Tags row */}
                         <div className="sc-alert-issue-detail-row">
                           <div className="sc-alert-issue-tag sc-alert-tag--warn">
                             <WarningAmberOutlined sx={{ fontSize: 11 }}/>
@@ -2546,6 +2621,7 @@ export const StoreCenter: React.FC = () => {
                           )}
                         </div>
 
+                        {/* Stats row */}
                         <div className="sc-alert-issue-stats">
                           {isBoh && (
                             <>
@@ -2557,18 +2633,40 @@ export const StoreCenter: React.FC = () => {
                                 <span className="sc-ais-label">Shelf Detected</span>
                                 <span className="sc-ais-value sc-ais-value--neg">{issue.shelfQty} units</span>
                               </div>
+                              {issue.weeklyOpportunity != null && (
+                                <div className="sc-alert-issue-stat">
+                                  <span className="sc-ais-label">Weekly Opportunity</span>
+                                  <span className="sc-ais-value sc-ais-value--opp">${issue.weeklyOpportunity}/wk</span>
+                                </div>
+                              )}
                             </>
                           )}
                           {alertDrawer.id === 'phantom-stock' && (
-                            <div className="sc-alert-issue-stat">
-                              <span className="sc-ais-label">Units on Hand</span>
-                              <span className="sc-ais-value">{issue.bohQty} units</span>
-                            </div>
+                            <>
+                              <div className="sc-alert-issue-stat">
+                                <span className="sc-ais-label">Units on Hand</span>
+                                <span className="sc-ais-value">{issue.bohQty} units</span>
+                              </div>
+                              {issue.zeroSalesDays != null && (
+                                <div className="sc-alert-issue-stat">
+                                  <span className="sc-ais-label">Zero-Sales Days</span>
+                                  <span className="sc-ais-value sc-ais-value--neg">{issue.zeroSalesDays} days</span>
+                                </div>
+                              )}
+                              <div className="sc-alert-issue-stat" title={PHANTOM_RECOVERY_TOOLTIP}>
+                                <span className="sc-ais-label sc-ais-label--tip">Sales Recovery Est.</span>
+                                <span className={`sc-ais-value${issue.recoveryEstimate != null ? ' sc-ais-value--opp' : ' sc-ais-value--muted'}`}>
+                                  {issue.recoveryEstimate != null
+                                    ? `$${Math.round(issue.recoveryEstimate)}/wk`
+                                    : 'Unavailable'}
+                                </span>
+                              </div>
+                            </>
                           )}
-                          {issue.weeklyOpportunity && (
+                          {alertDrawer.id === 'pog-compliance' && issue.confidenceScore != null && (
                             <div className="sc-alert-issue-stat">
-                              <span className="sc-ais-label">Weekly Opportunity</span>
-                              <span className="sc-ais-value sc-ais-value--opp">${issue.weeklyOpportunity}/wk</span>
+                              <span className="sc-ais-label">AI Confidence</span>
+                              <span className="sc-ais-value">{issue.confidenceScore}%</span>
                             </div>
                           )}
                         </div>
@@ -2579,15 +2677,17 @@ export const StoreCenter: React.FC = () => {
                         {isCreated ? (
                           <span className="sc-alert-task-created-label">Task Created</span>
                         ) : (
-                          <button className="sc-alert-create-task-btn"
+                          <button
+                            className="sc-alert-create-task-btn"
                             onClick={e => { e.stopPropagation(); setTaskConfirmIssue(issue); }}>
                             Create Task
                           </button>
                         )}
                         {!isCreated && !isReviewed && (
-                          <button className="sc-alert-dismiss-btn"
+                          <button
+                            className="sc-alert-dismiss-btn"
                             onClick={() => setReviewedIssues(prev => new Set(prev).add(issue.id))}>
-                            Reviewed
+                            Mark Reviewed
                           </button>
                         )}
                       </div>
