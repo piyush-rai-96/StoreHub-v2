@@ -72,24 +72,24 @@
    ============================================================ */
 
 :root {
-  /* --- Brand / Primary (#4259EE family) --- */
-  --ia-color-primary:           #4259EE;
-  --ia-color-primary-hover:     #3649C6;
-  --ia-color-primary-pressed:   #29399F;
-  --ia-color-primary-soft:      #ECEEFD;
-  --ia-color-primary-border:    #B3BDF8;
-  --ia-color-info:              #5267F4;
+  /* --- Brand / Primary — cornflower shift --- */
+  --ia-color-primary:           #4F6CF5;
+  --ia-color-primary-hover:     #3B58E2;
+  --ia-color-primary-pressed:   #2A45C9;
+  --ia-color-primary-soft:      #EEF1FE;
+  --ia-color-primary-border:    #BAC4FA;
+  --ia-color-info:              #5B72F6;
 
   /* --- Neutral text --- */
-  --ia-color-text-primary:      #1F2B4D;
+  --ia-color-text-primary:      #1A2744;
   --ia-color-text-secondary:    #60697D;
   --ia-color-text-tertiary:     #B4BAC7;
 
   /* --- Neutral surface / border --- */
-  --ia-color-border:            #D9DDE7;
-  --ia-color-border-strong:     #C3C8D4;
-  --ia-color-bg-muted:          #F2F3F4;
-  --ia-color-bg-subtle:         #F8F9FB;
+  --ia-color-border:            #DEE3EF;
+  --ia-color-border-strong:     #C8CEDC;
+  --ia-color-bg-muted:          #EFF1F6;
+  --ia-color-bg-subtle:         #F5F7FC;
   --ia-color-surface:           #FFFFFF;
 
   /* --- Semantic: success --- */
@@ -98,9 +98,9 @@
   --ia-color-success-bg:        #ECFDF3;
 
   /* --- Semantic: warning --- */
-  --ia-color-warning:           #FFE174;
-  --ia-color-warning-text:      #8C6F06;
-  --ia-color-warning-bg:        #FFF8E1;
+  --ia-color-warning:           #FBBF24;
+  --ia-color-warning-text:      #92400E;
+  --ia-color-warning-bg:        #FFF7E6;
 
   /* --- Semantic: error / destructive --- */
   --ia-color-error:             #EC4C5C;
