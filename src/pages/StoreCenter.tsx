@@ -40,11 +40,43 @@ import OpenInNewOutlined from '@mui/icons-material/OpenInNewOutlined';
 import { Button, Badge, Card, Tabs } from 'impact-ui';
 import { AIDailyBrief, AIDailyBriefData } from '../components/common/AIDailyBrief';
 import { useAuth } from '../context/AuthContext';
+import { useExecutionTasks } from '../context/ExecutionTasksContext';
 import { openAskAlan } from '../utils/openAskAlan';
 import './StoreCenter.css';
 // Reuses detail-panel/dp-* styles for the SM broadcast detail panel
 import './StoreOpsHome.css';
 import './DistrictIntelligence.css';
+
+// ── Alert Bucket Types ──────────────────────────────────
+interface AlertIssueRow {
+  id: string;
+  itemName: string;
+  sku: string;
+  department: string;
+  store: string;
+  aisle?: string;
+  bay?: string;
+  issue: string;
+  bohQty: number;
+  shelfQty: number;
+  weeklyOpportunity?: number;
+  confidenceScore?: number;
+}
+
+type AlertBucketType = 'boh-sync' | 'phantom-stock' | 'pog-compliance';
+type AlertPriority = 'High' | 'Medium' | 'Low';
+
+interface AlertMetric { label: string; value: string }
+
+interface AlertBucket {
+  id: AlertBucketType;
+  name: string;
+  shortDesc: string;
+  fullDesc: string;
+  priority: AlertPriority;
+  metrics: AlertMetric[];
+  issues: AlertIssueRow[];
+}
 
 // ── Types ──────────────────────────────────────────────
 interface StoreMeta {
@@ -1005,6 +1037,136 @@ const detRnd = (s: string): number => {
   return h / 4294967295;
 };
 
+// ── Alert Bucket Data Generator ─────────────────────────
+const BOH_ITEMS = [
+  { itemName: 'Coca-Cola Zero 12pk', sku: '884221', dept: 'Beverages', aisle: 'Aisle 4', bay: 'Bay 2', bohQty: 48, opp: 420 },
+  { itemName: 'Pepsi Max 6pk', sku: '771034', dept: 'Beverages', aisle: 'Aisle 4', bay: 'Bay 3', bohQty: 36, opp: 310 },
+  { itemName: 'Lay\'s Classic 200g', sku: '553812', dept: 'Snacks', aisle: 'Aisle 7', bay: 'Bay 1', bohQty: 24, opp: 185 },
+  { itemName: 'Oreo Double Stuf 370g', sku: '412667', dept: 'Snacks', aisle: 'Aisle 7', bay: 'Bay 4', bohQty: 18, opp: 220 },
+  { itemName: 'Red Bull 250ml 4pk', sku: '990341', dept: 'Beverages', aisle: 'Aisle 5', bay: 'Bay 1', bohQty: 60, opp: 390 },
+  { itemName: 'Gatorade Blue 32oz', sku: '338901', dept: 'Beverages', aisle: 'Aisle 5', bay: 'Bay 3', bohQty: 30, opp: 140 },
+  { itemName: 'Kind Bar Variety 12ct', sku: '205874', dept: 'Snacks', aisle: 'Aisle 8', bay: 'Bay 2', bohQty: 14, opp: 165 },
+  { itemName: 'Pringles Original 200g', sku: '661203', dept: 'Snacks', aisle: 'Aisle 7', bay: 'Bay 2', bohQty: 20, opp: 130 },
+];
+
+const PHANTOM_ITEMS = [
+  { itemName: 'Heinz Ketchup 1L', sku: '334512', dept: 'Condiments', zeroDays: 22, units: 60, opp: 210 },
+  { itemName: 'Hellmann\'s Mayo 900ml', sku: '221847', dept: 'Condiments', zeroDays: 19, units: 48, opp: 175 },
+  { itemName: 'Quaker Oats 1kg', sku: '509341', dept: 'Breakfast', zeroDays: 31, units: 72, opp: 290 },
+  { itemName: 'Uncle Ben\'s Rice 2kg', sku: '401228', dept: 'Grains', zeroDays: 25, units: 36, opp: 155 },
+  { itemName: 'Tropicana OJ 1.75L', sku: '773920', dept: 'Beverages', zeroDays: 18, units: 24, opp: 240 },
+  { itemName: 'Skippy PB Chunky 1kg', sku: '889012', dept: 'Spreads', zeroDays: 28, units: 18, opp: 120 },
+];
+
+const POG_ITEMS = [
+  { itemName: 'Dove Body Wash 400ml', sku: '556732', dept: 'Personal Care', bay: 'Bay 3', mismatch: 'Wrong shelf level' },
+  { itemName: 'Head & Shoulders 400ml', sku: '445091', dept: 'Personal Care', bay: 'Bay 4', mismatch: 'Placed 2 bays left of planogram' },
+  { itemName: 'Pantene Shampoo 375ml', sku: '338204', dept: 'Personal Care', bay: 'Bay 4', mismatch: 'Facing count mismatch (3 vs 6 expected)' },
+  { itemName: 'Gillette Fusion 5pk', sku: '112876', dept: 'Personal Care', bay: 'Bay 1', mismatch: 'SKU not found in planogram location' },
+  { itemName: 'Colgate Total 200g', sku: '774531', dept: 'Oral Care', bay: 'Bay 2', mismatch: 'Wrong shelf level' },
+  { itemName: 'Listerine Cool Mint 500ml', sku: '990874', dept: 'Oral Care', bay: 'Bay 2', mismatch: 'Facing count mismatch (2 vs 4 expected)' },
+  { itemName: 'Nivea Moisturiser 400ml', sku: '228345', dept: 'Personal Care', bay: 'Bay 5', mismatch: 'Placed in wrong section' },
+  { itemName: 'Old Spice Deodorant 150ml', sku: '331980', dept: 'Personal Care', bay: 'Bay 1', mismatch: 'SKU not found in planogram location' },
+  { itemName: 'Sensodyne Toothpaste 100g', sku: '663412', dept: 'Oral Care', bay: 'Bay 3', mismatch: 'Wrong shelf level' },
+];
+
+function getAlertBuckets(store: StoreMeta): AlertBucket[] {
+  const r = (seed: string) => detRnd(`${store.id}-${seed}`);
+  const bohCount = 8 + Math.round(r('boh-cnt') * 4);
+  const bohUnits = 134 + Math.round(r('boh-units') * 40);
+  const bohOpp = Math.round((1800 + r('boh-opp') * 600) / 100) * 100;
+  const phantomCount = 4 + Math.round(r('ph-cnt') * 3);
+  const phantomUnits = 240 + Math.round(r('ph-units') * 120);
+  const phantomOpp = Math.round((2100 + r('ph-opp') * 700) / 100) * 100;
+  const pogCount = 7 + Math.round(r('pog-cnt') * 4);
+  const pogBays = 4 + Math.round(r('pog-bays') * 2);
+
+  const bohIssues: AlertIssueRow[] = BOH_ITEMS.slice(0, bohCount).map((it, i) => ({
+    id: `boh-${i}`,
+    itemName: it.itemName,
+    sku: it.sku,
+    department: it.dept,
+    store: store.name,
+    aisle: it.aisle,
+    bay: it.bay,
+    issue: 'Shelf gap detected',
+    bohQty: it.bohQty + Math.round(r(`boh-qty-${i}`) * 12),
+    shelfQty: 0,
+    weeklyOpportunity: it.opp + Math.round(r(`boh-opp-${i}`) * 80),
+    confidenceScore: Math.round((0.82 + r(`boh-conf-${i}`) * 0.15) * 100),
+  }));
+
+  const phantomIssues: AlertIssueRow[] = PHANTOM_ITEMS.slice(0, phantomCount).map((it, i) => ({
+    id: `ph-${i}`,
+    itemName: it.itemName,
+    sku: it.sku,
+    department: it.dept,
+    store: store.name,
+    issue: `${it.zeroDays + Math.round(r(`ph-days-${i}`) * 5)} zero-sales days`,
+    bohQty: it.units + Math.round(r(`ph-units-${i}`) * 20),
+    shelfQty: it.units + Math.round(r(`ph-units-${i}`) * 20),
+    weeklyOpportunity: it.opp + Math.round(r(`ph-opp-${i}`) * 60),
+    confidenceScore: Math.round((0.74 + r(`ph-conf-${i}`) * 0.18) * 100),
+  }));
+
+  const pogIssues: AlertIssueRow[] = POG_ITEMS.slice(0, pogCount).map((it, i) => ({
+    id: `pog-${i}`,
+    itemName: it.itemName,
+    sku: it.sku,
+    department: it.dept,
+    store: store.name,
+    bay: it.bay,
+    issue: it.mismatch,
+    bohQty: 0,
+    shelfQty: 0,
+    confidenceScore: Math.round((0.78 + r(`pog-conf-${i}`) * 0.17) * 100),
+  }));
+
+  return [
+    {
+      id: 'boh-sync',
+      name: 'BOH-to-Shelf Sync',
+      shortDesc: 'Shelf gaps where back-of-house inventory is available.',
+      fullDesc: 'Shelf gaps detected where back-of-house inventory is available. Review and create replenishment tasks to move available stock from BOH to shelf.',
+      priority: 'High',
+      metrics: [
+        { label: 'Shelf Gaps', value: String(bohCount) },
+        { label: 'Affected SKUs', value: `${bohCount} SKUs` },
+        { label: 'BOH Available', value: `${bohUnits} units` },
+        { label: 'Weekly Opportunity', value: `$${(bohOpp / 1000).toFixed(1)}K` },
+      ],
+      issues: bohIssues,
+    },
+    {
+      id: 'phantom-stock',
+      name: 'Phantom Stock',
+      shortDesc: 'High inventory with zero recent sales — stock may be trapped in backroom.',
+      fullDesc: 'High inventory records with zero recent sales, indicating stock may be trapped in the backroom or not reaching the shelf. Review and verify physical shelf placement.',
+      priority: 'Medium',
+      metrics: [
+        { label: 'Affected SKUs', value: `${phantomCount} SKUs` },
+        { label: 'Units on Hand', value: `${phantomUnits} units` },
+        { label: 'Avg Zero-Sales Days', value: `${21 + Math.round(r('ph-avg-days') * 10)} days` },
+        { label: 'Weekly Opportunity', value: `$${(phantomOpp / 1000).toFixed(1)}K` },
+      ],
+      issues: phantomIssues,
+    },
+    {
+      id: 'pog-compliance',
+      name: 'POG Compliance Gap',
+      shortDesc: 'Shelf image does not match expected planogram placement.',
+      fullDesc: 'AI shelf audit detected mismatches between actual shelf layout and the approved planogram. Review affected SKUs and bays and create correction tasks.',
+      priority: 'Medium',
+      metrics: [
+        { label: 'Mismatches', value: String(pogCount) },
+        { label: 'Affected SKUs', value: `${pogCount} SKUs` },
+        { label: 'Affected Bays', value: `${pogBays} bays` },
+      ],
+      issues: pogIssues,
+    },
+  ];
+}
+
 // ── Component ──────────────────────────────────────────
 export const StoreCenter: React.FC = () => {
   const { user } = useAuth();
@@ -1045,11 +1207,18 @@ export const StoreCenter: React.FC = () => {
     skillLogic: string;
     trend: 'improving' | 'declining' | 'stable';
   } | null>(null);
+  const { addTasks } = useExecutionTasks();
   const [activeTab, setActiveTab] = useState<'voc' | 'inventory' | 'benchmarking'>('inventory');
   const [inventoryView, setInventoryView] = useState<'at-risk' | 'all'>('at-risk');
   const [vocExpanded, setVocExpanded] = useState(false);
   // Benchmarking section: view toggle
   const [benchView, setBenchView] = useState<'cards' | 'table'>('cards');
+  // Alert Bucket state
+  const [alertDrawer, setAlertDrawer] = useState<AlertBucket | null>(null);
+  const [selectedIssues, setSelectedIssues] = useState<Set<string>>(new Set());
+  const [reviewedIssues, setReviewedIssues] = useState<Set<string>>(new Set());
+  const [taskConfirmIssue, setTaskConfirmIssue] = useState<AlertIssueRow | null>(null);
+  const [createdTaskIds, setCreatedTaskIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -1224,6 +1393,7 @@ export const StoreCenter: React.FC = () => {
   const aiInsight = getAIInsight(store);
   const vocData = getVoCData(store);
   const inventoryData = getInventoryData(store);
+  const alertBuckets = getAlertBuckets(store);
 
   // Filter broadcasts to only those where this store has a non-completed status
   const storeBroadcasts = broadcastActions.filter(bc => {
@@ -1286,6 +1456,55 @@ export const StoreCenter: React.FC = () => {
       </div>
     );
   }
+
+  // ── Alert helpers ──
+  const createTaskFromIssue = (bucket: AlertBucket, issue: AlertIssueRow) => {
+    const today = new Date();
+    const due = new Date(today); due.setDate(due.getDate() + 1);
+    const dueDateStr = due.toISOString().split('T')[0];
+    const isBoh = bucket.id === 'boh-sync';
+    const title = isBoh
+      ? `Replenish shelf from BOH: ${issue.itemName}`
+      : bucket.id === 'phantom-stock'
+      ? `Investigate phantom stock: ${issue.itemName}`
+      : `Fix POG placement: ${issue.itemName}`;
+    const description = isBoh
+      ? `AI shelf audit detected a shelf gap for ${issue.itemName} (SKU: ${issue.sku}). BOH inventory shows ${issue.bohQty} units available. Check backroom inventory and move available stock to the shelf${issue.aisle ? ` at ${issue.aisle}${issue.bay ? `, ${issue.bay}` : ''}` : ''}.`
+      : bucket.id === 'phantom-stock'
+      ? `System detected high inventory (${issue.bohQty} units on hand) with zero recent sales for ${issue.itemName} (SKU: ${issue.sku}). Verify physical shelf placement and ensure stock is accessible to customers.`
+      : `AI shelf audit detected a planogram mismatch for ${issue.itemName} (SKU: ${issue.sku}). Issue: ${issue.issue}. Correct shelf placement to match approved planogram.`;
+    addTasks([{
+      id: `alert-${bucket.id}-${issue.id}-${Date.now()}`,
+      type: isBoh ? 'Move' : bucket.id === 'phantom-stock' ? 'Reset Shelf' : 'Adjust Facing',
+      title,
+      description,
+      skuName: issue.itemName,
+      skuId: issue.sku,
+      priority: bucket.priority as 'High' | 'Medium' | 'Low',
+      reason: issue.issue,
+      impact: issue.weeklyOpportunity ? `$${issue.weeklyOpportunity}/week sales opportunity` : 'Planogram compliance',
+      status: 'Pending',
+      assignedTo: null,
+      dueDate: dueDateStr,
+      storeName: store.name,
+      storeGroup: store.cluster,
+      pogName: `${issue.department} Shelf`,
+      category: issue.department,
+      createdAt: new Date().toISOString(),
+      localizationId: `${store.id}-alert`,
+      source: 'BOH Alert',
+      confidenceScore: issue.confidenceScore,
+    }]);
+    setCreatedTaskIds(prev => new Set(prev).add(issue.id));
+    setReviewedIssues(prev => new Set(prev).add(issue.id));
+  };
+
+  const createAllTasks = (bucket: AlertBucket) => {
+    bucket.issues
+      .filter(i => !createdTaskIds.has(i.id))
+      .forEach(i => createTaskFromIssue(bucket, i));
+    setAlertDrawer(null);
+  };
 
   return (
     <div className="sc-container">
@@ -2134,6 +2353,288 @@ export const StoreCenter: React.FC = () => {
             </table>
           </div>
         </div>
+
+        {/* ── Alert Buckets ──────────────────────────────── */}
+        <div className="sc-deepdive-section sc-alert-section">
+          <div className="sc-section-header">
+            <div className="sc-section-title-row">
+              <WarningAmberOutlined sx={{ fontSize: 20 }} className="sc-alert-title-icon"/>
+              <h3>Operational Alerts</h3>
+            </div>
+            <span className="sc-section-subtitle">
+              Grouped issues requiring review — {alertBuckets.reduce((s, b) => s + b.issues.length, 0)} items across {alertBuckets.length} alert types
+            </span>
+          </div>
+
+          <div className="sc-alert-buckets-grid">
+            {alertBuckets.map(bucket => {
+              const priorityClass = bucket.priority === 'High' ? 'sc-alert-priority--high'
+                : bucket.priority === 'Medium' ? 'sc-alert-priority--medium'
+                : 'sc-alert-priority--low';
+              const bucketIcon =
+                bucket.id === 'boh-sync' ? <InventoryOutlined sx={{ fontSize: 18 }}/>
+                : bucket.id === 'phantom-stock' ? <ErrorOutlined sx={{ fontSize: 18 }}/>
+                : <GridOnOutlined sx={{ fontSize: 18 }}/>;
+              return (
+                <div key={bucket.id} className="sc-alert-bucket" onClick={() => { setAlertDrawer(bucket); setSelectedIssues(new Set()); }}>
+                  <div className="sc-alert-bucket-top">
+                    <div className="sc-alert-bucket-icon">{bucketIcon}</div>
+                    <span className={`sc-alert-priority-badge ${priorityClass}`}>{bucket.priority}</span>
+                  </div>
+                  <h4 className="sc-alert-bucket-name">{bucket.name}</h4>
+                  <p className="sc-alert-bucket-desc">{bucket.shortDesc}</p>
+                  <div className="sc-alert-bucket-metrics">
+                    {bucket.metrics.map(m => (
+                      <div key={m.label} className="sc-alert-metric-chip">
+                        <span className="sc-alert-metric-val">{m.value}</span>
+                        <span className="sc-alert-metric-lbl">{m.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="sc-alert-bucket-footer">
+                    <button className="sc-alert-review-btn" onClick={e => { e.stopPropagation(); setAlertDrawer(bucket); setSelectedIssues(new Set()); }}>
+                      Review
+                      <KeyboardArrowRight sx={{ fontSize: 16 }}/>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── Alert Review Drawer ─────────────────────────── */}
+        {alertDrawer && (
+          <div className="sc-alert-overlay" onClick={() => setAlertDrawer(null)}>
+            <div className="sc-alert-drawer" onClick={e => e.stopPropagation()}>
+              {/* Header */}
+              <div className="sc-alert-drawer-header">
+                <div className="sc-alert-drawer-title-block">
+                  <div className="sc-alert-drawer-eyebrow">
+                    <span className={`sc-alert-priority-badge ${alertDrawer.priority === 'High' ? 'sc-alert-priority--high' : alertDrawer.priority === 'Medium' ? 'sc-alert-priority--medium' : 'sc-alert-priority--low'}`}>
+                      {alertDrawer.priority} Priority
+                    </span>
+                    <span className="sc-alert-drawer-type">Operational Alert</span>
+                  </div>
+                  <h2 className="sc-alert-drawer-name">{alertDrawer.name}</h2>
+                  <p className="sc-alert-drawer-sub">{alertDrawer.fullDesc}</p>
+                </div>
+                <button className="sc-alert-drawer-close" onClick={() => setAlertDrawer(null)}>
+                  <CloseOutlined sx={{ fontSize: 20 }}/>
+                </button>
+              </div>
+
+              {/* Summary stats */}
+              <div className="sc-alert-drawer-summary">
+                {alertDrawer.metrics.map(m => (
+                  <div key={m.label} className="sc-alert-summary-stat">
+                    <span className="sc-alert-summary-val">{m.value}</span>
+                    <span className="sc-alert-summary-lbl">{m.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Bulk actions */}
+              <div className="sc-alert-drawer-actions">
+                <span className="sc-alert-drawer-count">
+                  {alertDrawer.issues.length} issues · {createdTaskIds.size > 0 ? `${[...createdTaskIds].filter(id => alertDrawer.issues.find(i => i.id === id)).length} tasks created` : 'No tasks yet'}
+                </span>
+                <div className="sc-alert-drawer-action-btns">
+                  <Button variant="outlined" color="primary" size="small"
+                    onClick={() => {
+                      const allIds = new Set(alertDrawer.issues.map(i => i.id));
+                      setSelectedIssues(selectedIssues.size === alertDrawer.issues.length ? new Set() : allIds);
+                    }}>
+                    {selectedIssues.size === alertDrawer.issues.length ? 'Deselect All' : 'Select All'}
+                  </Button>
+                  {selectedIssues.size > 0 && (
+                    <Button variant="contained" color="primary" size="small"
+                      onClick={() => {
+                        alertDrawer.issues.filter(i => selectedIssues.has(i.id)).forEach(i => createTaskFromIssue(alertDrawer, i));
+                        setSelectedIssues(new Set());
+                      }}>
+                      Create {selectedIssues.size} Task{selectedIssues.size > 1 ? 's' : ''}
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* SKU Issue rows */}
+              <div className="sc-alert-drawer-issues">
+                {alertDrawer.issues.map(issue => {
+                  const isSelected = selectedIssues.has(issue.id);
+                  const isCreated = createdTaskIds.has(issue.id);
+                  const isReviewed = reviewedIssues.has(issue.id);
+                  const isBoh = alertDrawer.id === 'boh-sync';
+                  return (
+                    <div key={issue.id} className={`sc-alert-issue-row${isSelected ? ' sc-alert-issue-row--selected' : ''}${isCreated ? ' sc-alert-issue-row--done' : ''}`}>
+                      {/* Checkbox */}
+                      <div className="sc-alert-issue-select" onClick={() => {
+                        if (isCreated) return;
+                        setSelectedIssues(prev => {
+                          const next = new Set(prev);
+                          if (next.has(issue.id)) next.delete(issue.id); else next.add(issue.id);
+                          return next;
+                        });
+                      }}>
+                        {isCreated
+                          ? <CheckCircleOutlined sx={{ fontSize: 18 }} className="sc-alert-issue-done-icon"/>
+                          : isSelected
+                          ? <CheckCircleOutlined sx={{ fontSize: 18 }} className="sc-alert-issue-sel-icon"/>
+                          : <div className="sc-alert-issue-checkbox"/>}
+                      </div>
+
+                      <div className="sc-alert-issue-body">
+                        <div className="sc-alert-issue-top">
+                          <div>
+                            <span className="sc-alert-issue-name">{issue.itemName}</span>
+                            <span className="sc-alert-issue-sku">SKU: {issue.sku} · {issue.department}</span>
+                          </div>
+                          {issue.confidenceScore && (
+                            <span className="sc-alert-issue-conf">AI {issue.confidenceScore}%</span>
+                          )}
+                        </div>
+
+                        <div className="sc-alert-issue-detail-row">
+                          <div className="sc-alert-issue-tag sc-alert-tag--warn">
+                            <WarningAmberOutlined sx={{ fontSize: 11 }}/>
+                            {issue.issue}
+                          </div>
+                          {(issue.aisle || issue.bay) && (
+                            <div className="sc-alert-issue-tag sc-alert-tag--muted">
+                              {[issue.aisle, issue.bay].filter(Boolean).join(' · ')}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="sc-alert-issue-stats">
+                          {isBoh && (
+                            <>
+                              <div className="sc-alert-issue-stat">
+                                <span className="sc-ais-label">BOH Available</span>
+                                <span className="sc-ais-value sc-ais-value--pos">{issue.bohQty} units</span>
+                              </div>
+                              <div className="sc-alert-issue-stat">
+                                <span className="sc-ais-label">Shelf Detected</span>
+                                <span className="sc-ais-value sc-ais-value--neg">{issue.shelfQty} units</span>
+                              </div>
+                            </>
+                          )}
+                          {alertDrawer.id === 'phantom-stock' && (
+                            <div className="sc-alert-issue-stat">
+                              <span className="sc-ais-label">Units on Hand</span>
+                              <span className="sc-ais-value">{issue.bohQty} units</span>
+                            </div>
+                          )}
+                          {issue.weeklyOpportunity && (
+                            <div className="sc-alert-issue-stat">
+                              <span className="sc-ais-label">Weekly Opportunity</span>
+                              <span className="sc-ais-value sc-ais-value--opp">${issue.weeklyOpportunity}/wk</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Row CTA */}
+                      <div className="sc-alert-issue-cta">
+                        {isCreated ? (
+                          <span className="sc-alert-task-created-label">Task Created</span>
+                        ) : (
+                          <button className="sc-alert-create-task-btn"
+                            onClick={e => { e.stopPropagation(); setTaskConfirmIssue(issue); }}>
+                            Create Task
+                          </button>
+                        )}
+                        {!isCreated && !isReviewed && (
+                          <button className="sc-alert-dismiss-btn"
+                            onClick={() => setReviewedIssues(prev => new Set(prev).add(issue.id))}>
+                            Reviewed
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Drawer footer */}
+              <div className="sc-alert-drawer-footer">
+                <Button variant="outlined" color="primary" size="medium" onClick={() => setAlertDrawer(null)}>Close</Button>
+                <Button variant="contained" color="primary" size="medium"
+                  startIcon={<PlaylistAddCheckOutlined sx={{ fontSize: 16 }}/>}
+                  onClick={() => createAllTasks(alertDrawer)}>
+                  Create All Tasks
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Task Confirm Mini-Modal ─────────────────────── */}
+        {taskConfirmIssue && alertDrawer && (
+          <div className="sc-task-confirm-overlay" onClick={() => setTaskConfirmIssue(null)}>
+            <div className="sc-task-confirm-modal" onClick={e => e.stopPropagation()}>
+              <div className="sc-task-confirm-header">
+                <h4>Create Replenishment Task</h4>
+                <button className="sc-alert-drawer-close" onClick={() => setTaskConfirmIssue(null)}>
+                  <CloseOutlined sx={{ fontSize: 18 }}/>
+                </button>
+              </div>
+              <div className="sc-task-confirm-body">
+                <div className="sc-task-confirm-field">
+                  <span className="sc-task-confirm-label">Task Title</span>
+                  <span className="sc-task-confirm-value">
+                    {alertDrawer.id === 'boh-sync'
+                      ? `Replenish shelf from BOH: ${taskConfirmIssue.itemName}`
+                      : alertDrawer.id === 'phantom-stock'
+                      ? `Investigate phantom stock: ${taskConfirmIssue.itemName}`
+                      : `Fix POG placement: ${taskConfirmIssue.itemName}`}
+                  </span>
+                </div>
+                <div className="sc-task-confirm-field">
+                  <span className="sc-task-confirm-label">SKU</span>
+                  <span className="sc-task-confirm-value">{taskConfirmIssue.sku} · {taskConfirmIssue.department}</span>
+                </div>
+                <div className="sc-task-confirm-field">
+                  <span className="sc-task-confirm-label">Store</span>
+                  <span className="sc-task-confirm-value">{store.name}</span>
+                </div>
+                {taskConfirmIssue.aisle && (
+                  <div className="sc-task-confirm-field">
+                    <span className="sc-task-confirm-label">Location</span>
+                    <span className="sc-task-confirm-value">{[taskConfirmIssue.aisle, taskConfirmIssue.bay].filter(Boolean).join(' · ')}</span>
+                  </div>
+                )}
+                {alertDrawer.id === 'boh-sync' && (
+                  <div className="sc-task-confirm-field">
+                    <span className="sc-task-confirm-label">BOH Available</span>
+                    <span className="sc-task-confirm-value sc-ais-value--pos">{taskConfirmIssue.bohQty} units</span>
+                  </div>
+                )}
+                <div className="sc-task-confirm-field">
+                  <span className="sc-task-confirm-label">Priority</span>
+                  <span className={`sc-alert-priority-badge ${alertDrawer.priority === 'High' ? 'sc-alert-priority--high' : 'sc-alert-priority--medium'}`}>{alertDrawer.priority}</span>
+                </div>
+                <div className="sc-task-confirm-field">
+                  <span className="sc-task-confirm-label">Recommended Action</span>
+                  <span className="sc-task-confirm-value">
+                    {alertDrawer.id === 'boh-sync' ? 'Move available stock from BOH to shelf'
+                      : alertDrawer.id === 'phantom-stock' ? 'Verify physical shelf placement and ensure stock is accessible'
+                      : 'Correct shelf placement to match approved planogram'}
+                  </span>
+                </div>
+              </div>
+              <div className="sc-task-confirm-footer">
+                <Button variant="outlined" color="primary" size="medium" onClick={() => setTaskConfirmIssue(null)}>Cancel</Button>
+                <Button variant="contained" color="primary" size="medium"
+                  startIcon={<TaskAltOutlined sx={{ fontSize: 16 }}/>}
+                  onClick={() => { createTaskFromIssue(alertDrawer, taskConfirmIssue); setTaskConfirmIssue(null); }}>
+                  Confirm &amp; Create Task
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── Operational Breakdown ──────────────────────── */}
         <div className="sc-deepdive-section">
