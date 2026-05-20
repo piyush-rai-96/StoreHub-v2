@@ -998,6 +998,13 @@ const getComplianceTextColor = (val: number) => {
   return '#7f1d1d';
 };
 
+// Deterministic hash → 0..1 (avoids reseeding Math.random on every render)
+const detRnd = (s: string): number => {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h = ((Math.imul(h ^ s.charCodeAt(i), 16777619)) >>> 0); }
+  return h / 4294967295;
+};
+
 // ── Component ──────────────────────────────────────────
 export const StoreCenter: React.FC = () => {
   const { user } = useAuth();
@@ -1041,6 +1048,8 @@ export const StoreCenter: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'voc' | 'inventory' | 'benchmarking'>('inventory');
   const [inventoryView, setInventoryView] = useState<'at-risk' | 'all'>('at-risk');
   const [vocExpanded, setVocExpanded] = useState(false);
+  // Benchmarking section: view toggle
+  const [benchView, setBenchView] = useState<'cards' | 'table'>('cards');
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -1239,6 +1248,7 @@ export const StoreCenter: React.FC = () => {
 
   const clusterConfig = CLUSTER_BENCH_CONFIG[store.cluster] ?? DEFAULT_CLUSTER_BENCH;
   const clusterSize = clusterConfig.size;
+
 
   const getBenchmarks = () => clusterConfig.benchmarks.map((b, idx) => {
     const storeVal = b.metric === 'Sales vs Plan' ? (store.dpi >= 85 ? 104.2 : store.dpi >= 75 ? 97.8 : 91.3)
@@ -2483,8 +2493,33 @@ export const StoreCenter: React.FC = () => {
               const compRankDiffersDistrict = avgRank !== districtRank;
               const compBetterThanDistrict = avgRank < districtRank;
 
+              const baseYoY = store.momentum === 'rising' ? 5.6 : store.momentum === 'stable' ? 1.3 : -3.9;
+
               return (
                 <div className="sc-bench-tab">
+
+                  {/* ── Controls: View Toggle ── */}
+                  <div className="sc-bench-controls">
+                    <div className="sc-bench-view-toggle">
+                      <button
+                        type="button"
+                        className={`sc-bench-view-btn${benchView === 'cards' ? ' active' : ''}`}
+                        onClick={() => setBenchView('cards')}
+                      >
+                        Cards
+                      </button>
+                      <button
+                        type="button"
+                        className={`sc-bench-view-btn${benchView === 'table' ? ' active' : ''}`}
+                        onClick={() => setBenchView('table')}
+                      >
+                        Table
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* ── Card View ── */}
+                  {benchView === 'cards' && (<>
                   {/* District vs Chain-Wide Rank callout — visible whenever the two ranks differ */}
                   {compRankDiffersDistrict && (
                     <div className={`sc-bench-rank-callout ${compBetterThanDistrict ? 'sc-bench-rank-callout--positive' : 'sc-bench-rank-callout--amber'}`}>
@@ -2579,7 +2614,7 @@ export const StoreCenter: React.FC = () => {
 
                   {/* Benchmark cards — Impact UI Card per metric */}
                   <div className="sc-bench-cards">
-                    {benchmarks.map(b => {
+                    {benchmarks.map((b, bIdx) => {
                       const range = Math.max(0.0001, b.clusterMax - b.clusterMin);
                       const storePct = Math.max(0, Math.min(100, ((b.storeVal - b.clusterMin) / range) * 100));
                       const clusterMedPct = Math.max(0, Math.min(100, ((b.clusterMedian - b.clusterMin) / range) * 100));
@@ -2591,6 +2626,9 @@ export const StoreCenter: React.FC = () => {
                         b.quartile === 2 ? 'var(--ia-color-primary)' :
                         b.quartile === 3 ? 'var(--ia-color-warning)' :
                         'var(--ia-color-error-strong)';
+                      // YoY: store % change vs LY (deterministic per metric)
+                      const storeYoY  = baseYoY + detRnd(`${store.id}-bench${bIdx}-yoy`) * 3 - 1.5;
+                      const clusterYoY = 1.8 + detRnd(`${b.metric}-cyoy`) * 1.5 - 0.75;
 
                       return (
                         <Card
@@ -2629,6 +2667,25 @@ export const StoreCenter: React.FC = () => {
                               variant="subtle"
                               size="small"
                             />
+                          </div>
+
+                          {/* TY Snapshot: store vs cluster values + YoY */}
+                          <div className="sc-bench-snap">
+                            <div className="sc-bench-snap-item">
+                              <span className="sc-bench-snap-lbl">Store TY</span>
+                              <span className="sc-bench-snap-val">{b.storeVal}{b.unit !== '/100' && b.unit !== '/5' ? b.unit : b.unit}</span>
+                              <span className={`sc-bench-snap-yoy ${storeYoY >= 0 ? 'pos' : 'neg'}`}>
+                                {storeYoY >= 0 ? '+' : ''}{storeYoY.toFixed(1)}% vs LY
+                              </span>
+                            </div>
+                            <div className="sc-bench-snap-sep">vs</div>
+                            <div className="sc-bench-snap-item sc-bench-snap-item--cluster">
+                              <span className="sc-bench-snap-lbl">Cluster Avg</span>
+                              <span className="sc-bench-snap-val">{b.clusterAvg}{b.unit !== '/100' && b.unit !== '/5' ? b.unit : b.unit}</span>
+                              <span className={`sc-bench-snap-yoy ${clusterYoY >= 0 ? 'pos' : 'neg'}`}>
+                                {clusterYoY >= 0 ? '+' : ''}{clusterYoY.toFixed(1)}% vs LY
+                              </span>
+                            </div>
                           </div>
 
                           {/* Gap deltas */}
@@ -2670,12 +2727,141 @@ export const StoreCenter: React.FC = () => {
                       );
                     })}
                   </div>
+                  </>) /* end Card View */}
+
+                  {/* ── Table View: all KPIs for this store vs cluster average ── */}
+                  {benchView === 'table' && (() => {
+                    const tableRows = benchmarks.map((b, bIdx) => {
+                      const storeYoY   = baseYoY + detRnd(`${store.id}-bench${bIdx}-yoy`) * 3 - 1.5;
+                      const clusterYoY = 1.8 + detRnd(`${b.metric}-cyoy`) * 1.5 - 0.75;
+                      const changeGapPP = storeYoY - clusterYoY;
+                      const ahead = b.vsCluster >= 0;
+                      const quartileAccent =
+                        b.quartile === 1 ? 'var(--ia-color-success)' :
+                        b.quartile === 2 ? 'var(--ia-color-primary)' :
+                        b.quartile === 3 ? 'var(--ia-color-warning)' :
+                        'var(--ia-color-error-strong)';
+                      return { b, storeYoY, clusterYoY, changeGapPP, ahead, quartileAccent };
+                    });
+
+                    return (
+                      <div className="sc-bench-kpi-outer">
+                        {/* Context banner — separated from table with gap */}
+                        <div className="sc-bench-kpi-store-ctx">
+                          <div className="sc-bench-kpi-ctx-left">
+                            <span className="sc-bench-kpi-ctx-store">{store.name}</span>
+                            <span className="sc-bench-kpi-ctx-meta">
+                              Store #{store.number} · {store.cluster}
+                            </span>
+                          </div>
+                          <div className="sc-bench-kpi-ctx-right">
+                            <span className="sc-bench-kpi-ctx-vs">vs</span>
+                            <span className="sc-bench-kpi-ctx-cluster">{clusterConfig.label} Cluster Avg</span>
+                            <Badge label={`${clusterConfig.size} peers`} color="primary" variant="subtle" size="small" />
+                          </div>
+                        </div>
+
+                        {/* Table card */}
+                        <div className="sc-bench-kpi-table-wrap">
+                        <div className="sc-bench-kpi-scroll">
+                          <table className="sc-bench-kpi-table">
+                            <thead>
+                              <tr className="sc-bench-kpi-tr-group">
+                                <th className="sc-bench-kpi-th sc-bench-kpi-th--metric" rowSpan={2}>Metric</th>
+                                <th className="sc-bench-kpi-th-grp sc-bench-kpi-th-grp--store" colSpan={2}>
+                                  This Store
+                                </th>
+                                <th className="sc-bench-kpi-th-grp sc-bench-kpi-th-grp--cluster" colSpan={2}>
+                                  {clusterConfig.label} Avg
+                                </th>
+                                <th className="sc-bench-kpi-th-grp sc-bench-kpi-th-grp--compare" colSpan={2}>
+                                  vs Cluster
+                                </th>
+                              </tr>
+                              <tr className="sc-bench-kpi-tr-sub">
+                                <th className="sc-bench-kpi-th sc-bench-kpi-th--num sc-bench-kpi-th--store-col">TY Value</th>
+                                <th className="sc-bench-kpi-th sc-bench-kpi-th--num sc-bench-kpi-th--store-col">% vs LY</th>
+                                <th className="sc-bench-kpi-th sc-bench-kpi-th--num sc-bench-kpi-th--cluster-col">TY Value</th>
+                                <th className="sc-bench-kpi-th sc-bench-kpi-th--num sc-bench-kpi-th--cluster-col">% vs LY</th>
+                                <th className="sc-bench-kpi-th sc-bench-kpi-th--num sc-bench-kpi-th--compare-col">TY Gap</th>
+                                <th className="sc-bench-kpi-th sc-bench-kpi-th--num sc-bench-kpi-th--compare-col">% Change, pp</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {tableRows.map(({ b, storeYoY, clusterYoY, changeGapPP, ahead, quartileAccent }) => (
+                                <tr key={b.metric} className={`sc-bench-kpi-row${!ahead ? ' sc-bench-kpi-row--behind' : ''}`}>
+                                  {/* Metric: accent bar + name + rank */}
+                                  <td className="sc-bench-kpi-td sc-bench-kpi-td--metric">
+                                    <span className="sc-bench-kpi-accent" style={{ background: quartileAccent }} />
+                                    <div className="sc-bench-kpi-metric-body">
+                                      <span className="sc-bench-kpi-metric-name">{b.metric}</span>
+                                      <div className="sc-bench-kpi-metric-sub">
+                                        <Badge
+                                          label={b.quartile === 1 ? `🏆 Top 25%` : b.quartile === 2 ? `2nd Quartile` : b.quartile === 3 ? `3rd Quartile` : `Bottom 25%`}
+                                          color={b.quartile === 1 ? 'success' : b.quartile === 2 ? 'primary' : b.quartile === 3 ? 'warning' : 'error'}
+                                          variant="subtle"
+                                          size="small"
+                                        />
+                                        <span className="sc-bench-kpi-rank-txt">#{b.rank} of {b.rankTotal}</span>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  {/* Store TY */}
+                                  <td className="sc-bench-kpi-td sc-bench-kpi-td--num sc-bench-kpi-td--store">
+                                    <span className="sc-bench-kpi-val">{b.storeVal}{b.unit}</span>
+                                  </td>
+                                  {/* Store % vs LY */}
+                                  <td className="sc-bench-kpi-td sc-bench-kpi-td--num sc-bench-kpi-td--store">
+                                    <span className={`sc-bench-kpi-chg${storeYoY >= 0 ? ' pos' : ' neg'}`}>
+                                      {storeYoY >= 0 ? '+' : ''}{storeYoY.toFixed(1)}%
+                                    </span>
+                                  </td>
+                                  {/* Cluster TY */}
+                                  <td className="sc-bench-kpi-td sc-bench-kpi-td--num sc-bench-kpi-td--cluster">
+                                    <span className="sc-bench-kpi-val sc-bench-kpi-val--muted">{b.clusterAvg}{b.unit}</span>
+                                  </td>
+                                  {/* Cluster % vs LY */}
+                                  <td className="sc-bench-kpi-td sc-bench-kpi-td--num sc-bench-kpi-td--cluster">
+                                    <span className={`sc-bench-kpi-chg sc-bench-kpi-chg--muted${clusterYoY >= 0 ? ' pos' : ' neg'}`}>
+                                      {clusterYoY >= 0 ? '+' : ''}{clusterYoY.toFixed(1)}%
+                                    </span>
+                                  </td>
+                                  {/* TY Gap vs Cluster */}
+                                  <td className="sc-bench-kpi-td sc-bench-kpi-td--num sc-bench-kpi-td--compare">
+                                    <Badge
+                                      label={`${ahead ? '↑' : '↓'} ${fmtDelta(b.vsCluster, b.unit)}`}
+                                      color={ahead ? 'success' : 'error'}
+                                      variant="subtle"
+                                      size="small"
+                                    />
+                                  </td>
+                                  {/* % Change Gap pp */}
+                                  <td className="sc-bench-kpi-td sc-bench-kpi-td--num sc-bench-kpi-td--compare">
+                                    <Badge
+                                      label={`${changeGapPP >= 0 ? '+' : ''}${changeGapPP.toFixed(1)} pp`}
+                                      color={changeGapPP >= 0 ? 'success' : 'error'}
+                                      variant="subtle"
+                                      size="small"
+                                    />
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                 </div>
               );
             })()}
 
           </div>
         </div>
+
+
       </div>
 
       {/* ── SM Broadcast Detail Panel (right slide-in, mirrors DM Home) ── */}

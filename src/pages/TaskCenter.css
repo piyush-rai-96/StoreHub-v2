@@ -531,6 +531,30 @@
   100% { background: var(--ia-color-surface); }
 }
 
+/* ── Newly created task highlight (from Field Signal or manual create) ── */
+.tc-table-row--new-highlight {
+  background: var(--ia-color-primary-soft) !important;
+  box-shadow: inset 3px 0 0 var(--ia-color-primary);
+  animation: tcNewTaskPulse 3.5s ease forwards;
+}
+
+@keyframes tcNewTaskPulse {
+  0%   { background: color-mix(in srgb, var(--ia-color-primary) 18%, transparent); box-shadow: inset 3px 0 0 var(--ia-color-primary), 0 0 0 2px var(--ia-color-primary-border); }
+  50%  { background: color-mix(in srgb, var(--ia-color-primary) 10%, transparent); }
+  100% { background: transparent; box-shadow: none; }
+}
+
+.tc-card-new-highlight {
+  border-radius: 12px;
+  animation: tcNewCardPulse 3.5s ease forwards;
+}
+
+@keyframes tcNewCardPulse {
+  0%   { box-shadow: 0 0 0 2px var(--ia-color-primary), 0 4px 16px rgba(66, 89, 238, 0.20); }
+  60%  { box-shadow: 0 0 0 1px var(--ia-color-primary-border), 0 2px 8px rgba(66, 89, 238, 0.10); }
+  100% { box-shadow: none; }
+}
+
 .tc-table-row td {
   padding: 14px 18px;
   font-size: var(--ia-text-13);
@@ -981,6 +1005,41 @@
 .tc-dd-pri-dot--medium { background: var(--ia-color-warning-text); }
 .tc-dd-pri-dot--low { background: var(--ia-color-success); }
 
+/* Priority badge — avatar-sized circle with letter initial */
+.tc-dd-pri-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: var(--ia-font-weight-bold);
+  font-family: var(--ia-font-family);
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+.tc-dd-pri-badge--high   { background: var(--ia-color-error-subtle);   color: var(--ia-color-error-strong); }
+.tc-dd-pri-badge--medium { background: var(--ia-color-warning-subtle); color: var(--ia-color-warning-text); }
+.tc-dd-pri-badge--low    { background: var(--ia-color-success-subtle); color: var(--ia-color-success); }
+
+/* Type icon badge — circle matching avatar shape */
+.tc-dd-type-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--ia-color-primary-soft);
+  color: var(--ia-color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.tc-dd-item--active .tc-dd-type-badge {
+  background: var(--ia-color-primary);
+  color: #fff;
+}
+
 /* Avatar */
 .tc-dd-avatar {
   width: 24px;
@@ -1002,7 +1061,7 @@
   color: var(--ia-color-text-tertiary);
 }
 
-/* Menu */
+/* ── Inline dropdown menu (non-modal use) ── */
 .tc-dd-menu {
   position: absolute;
   top: calc(100% + 4px);
@@ -1017,7 +1076,7 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
-  animation: tcDdIn 0.14s ease;
+  animation: tcDdIn 0.14s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .tc-dd-menu--scroll {
@@ -1026,8 +1085,53 @@
 }
 
 @keyframes tcDdIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Portal dropdown — fixed-position, escapes all overflow/clipping ── */
+/* position:fixed + exact coords injected via inline style from JS        */
+.tc-dd-portal {
+  position: fixed;
+  padding: 0;
+  border-radius: 11px;
+  border: 1px solid var(--ia-color-border);
+  background: var(--ia-color-surface);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.04),
+    0 4px 8px rgba(15, 23, 42, 0.06),
+    0 20px 40px rgba(15, 23, 42, 0.14);
+  overflow: hidden;
+  animation: tcPortalDdIn 0.16s cubic-bezier(0.2, 0, 0, 1);
+}
+
+@keyframes tcPortalDdIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.tc-dd-portal-inner {
+  padding: 6px;
+  overflow-y: auto;
+  max-height: inherit;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.tc-dd-portal-inner::-webkit-scrollbar { width: 5px; }
+.tc-dd-portal-inner::-webkit-scrollbar-track { background: transparent; }
+.tc-dd-portal-inner::-webkit-scrollbar-thumb {
+  background: var(--ia-color-border);
+  border-radius: 4px;
+}
+
+/* Trigger open state — visual feedback that the dropdown is active */
+.tc-dd-trigger--open {
+  border-color: var(--ia-color-primary-border) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
+  background: var(--ia-color-surface) !important;
 }
 
 .tc-dd-item {
@@ -1283,6 +1387,79 @@
 }
 
 .tc-detail-source-right > svg { color: var(--ia-color-text-tertiary); }
+
+/* Field Signal source row */
+.tc-signal-source-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--ia-color-bg-subtle);
+  border: 1px solid var(--ia-color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.tc-signal-source-row:hover {
+  border-color: var(--ia-color-primary-border);
+  background: var(--ia-color-primary-soft);
+}
+
+.tc-signal-source-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--ia-color-primary) 0%, var(--ia-color-primary-pressed) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.tc-signal-source-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tc-signal-source-label {
+  font-size: var(--ia-text-sm);
+  font-weight: var(--ia-font-weight-semibold);
+  color: var(--ia-color-text-primary);
+}
+
+.tc-signal-source-id {
+  font-size: var(--ia-text-xs);
+  color: var(--ia-color-text-tertiary);
+  font-family: monospace;
+}
+
+.tc-signal-source-arrow {
+  color: var(--ia-color-text-tertiary);
+  transition: color 0.12s;
+}
+
+.tc-signal-source-row:hover .tc-signal-source-arrow {
+  color: var(--ia-color-primary);
+}
+
+/* Field Signal source card variant */
+.tc-card-source.tc-source--signal {
+  background: var(--ia-color-primary-soft);
+  color: var(--ia-color-primary);
+  border: 1px solid rgba(66, 89, 238, 0.12);
+}
+
+.tc-detail-source-badge.tc-source--signal {
+  background: var(--ia-color-primary-soft);
+  border: 1px solid rgba(66, 89, 238, 0.15);
+}
 
 .tc-detail-source-conf {
   display: inline-flex;

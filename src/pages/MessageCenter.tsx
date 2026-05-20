@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import SendOutlined from '@mui/icons-material/SendOutlined';
 import PhoneOutlined from '@mui/icons-material/PhoneOutlined';
@@ -23,15 +23,35 @@ import PlaceOutlined from '@mui/icons-material/PlaceOutlined';
 import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined';
 import LayersOutlined from '@mui/icons-material/LayersOutlined';
 import ForumOutlined from '@mui/icons-material/ForumOutlined';
+import SensorsOutlined from '@mui/icons-material/SensorsOutlined';
 import { Button, Chips, Badge, Tabs, EmptyState } from 'impact-ui';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { openAskAlan } from '../utils/openAskAlan';
+import type { FieldSignal, LogSignalFormState } from '../types/fieldSignal';
+import { EMPTY_LOG_SIGNAL_FORM } from '../types/fieldSignal';
+import { MOCK_FIELD_SIGNALS } from '../constants/fieldSignals';
+import {
+  LogFieldSignalDrawer,
+  FieldSignalChatCard,
+  ActiveSignalsPill,
+  FieldSignalDetailDrawer,
+  FieldSignalSidebarList,
+  FieldSignalMainPanel,
+  EMPTY_FS_FILTERS,
+  type FieldSignalFilters,
+  canExportFieldSignals,
+  canReviewFieldSignals,
+  filterSignalsForRole,
+  getActiveSignalsForThread,
+} from '../components/fieldSignals/FieldSignalsUI';
 import './MessageCenter.css';
 
 // ── Types ──
 type ChatType = 'direct' | 'group' | 'broadcast';
 type MessageStatus = 'sent' | 'delivered' | 'read';
 type Tab = 'all' | 'direct' | 'groups' | 'broadcast';
+type CommSection = 'messages' | 'broadcasts' | 'field_signals';
 type UserRole = 'ADMIN' | 'DM' | 'SM' | 'HQ' | 'OPS' | 'LP' | 'INV' | 'POG';
 
 interface Contact {
@@ -60,6 +80,7 @@ interface Message {
   replyTo?: string;
   imageUrl?: string;
   context?: MessageContext;
+  fieldSignalId?: string;
 }
 
 interface Chat {
@@ -461,7 +482,9 @@ const getContextIcon = (kind: MessageContext['kind']) => {
 // ── Component ──
 export const MessageCenter: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const roleChats = getChatsByRole(user?.role || 'DM');
   const [isLoading, setIsLoading]           = useState(true);
   const [chats, setChats]                   = useState<Chat[]>(roleChats);
@@ -469,21 +492,123 @@ export const MessageCenter: React.FC = () => {
   const [inputValue, setInputValue]         = useState('');
   const [searchQuery, setSearchQuery]       = useState('');
   const [activeTab, setActiveTab]           = useState<Tab>('all');
+  const [section, setSection]               = useState<CommSection>('messages');
   const [showNewChat, setShowNewChat]       = useState(false);
   const [modalStep, setModalStep]           = useState<'main' | 'group' | 'broadcast'>('main');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [newChatName, setNewChatName]       = useState('');
   const [contactSearch, setContactSearch]   = useState('');
   const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [fieldSignals, setFieldSignals]     = useState<FieldSignal[]>(MOCK_FIELD_SIGNALS);
+  const [showLogSignal, setShowLogSignal]     = useState(false);
+  const [logSignalForm, setLogSignalForm]   = useState<LogSignalFormState>(EMPTY_LOG_SIGNAL_FORM);
+  const [logSignalErrors, setLogSignalErrors] = useState<Partial<Record<keyof LogSignalFormState, string>>>({});
+  const [activeSignalId, setActiveSignalId] = useState<string | null>(null);
+  const [fsFilters, setFsFilters]           = useState<FieldSignalFilters>(EMPTY_FS_FILTERS);
+  const [showComposerAdd, setShowComposerAdd] = useState(false);
+  const [showHeaderMenu, setShowHeaderMenu] = useState(false);
+  const [threadSignalFilter, setThreadSignalFilter] = useState(false);
+  const [prefillBroadcastFromSignal, setPrefillBroadcastFromSignal] = useState<FieldSignal | null>(null);
   const chatEndRef  = useRef<HTMLDivElement>(null);
   const inputRef    = useRef<HTMLTextAreaElement>(null);
 
   const selectedChat = chats.find(c => c.id === activeChat);
+  const visibleSignals = useMemo(() => filterSignalsForRole(fieldSignals, user), [fieldSignals, user]);
+  const activeSignal = activeSignalId ? fieldSignals.find(s => s.id === activeSignalId) ?? null : null;
+  const storeOptions = useMemo(
+    () => [...new Set(visibleSignals.map(s => s.storeName || s.storeId))].sort(),
+    [visibleSignals]
+  );
+  const threadActiveSignals = activeChat
+    ? getActiveSignalsForThread(visibleSignals, activeChat)
+    : [];
 
   useEffect(() => {
     const t = setTimeout(() => setIsLoading(false), 600);
     return () => clearTimeout(t);
   }, []);
+
+  // Deep-link: navigate to a specific Field Signal from another page (e.g. Task detail → Field Signal)
+  useEffect(() => {
+    const state = location.state as { openFieldSignal?: string } | null;
+    const signalId = state?.openFieldSignal;
+    if (!signalId) return;
+    window.history.replaceState({}, document.title);
+    setSection('field_signals');
+    setActiveChat(null);
+    setActiveSignalId(signalId);
+  }, [location.state]);
+
+  // Link task created from Field Signal (return path from Operations Queue)
+  useEffect(() => {
+    const raw = sessionStorage.getItem('fieldSignalTaskLink');
+    if (!raw) return;
+    try {
+      const { signalId, taskId } = JSON.parse(raw) as { signalId: string; taskId: string };
+      sessionStorage.removeItem('fieldSignalTaskLink');
+      const now = new Date().toISOString();
+      setFieldSignals(prev => prev.map(s => {
+        if (s.id !== signalId) return s;
+        return {
+          ...s,
+          linkedTaskId: taskId,
+          updatedAt: now,
+          activityLog: [...s.activityLog, {
+            id: `fsa-${Date.now()}`,
+            fieldSignalId: signalId,
+            action: 'Task created from signal',
+            actorUserId: user?.id || 'me',
+            actorName: user?.name || 'You',
+            timestamp: now,
+            notes: `Task #${taskId}`,
+          }],
+        };
+      }));
+      showToast('Task Linked To Field Signal', 'success');
+    } catch {
+      sessionStorage.removeItem('fieldSignalTaskLink');
+    }
+  }, [user?.id, user?.name, showToast]);
+
+  // Attach demo field-signal markers to chats that reference them
+  useEffect(() => {
+    setChats(prev => {
+      let changed = false;
+      const next = prev.map(chat => {
+        const linked = MOCK_FIELD_SIGNALS.filter(
+          s => s.originalThreadId === chat.id && s.originalMessageId
+        );
+        if (!linked.length) return chat;
+        const existingIds = new Set(chat.messages.map(m => m.id));
+        const toAdd: Message[] = linked
+          .filter(s => s.originalMessageId && !existingIds.has(s.originalMessageId))
+          .map(s => ({
+            id: s.originalMessageId!,
+            senderId: 'me',
+            content: '',
+            timestamp: new Date(s.createdAt),
+            status: 'read' as MessageStatus,
+            fieldSignalId: s.id,
+          }));
+        if (!toAdd.length) return chat;
+        changed = true;
+        return {
+          ...chat,
+          messages: [...chat.messages, ...toAdd].sort(
+            (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+          ),
+        };
+      });
+      return changed ? next : prev;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!showHeaderMenu && !showComposerAdd) return;
+    const handler = () => { setShowHeaderMenu(false); setShowComposerAdd(false); };
+    const timer = setTimeout(() => document.addEventListener('click', handler), 0);
+    return () => { clearTimeout(timer); document.removeEventListener('click', handler); };
+  }, [showHeaderMenu, showComposerAdd]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -493,11 +618,174 @@ export const MessageCenter: React.FC = () => {
     if (activeChat) inputRef.current?.focus();
   }, [activeChat]);
 
+  const openLogSignalDrawer = () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const end = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
+    setLogSignalForm({
+      ...EMPTY_LOG_SIGNAL_FORM,
+      storeId: user?.storeId || '',
+      storeName: user?.store || user?.district || '',
+      department: '',
+      impactStartDate: today,
+      impactEndDate: end,
+    });
+    setLogSignalErrors({});
+    setShowLogSignal(true);
+  };
+
+  const validateLogSignalForm = (): boolean => {
+    const err: Partial<Record<keyof LogSignalFormState, string>> = {};
+    if (!logSignalForm.signalType) err.signalType = 'Required';
+    if (!logSignalForm.title.trim()) err.title = 'Required';
+    if (!logSignalForm.description.trim()) err.description = 'Required';
+    if (!logSignalForm.impactStartDate) err.impactStartDate = 'Required';
+    if (!logSignalForm.impactEndDate) err.impactEndDate = 'Required';
+    if (!logSignalForm.expectedImpact) err.expectedImpact = 'Required';
+    if (logSignalForm.impactStartDate && logSignalForm.impactEndDate
+      && logSignalForm.impactEndDate < logSignalForm.impactStartDate) {
+      err.impactEndDate = 'End date must be on or after start date';
+    }
+    setLogSignalErrors(err);
+    return Object.keys(err).length === 0;
+  };
+
+  const submitFieldSignal = () => {
+    if (!validateLogSignalForm() || !logSignalForm.signalType || !logSignalForm.expectedImpact) return;
+    const now = new Date().toISOString();
+    const id = `FS-${Date.now().toString().slice(-6)}`;
+    const signal: FieldSignal = {
+      id,
+      signalType: logSignalForm.signalType,
+      title: logSignalForm.title.trim(),
+      description: logSignalForm.description.trim(),
+      storeId: logSignalForm.storeId || '—',
+      storeName: logSignalForm.storeName || undefined,
+      districtId: user?.districtId,
+      districtName: user?.district,
+      department: logSignalForm.department || undefined,
+      impactStartDate: logSignalForm.impactStartDate,
+      impactEndDate: logSignalForm.impactEndDate,
+      expectedImpact: logSignalForm.expectedImpact,
+      status: 'new',
+      createdByUserId: user?.id || 'me',
+      createdByName: user?.name || 'You',
+      createdAt: now,
+      updatedAt: now,
+      originalThreadId: activeChat || undefined,
+      activityLog: [{
+        id: `fsa-${Date.now()}`,
+        fieldSignalId: id,
+        action: 'Field Signal created',
+        actorUserId: user?.id || 'me',
+        actorName: user?.name || 'You',
+        timestamp: now,
+      }],
+    };
+    setFieldSignals(prev => [signal, ...prev]);
+    if (activeChat) {
+      const msgId = `fs-msg-${Date.now()}`;
+      signal.originalMessageId = msgId;
+      const marker: Message = {
+        id: msgId,
+        senderId: 'me',
+        content: '',
+        timestamp: new Date(),
+        status: 'sent',
+        fieldSignalId: id,
+      };
+      setChats(prev => prev.map(c =>
+        c.id === activeChat
+          ? { ...c, messages: [...c.messages, marker], lastActivity: new Date() }
+          : c
+      ));
+    }
+    setShowLogSignal(false);
+    setLogSignalForm(EMPTY_LOG_SIGNAL_FORM);
+    showToast('Field Signal Logged Successfully', 'success');
+  };
+
+  const updateSignal = (id: string, updater: (s: FieldSignal) => FieldSignal) => {
+    setFieldSignals(prev => prev.map(s => (s.id === id ? updater(s) : s)));
+  };
+
+  const handleMarkReviewed = (id: string) => {
+    if (!canReviewFieldSignals(user?.role)) return;
+    const now = new Date().toISOString();
+    updateSignal(id, s => ({
+      ...s,
+      status: 'reviewed',
+      reviewedByUserId: user?.id,
+      reviewedByName: user?.name,
+      reviewedAt: now,
+      updatedAt: now,
+      activityLog: [...s.activityLog, {
+        id: `fsa-${Date.now()}`,
+        fieldSignalId: id,
+        action: 'Marked as Reviewed',
+        actorUserId: user?.id || 'me',
+        actorName: user?.name || 'You',
+        timestamp: now,
+      }],
+    }));
+    showToast('Field Signal Marked As Reviewed', 'success');
+  };
+
+  const handleCloseSignal = (id: string) => {
+    if (!canReviewFieldSignals(user?.role)) return;
+    const now = new Date().toISOString();
+    updateSignal(id, s => ({
+      ...s,
+      status: 'closed',
+      closedByUserId: user?.id,
+      closedByName: user?.name,
+      closedAt: now,
+      updatedAt: now,
+      activityLog: [...s.activityLog, {
+        id: `fsa-${Date.now()}`,
+        fieldSignalId: id,
+        action: 'Signal closed',
+        actorUserId: user?.id || 'me',
+        actorName: user?.name || 'You',
+        timestamp: now,
+      }],
+    }));
+    showToast('Field Signal Closed', 'success');
+  };
+
+  const handleCreateTaskFromSignal = (signal: FieldSignal) => {
+    navigate('/command-center/operations-queue', {
+      state: {
+        prefillFromSignal: {
+          fieldSignalId: signal.id,
+          title: `[Field Signal] ${signal.title}`,
+          description: signal.description,
+          storeName: signal.storeName || signal.storeId,
+          priority: signal.expectedImpact === 'demand_increase' || signal.expectedImpact === 'inventory_risk' ? 'High' : 'Medium',
+        },
+      },
+    });
+  };
+
+  const handleCreateBroadcastFromSignal = (signal: FieldSignal) => {
+    setPrefillBroadcastFromSignal(signal);
+    setNewChatName(signal.title);
+    setBroadcastMessage(
+      `${signal.description}\n\n— Field Signal ${signal.id} · ${signal.storeName || signal.storeId}`
+    );
+    setModalStep('broadcast');
+    setShowNewChat(true);
+    setActiveSignalId(null);
+  };
+
+
   const filteredChats = chats
     .filter(c => {
-      if (activeTab === 'direct')    return c.type === 'direct';
-      if (activeTab === 'groups')    return c.type === 'group';
-      if (activeTab === 'broadcast') return c.type === 'broadcast';
+      if (section === 'broadcasts') return c.type === 'broadcast';
+      if (section === 'messages') {
+        if (activeTab === 'direct') return c.type === 'direct';
+        if (activeTab === 'groups') return c.type === 'group';
+        return true;
+      }
       return true;
     })
     .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -533,6 +821,7 @@ export const MessageCenter: React.FC = () => {
   const closeModal = () => {
     setShowNewChat(false); setModalStep('main');
     setSelectedMembers([]); setNewChatName(''); setContactSearch(''); setBroadcastMessage('');
+    setPrefillBroadcastFromSignal(null);
   };
 
   const toggleMember = (id: string) =>
@@ -566,6 +855,25 @@ export const MessageCenter: React.FC = () => {
       description: `Broadcast to ${members.length} recipients`,
       participants: members, messages: initialMessages, unread: 0, pinned: false, lastActivity: new Date(),
     };
+    if (prefillBroadcastFromSignal) {
+      const bcId = `bc-fs-${Date.now().toString().slice(-6)}`;
+      updateSignal(prefillBroadcastFromSignal.id, s => ({
+        ...s,
+        linkedBroadcastId: bcId,
+        updatedAt: new Date().toISOString(),
+        activityLog: [...s.activityLog, {
+          id: `fsa-${Date.now()}`,
+          fieldSignalId: s.id,
+          action: 'Broadcast created from signal',
+          actorUserId: user?.id || 'me',
+          actorName: user?.name || 'You',
+          timestamp: new Date().toISOString(),
+          notes: `Broadcast #${bcId}`,
+        }],
+      }));
+      setPrefillBroadcastFromSignal(null);
+      showToast('Broadcast Draft Created — Review And Confirm Before Sending', 'success');
+    }
     setChats(prev => [newChat, ...prev]); setActiveChat(newChat.id); setActiveTab('broadcast'); closeModal();
   };
 
@@ -626,108 +934,170 @@ export const MessageCenter: React.FC = () => {
   return (
     <div className="mc-container">
 
-      {/* ── Left Sidebar ── */}
+      {/* ── Left Sidebar — always visible, content swaps per section ── */}
       <div className="mc-sidebar">
 
-        {/* Header */}
+        {/* Header — identical across all sections */}
         <div className="mc-sidebar-header">
           <div className="mc-sidebar-title">
             <ForumOutlined sx={{ fontSize: 20 }} />
             <h2>Communications</h2>
           </div>
-          <Button
-            variant="contained" color="primary" size="small"
-            className="mc-new-chat-btn"
-            onClick={() => setShowNewChat(true)}
-            aria-label="New conversation"
-          >
-            <Add sx={{ fontSize: 18 }} />
-          </Button>
+          <div className="mc-header-add-wrap">
+            <Button
+              variant="contained" color="primary" size="small"
+              className="mc-new-chat-btn"
+              onClick={() => setShowHeaderMenu(v => !v)}
+              aria-label="New"
+            >
+              <Add sx={{ fontSize: 18 }} />
+            </Button>
+            {showHeaderMenu && (
+              <div className="mc-header-add-menu">
+                <button type="button" onClick={() => { setShowHeaderMenu(false); setShowNewChat(true); setModalStep('main'); }}>
+                  <ChatOutlined sx={{ fontSize: 16 }} />
+                  <span>New Message</span>
+                </button>
+                <button type="button" onClick={() => { setShowHeaderMenu(false); setShowNewChat(true); setModalStep('broadcast'); }}>
+                  <CampaignOutlined sx={{ fontSize: 16 }} />
+                  <span>New Broadcast</span>
+                </button>
+                <button type="button" onClick={() => { setShowHeaderMenu(false); openLogSignalDrawer(); }}>
+                  <SensorsOutlined sx={{ fontSize: 16 }} />
+                  <span>Log Field Signal</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Search */}
-        <div className="mc-search">
-          <SearchOutlined sx={{ fontSize: 15 }} />
-          <input
-            type="text" placeholder="Search conversations..."
-            value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button className="mc-search-clear-btn" onClick={() => setSearchQuery('')} aria-label="Clear">
-              <CloseOutlined sx={{ fontSize: 13 }} />
+        {/* Section tabs — identical across all sections */}
+        <div className="mc-section-tabs">
+          {(['messages', 'broadcasts', 'field_signals'] as CommSection[]).map(sec => (
+            <button
+              key={sec}
+              type="button"
+              className={`mc-section-tab ${section === sec ? 'mc-section-tab--active' : ''}`}
+              onClick={() => {
+                setSection(sec);
+                if (sec === 'broadcasts') { setActiveTab('broadcast'); setActiveSignalId(null); }
+                if (sec === 'messages') { setActiveTab('all'); setActiveSignalId(null); }
+                if (sec === 'field_signals') { setActiveChat(null); }
+              }}
+            >
+              {sec === 'messages' ? 'Messages' : sec === 'broadcasts' ? 'Broadcasts' : 'Field Signals'}
             </button>
-          )}
+          ))}
         </div>
 
-        {/* Tabs */}
-        <Tabs
-          tabNames={[
-            { value: 'all',       label: 'All' },
-            { value: 'direct',    label: 'Direct',    icon: <ChatOutlined sx={{ fontSize: 12 }} /> },
-            { value: 'groups',    label: 'Groups',    icon: <GroupOutlined sx={{ fontSize: 12 }} /> },
-            { value: 'broadcast', label: 'Broadcast', icon: <CampaignOutlined sx={{ fontSize: 12 }} /> },
-          ]}
-          tabPanels={[]} value={activeTab}
-          onChange={(_, val) => setActiveTab(val as Tab)}
-        />
-
-        {/* Chat List */}
-        <div className="mc-chat-list">
-          {filteredChats.length === 0 && (
-            <div className="mc-chat-list-empty">
-              <SearchOutlined sx={{ fontSize: 22 }} />
-              <span>No conversations found</span>
+        {/* ── Field Signals sidebar: search + export + signal cards ── */}
+        {section === 'field_signals' ? (
+          <FieldSignalSidebarList
+            signals={visibleSignals}
+            search={fsFilters.search}
+            selectedSignalId={activeSignalId}
+            onSearch={v => setFsFilters(f => ({ ...f, search: v }))}
+            onSelectSignal={id => setActiveSignalId(id)}
+            canExport={canExportFieldSignals(user?.role)}
+            storeOptions={storeOptions}
+          />
+        ) : (
+          <>
+            {/* Conversation search */}
+            <div className="mc-search">
+              <SearchOutlined sx={{ fontSize: 15 }} />
+              <input
+                type="text" placeholder="Search conversations..."
+                value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button className="mc-search-clear-btn" onClick={() => setSearchQuery('')} aria-label="Clear">
+                  <CloseOutlined sx={{ fontSize: 13 }} />
+                </button>
+              )}
             </div>
-          )}
-          {filteredChats.map(chat => {
-            const av = getAvatarGradient(chat.avatar);
-            const hasUnread = chat.unread > 0;
-            const lastMsg = chat.messages[chat.messages.length - 1];
-            const isOnline = chat.type === 'direct' && chat.participants[0]?.online;
-            return (
-              <button
-                key={chat.id}
-                className={`mc-chat-item ${activeChat === chat.id ? 'mc-chat-item--active' : ''} ${hasUnread ? 'mc-chat-item--unread' : ''}`}
-                onClick={() => { setActiveChat(chat.id); setChats(prev => prev.map(c => c.id === chat.id ? { ...c, unread: 0 } : c)); }}
-              >
-                {/* Avatar */}
-                <div
-                  className="mc-chat-item-avatar"
-                  style={{ background: av.bg, borderRadius: chat.type === 'broadcast' ? '50%' : undefined }}
-                >
-                  <span style={{ color: av.ink }}>{chat.avatar}</span>
-                  {isOnline && <span className="mc-chat-item-online-dot" />}
-                </div>
 
-                {/* Info */}
-                <div className="mc-chat-item-body">
-                  <div className="mc-chat-item-row">
-                    <span className="mc-chat-name">{chat.name}</span>
-                    <div className="mc-chat-meta">
-                      {chat.pinned && <PushPinOutlined sx={{ fontSize: 10 }} className="mc-pin-icon" />}
-                      {hasUnread
-                        ? <span className="mc-unread-badge-wrap"><Badge label={String(chat.unread)} color="error" size="small" /></span>
-                        : null
-                      }
-                      <span className="mc-chat-time">{formatTime(chat.lastActivity)}</span>
-                    </div>
-                  </div>
-                  {lastMsg && (
-                    <p className="mc-chat-preview">
-                      {lastMsg.senderId === 'me' ? 'You: ' : ''}
-                      {lastMsg.content.slice(0, 55)}{lastMsg.content.length > 55 ? '…' : ''}
-                    </p>
-                  )}
+            {/* Conversation filter tabs (messages only) */}
+            {section === 'messages' && (
+              <Tabs
+                tabNames={[
+                  { value: 'all',    label: 'All' },
+                  { value: 'direct', label: 'Direct', icon: <ChatOutlined sx={{ fontSize: 12 }} /> },
+                  { value: 'groups', label: 'Groups', icon: <GroupOutlined sx={{ fontSize: 12 }} /> },
+                ]}
+                tabPanels={[]} value={activeTab}
+                onChange={(_, val) => setActiveTab(val as Tab)}
+              />
+            )}
+
+            {/* Chat list */}
+            <div className="mc-chat-list">
+              {filteredChats.length === 0 && (
+                <div className="mc-chat-list-empty">
+                  <SearchOutlined sx={{ fontSize: 22 }} />
+                  <span>No conversations found</span>
                 </div>
-              </button>
-            );
-          })}
-        </div>
+              )}
+              {filteredChats.map(chat => {
+                const av = getAvatarGradient(chat.avatar);
+                const hasUnread = chat.unread > 0;
+                const lastMsg = chat.messages[chat.messages.length - 1];
+                const isOnline = chat.type === 'direct' && chat.participants[0]?.online;
+                return (
+                  <button
+                    key={chat.id}
+                    className={`mc-chat-item ${activeChat === chat.id ? 'mc-chat-item--active' : ''} ${hasUnread ? 'mc-chat-item--unread' : ''}`}
+                    onClick={() => { setActiveChat(chat.id); setChats(prev => prev.map(c => c.id === chat.id ? { ...c, unread: 0 } : c)); }}
+                  >
+                    <div className="mc-chat-item-avatar"
+                      style={{ background: av.bg, borderRadius: chat.type === 'broadcast' ? '50%' : undefined }}>
+                      <span style={{ color: av.ink }}>{chat.avatar}</span>
+                      {isOnline && <span className="mc-chat-item-online-dot" />}
+                    </div>
+                    <div className="mc-chat-item-body">
+                      <div className="mc-chat-item-row">
+                        <span className="mc-chat-name">{chat.name}</span>
+                        <div className="mc-chat-meta">
+                          {chat.pinned && <PushPinOutlined sx={{ fontSize: 10 }} className="mc-pin-icon" />}
+                          {hasUnread
+                            ? <span className="mc-unread-badge-wrap"><Badge label={String(chat.unread)} color="error" size="small" /></span>
+                            : null}
+                          <span className="mc-chat-time">{formatTime(chat.lastActivity)}</span>
+                        </div>
+                      </div>
+                      {lastMsg && (
+                        <p className="mc-chat-preview">
+                          {lastMsg.senderId === 'me' ? 'You: ' : ''}
+                          {lastMsg.content.slice(0, 55)}{lastMsg.content.length > 55 ? '…' : ''}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
 
       {/* ── Main Panel ── */}
       <div className="mc-main">
-        {selectedChat ? (
+        {section === 'field_signals' ? (
+          <FieldSignalMainPanel
+            selectedSignal={activeSignalId ? (visibleSignals.find(s => s.id === activeSignalId) ?? null) : null}
+            user={user}
+            onMarkReviewed={handleMarkReviewed}
+            onCloseSignal={handleCloseSignal}
+            onCreateTask={handleCreateTaskFromSignal}
+            onCreateBroadcast={handleCreateBroadcastFromSignal}
+            onViewConversation={threadId => {
+              setActiveSignalId(null);
+              setSection('messages');
+              setActiveChat(threadId);
+            }}
+            onViewTask={taskId => navigate('/command-center/operations-queue', { state: { highlightTaskId: taskId } })}
+          />
+        ) : selectedChat ? (
           <>
             {/* Chat Header */}
             <div className="mc-chat-header">
@@ -752,6 +1122,13 @@ export const MessageCenter: React.FC = () => {
                 </div>
               </div>
               <div className="mc-chat-header-actions">
+                <ActiveSignalsPill
+                  count={threadActiveSignals.length}
+                  signals={threadActiveSignals}
+                  filterActive={threadSignalFilter}
+                  onToggleFilter={() => setThreadSignalFilter(v => !v)}
+                  onViewSignal={id => setActiveSignalId(id)}
+                />
                 {selectedChat.type === 'direct' && (
                   <>
                     <Button variant="outlined" size="small" className="mc-header-action" aria-label="Call"><PhoneOutlined sx={{ fontSize: 18 }} /></Button>
@@ -762,6 +1139,13 @@ export const MessageCenter: React.FC = () => {
                 <Button variant="outlined" size="small" className="mc-header-action" aria-label="More"><MoreVert sx={{ fontSize: 18 }} /></Button>
               </div>
             </div>
+
+            {threadSignalFilter && (
+              <div className="mc-thread-signals-filter">
+                <span>Showing Field Signals in this thread</span>
+                <button type="button" onClick={() => setThreadSignalFilter(false)}>Show all messages</button>
+              </div>
+            )}
 
             {/* Messages */}
             <div className="mc-messages">
@@ -775,6 +1159,19 @@ export const MessageCenter: React.FC = () => {
                 <React.Fragment key={group.date}>
                   {renderDateSeparator(new Date(group.date))}
                   {group.messages.map((msg, idx) => {
+                    if (threadSignalFilter && !msg.fieldSignalId) return null;
+                    if (msg.fieldSignalId) {
+                      const signal = fieldSignals.find(s => s.id === msg.fieldSignalId);
+                      if (!signal) return null;
+                      return (
+                        <FieldSignalChatCard
+                          key={msg.id}
+                          signal={signal}
+                          onViewDetails={() => setActiveSignalId(signal.id)}
+                          onOpenLog={() => { setSection('field_signals'); setActiveSignalId(signal.id); }}
+                        />
+                      );
+                    }
                     const isMe     = msg.senderId === 'me';
                     const sender   = contacts.find(c => c.id === msg.senderId);
                     const showAv   = !isMe && selectedChat.type !== 'direct' && (idx === 0 || group.messages[idx - 1].senderId !== msg.senderId);
@@ -873,6 +1270,27 @@ export const MessageCenter: React.FC = () => {
             ) : (
               <div className="mc-input-area">
                 <div className="mc-input-row">
+                  <div className="mc-composer-add-wrap">
+                    <Button
+                      variant="text" size="small" className="mc-input-action mc-composer-add-btn"
+                      aria-label="Add"
+                      onClick={() => setShowComposerAdd(v => !v)}
+                    >
+                      <Add sx={{ fontSize: 20 }} />
+                    </Button>
+                    {showComposerAdd && (
+                      <div className="mc-composer-add-menu">
+                        <button type="button" onClick={() => { setShowComposerAdd(false); }}>
+                          <AttachFileOutlined sx={{ fontSize: 18 }} />
+                          Attach File
+                        </button>
+                        <button type="button" onClick={() => { setShowComposerAdd(false); openLogSignalDrawer(); }}>
+                          <SensorsOutlined sx={{ fontSize: 18 }} />
+                          Log Field Signal
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <Button variant="text" size="small" className="mc-input-action" aria-label="Emoji">
                     <SentimentSatisfiedOutlined sx={{ fontSize: 20 }} />
                   </Button>
@@ -980,6 +1398,11 @@ export const MessageCenter: React.FC = () => {
                 </div>
 
                 {/* Message field — broadcast only */}
+                {modalStep === 'broadcast' && prefillBroadcastFromSignal && (
+                  <p className="mc-modal-prefill-hint">
+                    Prefilled from Field Signal {prefillBroadcastFromSignal.id}. Select recipients and confirm before sending.
+                  </p>
+                )}
                 {modalStep === 'broadcast' && (
                   <div className="mc-modal-message-input">
                     <div className="mc-modal-message-label">
@@ -1045,6 +1468,33 @@ export const MessageCenter: React.FC = () => {
             )}
           </div>
         </div>
+      )}
+
+      <LogFieldSignalDrawer
+        open={showLogSignal}
+        form={logSignalForm}
+        errors={logSignalErrors}
+        onClose={() => { setShowLogSignal(false); setLogSignalErrors({}); }}
+        onChange={updates => setLogSignalForm(prev => ({ ...prev, ...updates }))}
+        onSubmit={submitFieldSignal}
+      />
+
+      {section !== 'field_signals' && (
+        <FieldSignalDetailDrawer
+          signal={activeSignal}
+          user={user}
+          onClose={() => setActiveSignalId(null)}
+          onMarkReviewed={handleMarkReviewed}
+          onCloseSignal={handleCloseSignal}
+          onCreateTask={handleCreateTaskFromSignal}
+          onCreateBroadcast={handleCreateBroadcastFromSignal}
+          onViewConversation={threadId => {
+            setActiveSignalId(null);
+            setSection('messages');
+            setActiveChat(threadId);
+          }}
+          onViewTask={taskId => navigate('/command-center/operations-queue', { state: { highlightTaskId: taskId } })}
+        />
       )}
     </div>
   );

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import Add from '@mui/icons-material/Add';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
@@ -20,9 +21,17 @@ import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
 import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
 import Check from '@mui/icons-material/Check';
 import BuildOutlined from '@mui/icons-material/BuildOutlined';
+import SensorsOutlined from '@mui/icons-material/SensorsOutlined';
+import LinkOutlined from '@mui/icons-material/LinkOutlined';
+import RefreshOutlined from '@mui/icons-material/RefreshOutlined';
+import RemoveOutlined from '@mui/icons-material/RemoveOutlined';
+import OpenWithOutlined from '@mui/icons-material/OpenWithOutlined';
+import TuneOutlined from '@mui/icons-material/TuneOutlined';
+import LabelOutlined from '@mui/icons-material/LabelOutlined';
 import { useNavigate } from 'react-router-dom';
 import { Button, Badge, Card, Tabs } from 'impact-ui';
 import { useExecutionTasks, ExecutionTask, TaskStatus, Priority } from '../context/ExecutionTasksContext';
+import { useToast } from '../context/ToastContext';
 import './TaskCenter.css';
 
 // ── Seed tasks so the Operations Queue isn't empty ──
@@ -299,9 +308,174 @@ const broadcastSearchMap: Record<string, string> = {
 type ViewMode = 'board' | 'list';
 type FilterStatus = 'all' | 'Pending' | 'In Progress' | 'Completed';
 
+// ── Dropdown option metadata ──
+const PRIORITY_META: Record<Priority, { desc: string }> = {
+  High:   { desc: 'Escalate · resolve within 2–4 hours' },
+  Medium: { desc: 'Resolve by end of day' },
+  Low:    { desc: 'Schedule for next available cycle' },
+};
+
+const TYPE_OPTIONS: {
+  key: ExecutionTask['type'];
+  label: string;
+  desc: string;
+  Icon: React.ElementType;
+}[] = [
+  { key: 'Reset Shelf',    label: 'Reset Shelf',       desc: 'Rearrange facing & shelf alignment',   Icon: RefreshOutlined },
+  { key: 'Add',            label: 'Add / Replenish',   desc: 'Stock shelves or fill inventory',       Icon: Add },
+  { key: 'Remove',         label: 'Remove',            desc: 'Pull product from the floor',           Icon: RemoveOutlined },
+  { key: 'Move',           label: 'Move / Reposition', desc: 'Relocate product or display',           Icon: OpenWithOutlined },
+  { key: 'Adjust Facing',  label: 'Adjust Facing',     desc: 'Fix facing count & product depth',      Icon: TuneOutlined },
+  { key: 'Update Label',   label: 'Update Label',      desc: 'Replace or fix shelf labels',           Icon: LabelOutlined },
+  { key: 'Install Fixture',label: 'Install Fixture',   desc: 'Set up or install a display fixture',   Icon: BuildOutlined },
+];
+
+// ── Portal Dropdown — escapes modal overflow:hidden, viewport-aware ──
+interface PortalDropdownMenuProps {
+  anchorEl: HTMLElement | null;
+  open: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  maxHeight?: number;
+}
+
+const PortalDropdownMenu: React.FC<PortalDropdownMenuProps> = ({
+  anchorEl, open, onClose, children, maxHeight = 256,
+}) => {
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [style, setStyle] = useState<React.CSSProperties>({
+    position: 'fixed', visibility: 'hidden', zIndex: 9999,
+  });
+
+  // Recalculate position every time open/anchorEl changes, and on scroll/resize
+  const reposition = useCallback(() => {
+    if (!open || !anchorEl || !menuRef.current) return;
+    const anchor = anchorEl.getBoundingClientRect();
+    const menu = menuRef.current.getBoundingClientRect();
+    const vp = { w: window.innerWidth, h: window.innerHeight };
+    const MARGIN = 6;
+
+    const spaceBelow = vp.h - anchor.bottom - MARGIN;
+    const spaceAbove = anchor.top - MARGIN;
+    const menuH = Math.min(menu.height || maxHeight, maxHeight);
+
+    const flipUp = spaceBelow < menuH && spaceAbove > spaceBelow;
+    const top = flipUp
+      ? anchor.top - menuH - MARGIN
+      : anchor.bottom + MARGIN;
+
+    // Clamp left so it never goes off-screen right edge
+    const left = Math.min(anchor.left, vp.w - anchor.width - 8);
+
+    setStyle({
+      position: 'fixed',
+      top,
+      left,
+      width: anchor.width,
+      maxHeight,
+      zIndex: 9999,
+      visibility: 'visible',
+    });
+  }, [open, anchorEl, maxHeight]);
+
+  useEffect(() => {
+    if (!open) {
+      setStyle(s => ({ ...s, visibility: 'hidden' }));
+      return;
+    }
+    // Two-step: first paint hidden to measure, then position
+    setStyle({ position: 'fixed', visibility: 'hidden', zIndex: 9999 });
+    const id = requestAnimationFrame(reposition);
+    return () => cancelAnimationFrame(id);
+  }, [open, reposition]);
+
+  // Keep position fresh on scroll/resize while open
+  useEffect(() => {
+    if (!open) return;
+    const update = () => reposition();
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('resize', update);
+    };
+  }, [open, reposition]);
+
+  // Click-outside closes (preserving existing behavior)
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (
+        menuRef.current?.contains(e.target as Node) ||
+        anchorEl?.contains(e.target as Node)
+      ) return;
+      onClose();
+    };
+    // Small delay so the trigger's own onClick doesn't immediately close
+    const t = setTimeout(() => document.addEventListener('mousedown', handler), 0);
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener('mousedown', handler);
+    };
+  }, [open, onClose, anchorEl]);
+
+  if (!open) return null;
+
+  return ReactDOM.createPortal(
+    <div ref={menuRef} className="tc-dd-menu tc-dd-portal" style={style}>
+      <div className="tc-dd-portal-inner">
+        {children}
+      </div>
+    </div>,
+    document.body,
+  );
+};
+
+// ── Portal-aware dropdown trigger wrapper ──
+interface PortalDropdownProps {
+  id: string;
+  open: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  trigger: React.ReactNode;
+  children: React.ReactNode;
+  maxHeight?: number;
+}
+
+const PortalDropdown: React.FC<PortalDropdownProps> = ({
+  id, open, onToggle, onClose, trigger, children, maxHeight,
+}) => {
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  return (
+    <div className="tc-dd-wrap">
+      <button
+        ref={triggerRef}
+        id={id}
+        type="button"
+        className={`tc-dd-trigger${open ? ' tc-dd-trigger--open' : ''}`}
+        onClick={onToggle}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        {trigger}
+      </button>
+      <PortalDropdownMenu
+        anchorEl={triggerRef.current}
+        open={open}
+        onClose={onClose}
+        maxHeight={maxHeight}
+      >
+        {children}
+      </PortalDropdownMenu>
+    </div>
+  );
+};
+
 export const TaskCenter: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { showToast } = useToast();
   const { tasks: contextTasks, addTasks, updateTaskStatus, assignTask, teamMembers } = useExecutionTasks();
   const [tcSearchParams, setTcSearchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
@@ -315,24 +489,26 @@ export const TaskCenter: React.FC = () => {
   const [prefillLoading, setPrefillLoading] = useState(false);
   const [prefillBanner, setPrefillBanner] = useState<{ title: string; count: number; managers: string[] } | null>(null);
   const [prefillIds, setPrefillIds] = useState<string[]>([]);
+  const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null);
+  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prefillHandledRef = useRef(false);
+  const signalPrefillHandledRef = useRef(false);
+  const signalPrefillRef = useRef<{ fieldSignalId: string } | null>(null);
 
   // Custom dropdown state for Create Task modal
   const [openDropdown, setOpenDropdown] = useState<null | 'priority' | 'type' | 'assignee'>(null);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
     return () => clearTimeout(timer);
   }, []);
 
+  // Scroll the newly created task into view when highlight activates
   useEffect(() => {
-    if (!openDropdown) return;
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setOpenDropdown(null);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [openDropdown]);
+    if (!highlightedTaskId) return;
+    const el = document.getElementById(`tc-task-${highlightedTaskId}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [highlightedTaskId]);
 
   // Handle broadcast deep-link from OCV
   useEffect(() => {
@@ -415,6 +591,37 @@ export const TaskCenter: React.FC = () => {
     }, 1400);
   }, [location.state, addTasks, teamMembers]);
 
+  // Prefill Create Task modal from Field Signal (user must review and confirm)
+  useEffect(() => {
+    if (signalPrefillHandledRef.current) return;
+    const state = location.state as {
+      prefillFromSignal?: {
+        fieldSignalId: string;
+        title: string;
+        description?: string;
+        storeName?: string;
+        priority?: Priority;
+      };
+    } | null;
+    const payload = state?.prefillFromSignal;
+    if (!payload) return;
+    signalPrefillHandledRef.current = true;
+    signalPrefillRef.current = { fieldSignalId: payload.fieldSignalId };
+    window.history.replaceState({}, document.title);
+    const due = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    setNewTask({
+      title: payload.title,
+      description: payload.description || '',
+      priority: payload.priority || 'Medium',
+      assignedTo: '',
+      dueDate: due,
+      type: 'Reset Shelf',
+    });
+    setView('list');
+    setFilter('all');
+    setShowCreateModal(true);
+  }, [location.state]);
+
   // All tasks
   const allTasks = contextTasks;
 
@@ -460,13 +667,14 @@ export const TaskCenter: React.FC = () => {
   const handleCreate = () => {
     if (!newTask.title.trim()) return;
     const member = teamMembers.find(m => m.id === newTask.assignedTo);
+    const isFromSignal = !!signalPrefillRef.current;
     const task: ExecutionTask = {
       id: `tc-${Date.now()}`,
       type: newTask.type,
       title: newTask.title,
       description: newTask.description,
       priority: newTask.priority,
-      reason: 'Manually created',
+      reason: isFromSignal ? 'Created from Field Signal' : 'Manually created',
       impact: '',
       status: 'Pending',
       assignedTo: newTask.assignedTo || null,
@@ -478,10 +686,32 @@ export const TaskCenter: React.FC = () => {
       category: 'General',
       createdAt: new Date().toISOString(),
       localizationId: 'manual',
+      ...(isFromSignal && {
+        source: 'Field Signal',
+        fieldSignalId: signalPrefillRef.current!.fieldSignalId,
+      }),
     };
     addTasks([task]);
+    if (signalPrefillRef.current) {
+      sessionStorage.setItem(
+        'fieldSignalTaskLink',
+        JSON.stringify({ signalId: signalPrefillRef.current.fieldSignalId, taskId: task.id })
+      );
+      signalPrefillRef.current = null;
+    }
     setShowCreateModal(false);
     setNewTask({ title: '', description: '', priority: 'Medium', assignedTo: '', dueDate: '', type: 'Reset Shelf' });
+
+    // Highlight the new task for 3.5s, switching to list view so it's visible
+    setView('list');
+    setFilter('all');
+    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    setHighlightedTaskId(task.id);
+    highlightTimerRef.current = setTimeout(() => setHighlightedTaskId(null), 3500);
+
+    // Immediate toast notification
+    const notifLabel = isFromSignal ? 'Task Created From Field Signal' : 'Task Created Successfully';
+    showToast(notifLabel, 'success');
   };
 
   // ── Source badge helper ──
@@ -489,12 +719,14 @@ export const TaskCenter: React.FC = () => {
     if (source === 'AI POG Audit') return <AutoAwesomeOutlined sx={{ fontSize: 10 }} />;
     if (source === 'Localization Engine') return <AutoAwesomeOutlined sx={{ fontSize: 10 }} />;
     if (source === 'Broadcast') return <WarningAmberOutlined sx={{ fontSize: 10 }} />;
+    if (source === 'Field Signal') return <SensorsOutlined sx={{ fontSize: 10 }} />;
     return null;
   };
 
   const getSourceClass = (source?: string) => {
     if (source === 'AI POG Audit' || source === 'Localization Engine') return 'tc-source--ai';
     if (source === 'Broadcast') return 'tc-source--broadcast';
+    if (source === 'Field Signal') return 'tc-source--signal';
     return 'tc-source--manual';
   };
 
@@ -513,7 +745,8 @@ export const TaskCenter: React.FC = () => {
 
   // ── Task Card ──
   const renderCard = (task: ExecutionTask) => (
-    <Card key={task.id} size="extraSmall" sx={{ maxWidth: '100%', minHeight: 0, padding: '12px 14px', cursor: 'pointer' }} onClick={() => setSelectedTask(task)}>
+    <div key={task.id} id={`tc-task-${task.id}`} className={highlightedTaskId === task.id ? 'tc-card-new-highlight' : ''}>
+    <Card size="extraSmall" sx={{ maxWidth: '100%', minHeight: 0, padding: '12px 14px', cursor: 'pointer' }} onClick={() => setSelectedTask(task)}>
       <div className="tc-card-top">
         <span className="tc-card-title">{task.title}</span>
         <span className={`tc-card-priority tc-pri--${task.priority.toLowerCase()}`}>{task.priority}</span>
@@ -547,6 +780,7 @@ export const TaskCenter: React.FC = () => {
         )}
       </div>
     </Card>
+    </div>
   );
 
   // ── Board View ──
@@ -600,7 +834,8 @@ export const TaskCenter: React.FC = () => {
             filteredTasks.map(task => (
               <tr
                 key={task.id}
-                className={`tc-table-row${broadcastHighlight && task.localizationId === broadcastHighlight ? ' tc-table-row--highlighted' : ''}${prefillIds.includes(task.id) ? ' tc-table-row--prefilled' : ''}`}
+                id={`tc-task-${task.id}`}
+                className={`tc-table-row${broadcastHighlight && task.localizationId === broadcastHighlight ? ' tc-table-row--highlighted' : ''}${prefillIds.includes(task.id) ? ' tc-table-row--prefilled' : ''}${highlightedTaskId === task.id ? ' tc-table-row--new-highlight' : ''}`}
                 onClick={() => setSelectedTask(task)}
               >
                 <td className="tc-td-task">
@@ -883,70 +1118,81 @@ export const TaskCenter: React.FC = () => {
                   {/* Priority */}
                   <div className="tc-m-field">
                     <label>Priority</label>
-                    <div className="tc-dd-wrap" ref={openDropdown === 'priority' ? dropdownRef : undefined}>
-                      <button
-                        type="button"
-                        className="tc-dd-trigger"
-                        onClick={() => setOpenDropdown(openDropdown === 'priority' ? null : 'priority')}
-                      >
+                    <PortalDropdown
+                      id="dd-priority"
+                      open={openDropdown === 'priority'}
+                      onToggle={() => setOpenDropdown(openDropdown === 'priority' ? null : 'priority')}
+                      onClose={() => setOpenDropdown(null)}
+                      maxHeight={180}
+                      trigger={<>
                         <span className={`tc-dd-pri-dot tc-dd-pri-dot--${newTask.priority.toLowerCase()}`} />
                         <span className="tc-dd-trigger-text">{newTask.priority}</span>
                         <KeyboardArrowDown sx={{ fontSize: 14 }} className={`tc-dd-chevron ${openDropdown === 'priority' ? 'tc-dd-chevron--open' : ''}`} />
-                      </button>
-                      {openDropdown === 'priority' && (
-                        <div className="tc-dd-menu">
-                          {(['High', 'Medium', 'Low'] as Priority[]).map(p => (
-                            <button
-                              key={p}
-                              type="button"
-                              className={`tc-dd-item ${p === newTask.priority ? 'tc-dd-item--active' : ''}`}
-                              onClick={() => { setNewTask(prev => ({ ...prev, priority: p })); setOpenDropdown(null); }}
-                            >
-                              <span className="tc-dd-item-left">
-                                <span className={`tc-dd-pri-dot tc-dd-pri-dot--${p.toLowerCase()}`} />
-                                <span className="tc-dd-item-name">{p}</span>
-                              </span>
-                              {p === newTask.priority && <Check sx={{ fontSize: 14 }} />}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                      </>}
+                    >
+                      {(['High', 'Medium', 'Low'] as Priority[]).map(p => (
+                        <button
+                          key={p}
+                          type="button"
+                          role="option"
+                          aria-selected={p === newTask.priority}
+                          className={`tc-dd-item ${p === newTask.priority ? 'tc-dd-item--active' : ''}`}
+                          onClick={() => { setNewTask(prev => ({ ...prev, priority: p })); setOpenDropdown(null); }}
+                        >
+                          <span className="tc-dd-item-left">
+                            <span className={`tc-dd-pri-badge tc-dd-pri-badge--${p.toLowerCase()}`}>{p[0]}</span>
+                            <span className="tc-dd-item-text">
+                              <span className="tc-dd-item-name">{p}</span>
+                              <span className="tc-dd-item-desc">{PRIORITY_META[p].desc}</span>
+                            </span>
+                          </span>
+                          {p === newTask.priority && <Check sx={{ fontSize: 14 }} />}
+                        </button>
+                      ))}
+                    </PortalDropdown>
                   </div>
 
                   {/* Type */}
                   <div className="tc-m-field">
                     <label>Type</label>
-                    <div className="tc-dd-wrap" ref={openDropdown === 'type' ? dropdownRef : undefined}>
-                      <button
-                        type="button"
-                        className="tc-dd-trigger"
-                        onClick={() => setOpenDropdown(openDropdown === 'type' ? null : 'type')}
-                      >
-                        <BuildOutlined sx={{ fontSize: 14 }} className="tc-dd-icon-muted" />
-                        <span className="tc-dd-trigger-text">{newTask.type}</span>
-                        <KeyboardArrowDown sx={{ fontSize: 14 }} className={`tc-dd-chevron ${openDropdown === 'type' ? 'tc-dd-chevron--open' : ''}`} />
-                      </button>
-                      {openDropdown === 'type' && (
-                        <div className="tc-dd-menu">
-                          {(['Reset Shelf', 'Add', 'Remove', 'Move', 'Adjust Facing', 'Update Label', 'Install Fixture'] as ExecutionTask['type'][]).map(t => (
+                    {(() => {
+                      const activeType = TYPE_OPTIONS.find(o => o.key === newTask.type);
+                      const TypeIcon = activeType?.Icon ?? BuildOutlined;
+                      return (
+                        <PortalDropdown
+                          id="dd-type"
+                          open={openDropdown === 'type'}
+                          onToggle={() => setOpenDropdown(openDropdown === 'type' ? null : 'type')}
+                          onClose={() => setOpenDropdown(null)}
+                          maxHeight={296}
+                          trigger={<>
+                            <TypeIcon sx={{ fontSize: 14 }} className="tc-dd-icon-muted" />
+                            <span className="tc-dd-trigger-text">{activeType?.label ?? newTask.type}</span>
+                            <KeyboardArrowDown sx={{ fontSize: 14 }} className={`tc-dd-chevron ${openDropdown === 'type' ? 'tc-dd-chevron--open' : ''}`} />
+                          </>}
+                        >
+                          {TYPE_OPTIONS.map(({ key, label, desc, Icon }) => (
                             <button
-                              key={t}
+                              key={key}
                               type="button"
-                              className={`tc-dd-item ${t === newTask.type ? 'tc-dd-item--active' : ''}`}
-                              onClick={() => { setNewTask(prev => ({ ...prev, type: t })); setOpenDropdown(null); }}
+                              role="option"
+                              aria-selected={key === newTask.type}
+                              className={`tc-dd-item ${key === newTask.type ? 'tc-dd-item--active' : ''}`}
+                              onClick={() => { setNewTask(prev => ({ ...prev, type: key })); setOpenDropdown(null); }}
                             >
                               <span className="tc-dd-item-left">
-                                <span className="tc-dd-item-name">
-                                  {t === 'Add' ? 'Add / Replenish' : t === 'Move' ? 'Move / Reposition' : t}
+                                <span className="tc-dd-type-badge"><Icon sx={{ fontSize: 13 }} /></span>
+                                <span className="tc-dd-item-text">
+                                  <span className="tc-dd-item-name">{label}</span>
+                                  <span className="tc-dd-item-desc">{desc}</span>
                                 </span>
                               </span>
-                              {t === newTask.type && <Check sx={{ fontSize: 14 }} />}
+                              {key === newTask.type && <Check sx={{ fontSize: 14 }} />}
                             </button>
                           ))}
-                        </div>
-                      )}
-                    </div>
+                        </PortalDropdown>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
@@ -961,12 +1207,13 @@ export const TaskCenter: React.FC = () => {
                   {/* Assignee */}
                   <div className="tc-m-field">
                     <label>Assignee</label>
-                    <div className="tc-dd-wrap" ref={openDropdown === 'assignee' ? dropdownRef : undefined}>
-                      <button
-                        type="button"
-                        className="tc-dd-trigger"
-                        onClick={() => setOpenDropdown(openDropdown === 'assignee' ? null : 'assignee')}
-                      >
+                    <PortalDropdown
+                      id="dd-assignee"
+                      open={openDropdown === 'assignee'}
+                      onToggle={() => setOpenDropdown(openDropdown === 'assignee' ? null : 'assignee')}
+                      onClose={() => setOpenDropdown(null)}
+                      maxHeight={256}
+                      trigger={<>
                         {newTask.assignedTo ? (
                           <>
                             <span className="tc-dd-avatar">
@@ -984,40 +1231,41 @@ export const TaskCenter: React.FC = () => {
                           </>
                         )}
                         <KeyboardArrowDown sx={{ fontSize: 14 }} className={`tc-dd-chevron ${openDropdown === 'assignee' ? 'tc-dd-chevron--open' : ''}`} />
+                      </>}
+                    >
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={!newTask.assignedTo}
+                        className={`tc-dd-item ${!newTask.assignedTo ? 'tc-dd-item--active' : ''}`}
+                        onClick={() => { setNewTask(prev => ({ ...prev, assignedTo: '' })); setOpenDropdown(null); }}
+                      >
+                        <span className="tc-dd-item-left">
+                          <span className="tc-dd-avatar tc-dd-avatar--unassigned"><PersonOutlined sx={{ fontSize: 11 }} /></span>
+                          <span className="tc-dd-item-name">Unassigned</span>
+                        </span>
+                        {!newTask.assignedTo && <Check sx={{ fontSize: 14 }} />}
                       </button>
-                      {openDropdown === 'assignee' && (
-                        <div className="tc-dd-menu tc-dd-menu--scroll">
-                          <button
-                            type="button"
-                            className={`tc-dd-item ${!newTask.assignedTo ? 'tc-dd-item--active' : ''}`}
-                            onClick={() => { setNewTask(prev => ({ ...prev, assignedTo: '' })); setOpenDropdown(null); }}
-                          >
-                            <span className="tc-dd-item-left">
-                              <span className="tc-dd-avatar tc-dd-avatar--unassigned"><PersonOutlined sx={{ fontSize: 11 }} /></span>
-                              <span className="tc-dd-item-name">Unassigned</span>
+                      {teamMembers.map(m => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          role="option"
+                          aria-selected={m.id === newTask.assignedTo}
+                          className={`tc-dd-item ${m.id === newTask.assignedTo ? 'tc-dd-item--active' : ''}`}
+                          onClick={() => { setNewTask(prev => ({ ...prev, assignedTo: m.id })); setOpenDropdown(null); }}
+                        >
+                          <span className="tc-dd-item-left">
+                            <span className="tc-dd-avatar">{m.name.split(' ').map(n => n[0]).join('').substring(0, 2)}</span>
+                            <span className="tc-dd-item-text">
+                              <span className="tc-dd-item-name">{m.name}</span>
+                              <span className="tc-dd-item-desc">{m.role}</span>
                             </span>
-                            {!newTask.assignedTo && <Check sx={{ fontSize: 14 }} />}
-                          </button>
-                          {teamMembers.map(m => (
-                            <button
-                              key={m.id}
-                              type="button"
-                              className={`tc-dd-item ${m.id === newTask.assignedTo ? 'tc-dd-item--active' : ''}`}
-                              onClick={() => { setNewTask(prev => ({ ...prev, assignedTo: m.id })); setOpenDropdown(null); }}
-                            >
-                              <span className="tc-dd-item-left">
-                                <span className="tc-dd-avatar">{m.name.split(' ').map(n => n[0]).join('').substring(0, 2)}</span>
-                                <span className="tc-dd-item-text">
-                                  <span className="tc-dd-item-name">{m.name}</span>
-                                  <span className="tc-dd-item-desc">{m.role}</span>
-                                </span>
-                              </span>
-                              {m.id === newTask.assignedTo && <Check sx={{ fontSize: 14 }} />}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                          </span>
+                          {m.id === newTask.assignedTo && <Check sx={{ fontSize: 14 }} />}
+                        </button>
+                      ))}
+                    </PortalDropdown>
                   </div>
 
                   {/* Due Date */}
@@ -1105,8 +1353,8 @@ export const TaskCenter: React.FC = () => {
                   </div>
                 )}
 
-                {/* Source */}
-                {selectedTask.source && selectedTask.source !== 'Manual' && (
+                {/* Source badge (AI / Broadcast / etc.) */}
+                {selectedTask.source && selectedTask.source !== 'Manual' && selectedTask.source !== 'Field Signal' && (
                   <div
                     className={`tc-detail-source-badge ${getSourceClass(selectedTask.source)}`}
                     onClick={() => selectedTask.sourceLink && navigate(selectedTask.sourceLink)}
@@ -1124,6 +1372,29 @@ export const TaskCenter: React.FC = () => {
                       )}
                       {selectedTask.sourceLink && <OpenInNewOutlined sx={{ fontSize: 12 }} />}
                     </div>
+                  </div>
+                )}
+
+                {/* Field Signal back-link (premium provenance block) */}
+                {selectedTask.source === 'Field Signal' && selectedTask.fieldSignalId && (
+                  <div className="tc-detail-block">
+                    <div className="tc-detail-block-label"><LinkOutlined sx={{ fontSize: 12 }} /> Source</div>
+                    <button
+                      type="button"
+                      className="tc-signal-source-row"
+                      onClick={() => navigate('/command-center/communications', {
+                        state: { openFieldSignal: selectedTask.fieldSignalId }
+                      })}
+                    >
+                      <div className="tc-signal-source-icon">
+                        <SensorsOutlined sx={{ fontSize: 16 }} />
+                      </div>
+                      <div className="tc-signal-source-body">
+                        <span className="tc-signal-source-label">Created from Field Signal</span>
+                        <span className="tc-signal-source-id">{selectedTask.fieldSignalId}</span>
+                      </div>
+                      <OpenInNewOutlined sx={{ fontSize: 13 }} className="tc-signal-source-arrow" />
+                    </button>
                   </div>
                 )}
 

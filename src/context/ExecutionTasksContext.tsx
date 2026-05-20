@@ -28,8 +28,9 @@ export interface ExecutionTask {
   category: string;
   createdAt: string;
   localizationId: string;
-  source?: 'AI POG Audit' | 'Localization Engine' | 'Broadcast' | 'Manual';
+  source?: 'AI POG Audit' | 'Localization Engine' | 'Broadcast' | 'Manual' | 'Field Signal';
   sourceLink?: string;
+  fieldSignalId?: string;
   slaHours?: number;
   severityRationale?: string;
   confidenceScore?: number;
