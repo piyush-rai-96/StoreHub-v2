@@ -2358,7 +2358,7 @@ export const StoreCenter: React.FC = () => {
         <div className="sc-deepdive-section sc-alert-section">
           <div className="sc-section-header">
             <div className="sc-section-title-row">
-              <WarningAmberOutlined sx={{ fontSize: 20, color: '#f59e0b' }}/>
+              <WarningAmberOutlined sx={{ fontSize: 20, color: 'var(--ia-color-warning)' }}/>
               <h3>Operational Alerts</h3>
             </div>
             <span className="sc-section-subtitle">
@@ -2371,8 +2371,8 @@ export const StoreCenter: React.FC = () => {
               const priorityClass = bucket.priority === 'High' ? 'sc-alert-priority--high'
                 : bucket.priority === 'Medium' ? 'sc-alert-priority--medium'
                 : 'sc-alert-priority--low';
-              const accentColor = bucket.priority === 'High' ? '#ef4444'
-                : bucket.priority === 'Medium' ? '#f59e0b'
+              const accentColor = bucket.priority === 'High' ? 'var(--ia-color-error-strong, #dc2626)'
+                : bucket.priority === 'Medium' ? 'var(--ia-color-warning)'
                 : 'var(--ia-color-primary)';
               const bucketIcon =
                 bucket.id === 'boh-sync' ? <InventoryOutlined sx={{ fontSize: 18 }}/>
@@ -2405,14 +2405,14 @@ export const StoreCenter: React.FC = () => {
                   {/* Colour accent top bar */}
                   <div style={{ height: 3, background: accentColor, flexShrink: 0 }} />
 
-                  <div style={{ padding: '16px 18px 14px', display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
+                  <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
                     {/* Icon + priority */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div className="sc-alert-bucket-icon">{bucketIcon}</div>
                       <span className={`sc-alert-priority-badge ${priorityClass}`}>{bucket.priority}</span>
                     </div>
 
-                    <div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                       <h4 className="sc-alert-bucket-name">{bucket.name}</h4>
                       <p className="sc-alert-bucket-desc">{bucket.shortDesc}</p>
                     </div>
