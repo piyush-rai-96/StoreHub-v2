@@ -2111,7 +2111,8 @@
   accent-color: var(--ia-color-primary);
 }
 
-.fs-export-scope div {
+.fs-export-scope div,
+.fs-export-scope-text {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -2128,67 +2129,137 @@
   color: var(--ia-color-text-tertiary);
 }
 
+/* Export section title */
+.fs-export-section-title {
+  font-size: var(--ia-text-sm);
+  font-weight: var(--ia-font-weight-semibold);
+  color: var(--ia-color-text-primary);
+  margin: 0 0 10px;
+}
+
 /* Filter grid */
 .fs-export-filter-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px 16px;
+  gap: 12px 16px;
 }
 
 .fs-export-filter-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
 }
 
-.fs-export-filter-group label {
-  font-size: var(--ia-text-2xs);
+/* Date ranges span both columns so the two inputs never need to squeeze */
+.fs-filter-full {
+  grid-column: 1 / -1;
+}
+
+/* Shared label style */
+.fs-filter-label {
+  font-size: 10px;
   font-weight: var(--ia-font-weight-semibold);
   color: var(--ia-color-text-tertiary);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.055em;
 }
 
-.fs-export-filter-group select,
-.fs-export-filter-group input {
-  padding: 7px 10px;
+/* ── Premium FsSelect ── */
+.fs-sel-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.fs-sel {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  padding: 8px 34px 8px 11px;
   border: 1px solid var(--ia-color-border);
-  border-radius: 7px;
+  border-radius: 8px;
+  background: var(--ia-color-surface);
+  font-size: var(--ia-text-xs);
+  font-family: inherit;
+  color: var(--ia-color-text-primary);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  line-height: 1.4;
+}
+
+.fs-sel:focus {
+  border-color: var(--ia-color-primary);
+  box-shadow: 0 0 0 3px var(--ia-color-primary-soft);
+}
+
+.fs-sel:hover:not(:focus) {
+  border-color: var(--ia-color-border-strong);
+}
+
+.fs-sel-chevron {
+  position: absolute !important;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--ia-color-text-tertiary) !important;
+}
+
+/* Text inputs inside filter groups */
+.fs-text-input {
+  width: 100%;
+  padding: 8px 11px;
+  border: 1px solid var(--ia-color-border);
+  border-radius: 8px;
   font-size: var(--ia-text-xs);
   font-family: inherit;
   background: var(--ia-color-surface);
   color: var(--ia-color-text-primary);
-}
-
-.fs-export-filter-group select:focus,
-.fs-export-filter-group input:focus {
-  border-color: var(--ia-color-primary-border);
   outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
 }
 
-.fs-export-date-pair input:focus {
-  border-color: var(--ia-color-primary-border);
-  outline: none;
+.fs-text-input:focus {
+  border-color: var(--ia-color-primary);
+  box-shadow: 0 0 0 3px var(--ia-color-primary-soft);
 }
 
+.fs-text-input::placeholder {
+  color: var(--ia-color-text-tertiary);
+}
+
+/* Date pair */
 .fs-export-date-pair {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.fs-export-date-pair input {
+.fs-date-input {
   flex: 1;
-  padding: 7px 8px;
+  min-width: 0;
+  padding: 8px 8px;
   border: 1px solid var(--ia-color-border);
-  border-radius: 7px;
+  border-radius: 8px;
   font-size: var(--ia-text-xs);
+  font-family: inherit;
   background: var(--ia-color-surface);
+  color: var(--ia-color-text-primary);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.fs-export-date-pair span {
+.fs-date-input:focus {
+  border-color: var(--ia-color-primary);
+  box-shadow: 0 0 0 3px var(--ia-color-primary-soft);
+}
+
+.fs-date-sep {
   font-size: var(--ia-text-2xs);
   color: var(--ia-color-text-tertiary);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* Presets */
@@ -2266,6 +2337,31 @@
 
 .fs-cb-checked {
   color: var(--ia-color-primary);
+}
+
+/* Locked (grayed) checkboxes for Export All read-only preview */
+.fs-export-field-cb--locked {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.fs-export-field-cb--locked:hover {
+  background: transparent;
+}
+
+.fs-cb-locked {
+  color: var(--ia-color-text-tertiary);
+}
+
+/* Hint text above grayed column list */
+.fs-export-all-hint {
+  font-size: var(--ia-text-xs);
+  color: var(--ia-color-text-tertiary);
+  margin: 0 0 12px;
+  padding: 6px 10px;
+  background: var(--ia-color-bg-subtle);
+  border-radius: 6px;
+  border: 1px solid var(--ia-color-border);
 }
 
 /* Export summary */

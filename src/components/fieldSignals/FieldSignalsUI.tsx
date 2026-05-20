@@ -16,6 +16,7 @@ import SensorsOutlined from '@mui/icons-material/SensorsOutlined';
 import CheckBoxOutlined from '@mui/icons-material/CheckBoxOutlined';
 import CheckBoxOutlineBlankOutlined from '@mui/icons-material/CheckBoxOutlineBlankOutlined';
 import OpenInNewOutlined from '@mui/icons-material/OpenInNewOutlined';
+import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
 import { Button, Badge, EmptyState } from 'impact-ui';
 import type { User, UserRole } from '../../types';
 import type { FieldSignal, LogSignalFormState } from '../../types/fieldSignal';
@@ -452,13 +453,12 @@ interface ExportFilters {
   store: string;
   district: string;
   createdBy: string;
-  linkedWorkflow: string;
 }
 
 const EMPTY_EXPORT_FILTERS: ExportFilters = {
   dateFrom: '', dateTo: '', eventDateFrom: '', eventDateTo: '',
   status: '', signalType: '', expectedImpact: '', store: '', district: '',
-  createdBy: '', linkedWorkflow: '',
+  createdBy: '',
 };
 
 type ExportScope = 'search' | 'all' | 'custom';
@@ -469,10 +469,12 @@ const DEFAULT_FIELDS = [
   'Expected Impact', 'Status', 'Logged By', 'Logged Date', 'Last Updated',
 ];
 
+// Curated optional fields — limited to operationally useful columns
 const OPTIONAL_FIELDS = [
-  'Description', 'District', 'Department', 'Event Start Date', 'Event End Date',
-  'Reviewed By', 'Reviewed Date', 'Closed By', 'Closed Date',
-  'Linked Task ID', 'Linked Broadcast ID', 'Original Chat Thread Link', 'Activity History',
+  'Description', 'District', 'Department',
+  'Event Start Date', 'Event End Date',
+  'Reviewed By', 'Reviewed Date',
+  'Closed By', 'Closed Date',
 ];
 
 const SUMMARY_FIELDS = [...DEFAULT_FIELDS];
@@ -484,6 +486,22 @@ interface ExportFieldSignalsDrawerProps {
   storeOptions: string[];
   onClose: () => void;
 }
+
+// Premium select wrapper — consistent with Impact UI token system
+const FsSelect: React.FC<{
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+}> = ({ value, onChange, options, placeholder = 'All' }) => (
+  <div className="fs-sel-wrap">
+    <select className="fs-sel" value={value} onChange={e => onChange(e.target.value)}>
+      <option value="">{placeholder}</option>
+      {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+    </select>
+    <KeyboardArrowDown sx={{ fontSize: 15 }} className="fs-sel-chevron" />
+  </div>
+);
 
 const ExportFieldSignalsDrawer: React.FC<ExportFieldSignalsDrawerProps> = ({
   signals, currentSearchQuery, storeOptions, onClose,
@@ -528,9 +546,6 @@ const ExportFieldSignalsDrawer: React.FC<ExportFieldSignalsDrawerProps> = ({
         if (filters.store && !(s.storeName || s.storeId).includes(filters.store)) return false;
         if (filters.district && !(s.districtName || s.districtId || '').includes(filters.district)) return false;
         if (filters.createdBy && !s.createdByName.toLowerCase().includes(filters.createdBy.toLowerCase())) return false;
-        if (filters.linkedWorkflow === 'has_task' && !s.linkedTaskId) return false;
-        if (filters.linkedWorkflow === 'has_broadcast' && !s.linkedBroadcastId) return false;
-        if (filters.linkedWorkflow === 'none' && (s.linkedTaskId || s.linkedBroadcastId)) return false;
         return true;
       });
     }
@@ -538,7 +553,8 @@ const ExportFieldSignalsDrawer: React.FC<ExportFieldSignalsDrawerProps> = ({
   }, [signals, scope, currentSearchQuery, filters]);
 
   const doExport = () => {
-    const fields = Array.from(selectedFields);
+    // 'all' and 'search' always export every column; custom uses user selection
+    const fields = scope === 'custom' ? Array.from(selectedFields) : FULL_AUDIT_FIELDS;
     const escape = (v: string) => `"${String(v ?? '').replace(/"/g, '""')}"`;
 
     const fieldGetters: Record<string, (s: FieldSignal) => string> = {
@@ -601,14 +617,14 @@ const ExportFieldSignalsDrawer: React.FC<ExportFieldSignalsDrawerProps> = ({
         <div className="fs-export-body">
           {step === 'config' ? (
             <>
-              {/* Scope */}
+              {/* ── Export Scope ── */}
               <div className="fs-export-section">
-                <h4>Export Scope</h4>
+                <h4 className="fs-export-section-title">Export Scope</h4>
                 <div className="fs-export-scope-options">
                   {currentSearchQuery && (
                     <label className={`fs-export-scope ${scope === 'search' ? 'fs-export-scope--active' : ''}`}>
                       <input type="radio" name="scope" checked={scope === 'search'} onChange={() => setScope('search')} />
-                      <div>
+                      <div className="fs-export-scope-text">
                         <strong>Export current search results</strong>
                         <span>"{currentSearchQuery}" — {signals.filter(s => broadSearch(s, currentSearchQuery)).length} signals</span>
                       </div>
@@ -616,135 +632,182 @@ const ExportFieldSignalsDrawer: React.FC<ExportFieldSignalsDrawerProps> = ({
                   )}
                   <label className={`fs-export-scope ${scope === 'all' ? 'fs-export-scope--active' : ''}`}>
                     <input type="radio" name="scope" checked={scope === 'all'} onChange={() => setScope('all')} />
-                    <div>
+                    <div className="fs-export-scope-text">
                       <strong>Export all field signals</strong>
-                      <span>{signals.length} signals</span>
+                      <span>{signals.length} signals · All fields included</span>
                     </div>
                   </label>
                   <label className={`fs-export-scope ${scope === 'custom' ? 'fs-export-scope--active' : ''}`}>
                     <input type="radio" name="scope" checked={scope === 'custom'} onChange={() => setScope('custom')} />
-                    <div>
+                    <div className="fs-export-scope-text">
                       <strong>Custom export</strong>
-                      <span>Apply advanced filters below</span>
+                      <span>Apply filters and choose specific columns</span>
                     </div>
                   </label>
                 </div>
               </div>
 
-              {/* Advanced filters (only when scope = custom) */}
+              {/* ── Filters — visible only for Custom scope ── */}
               {scope === 'custom' && (
                 <div className="fs-export-section">
-                  <h4>Filters</h4>
+                  <h4 className="fs-export-section-title">Filters</h4>
                   <div className="fs-export-filter-grid">
-                    <div className="fs-export-filter-group">
-                      <label>Logged Date Range</label>
+
+                    {/* Date ranges — each spans full width so inputs never overflow */}
+                    <div className="fs-export-filter-group fs-filter-full">
+                      <label className="fs-filter-label">Logged Date Range</label>
                       <div className="fs-export-date-pair">
-                        <input type="date" value={filters.dateFrom} onChange={e => setF({ dateFrom: e.target.value })} />
-                        <span>to</span>
-                        <input type="date" value={filters.dateTo} onChange={e => setF({ dateTo: e.target.value })} />
+                        <input className="fs-date-input" type="date" value={filters.dateFrom} onChange={e => setF({ dateFrom: e.target.value })} />
+                        <span className="fs-date-sep">to</span>
+                        <input className="fs-date-input" type="date" value={filters.dateTo} onChange={e => setF({ dateTo: e.target.value })} />
                       </div>
                     </div>
-                    <div className="fs-export-filter-group">
-                      <label>Event Date Range</label>
+                    <div className="fs-export-filter-group fs-filter-full">
+                      <label className="fs-filter-label">Event Date Range</label>
                       <div className="fs-export-date-pair">
-                        <input type="date" value={filters.eventDateFrom} onChange={e => setF({ eventDateFrom: e.target.value })} />
-                        <span>to</span>
-                        <input type="date" value={filters.eventDateTo} onChange={e => setF({ eventDateTo: e.target.value })} />
+                        <input className="fs-date-input" type="date" value={filters.eventDateFrom} onChange={e => setF({ eventDateFrom: e.target.value })} />
+                        <span className="fs-date-sep">to</span>
+                        <input className="fs-date-input" type="date" value={filters.eventDateTo} onChange={e => setF({ eventDateTo: e.target.value })} />
                       </div>
                     </div>
+
+                    {/* Dropdowns — 2-column */}
                     <div className="fs-export-filter-group">
-                      <label>Status</label>
-                      <select value={filters.status} onChange={e => setF({ status: e.target.value })}>
-                        <option value="">All statuses</option>
-                        <option value="new">New</option>
-                        <option value="reviewed">Reviewed</option>
-                        <option value="closed">Closed</option>
-                      </select>
+                      <label className="fs-filter-label">Status</label>
+                      <FsSelect
+                        value={filters.status}
+                        onChange={v => setF({ status: v })}
+                        placeholder="All statuses"
+                        options={[
+                          { value: 'new', label: 'New' },
+                          { value: 'reviewed', label: 'Reviewed' },
+                          { value: 'closed', label: 'Closed' },
+                        ]}
+                      />
                     </div>
                     <div className="fs-export-filter-group">
-                      <label>Signal Type</label>
-                      <select value={filters.signalType} onChange={e => setF({ signalType: e.target.value })}>
-                        <option value="">All types</option>
-                        {SIGNAL_TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                      </select>
+                      <label className="fs-filter-label">Signal Type</label>
+                      <FsSelect
+                        value={filters.signalType}
+                        onChange={v => setF({ signalType: v })}
+                        placeholder="All types"
+                        options={SIGNAL_TYPE_OPTIONS}
+                      />
+                    </div>
+
+                    <div className="fs-export-filter-group">
+                      <label className="fs-filter-label">Expected Impact</label>
+                      <FsSelect
+                        value={filters.expectedImpact}
+                        onChange={v => setF({ expectedImpact: v })}
+                        placeholder="All impacts"
+                        options={EXPECTED_IMPACT_OPTIONS}
+                      />
                     </div>
                     <div className="fs-export-filter-group">
-                      <label>Expected Impact</label>
-                      <select value={filters.expectedImpact} onChange={e => setF({ expectedImpact: e.target.value })}>
-                        <option value="">All impacts</option>
-                        {EXPECTED_IMPACT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                      </select>
+                      <label className="fs-filter-label">Store</label>
+                      <FsSelect
+                        value={filters.store}
+                        onChange={v => setF({ store: v })}
+                        placeholder="All stores"
+                        options={storeOptions.map(s => ({ value: s, label: s }))}
+                      />
+                    </div>
+
+                    {/* Text inputs */}
+                    <div className="fs-export-filter-group">
+                      <label className="fs-filter-label">District</label>
+                      <input className="fs-text-input" type="text" placeholder="District name…" value={filters.district} onChange={e => setF({ district: e.target.value })} />
                     </div>
                     <div className="fs-export-filter-group">
-                      <label>Store</label>
-                      <select value={filters.store} onChange={e => setF({ store: e.target.value })}>
-                        <option value="">All stores</option>
-                        {storeOptions.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
+                      <label className="fs-filter-label">Logged By</label>
+                      <input className="fs-text-input" type="text" placeholder="Name or email…" value={filters.createdBy} onChange={e => setF({ createdBy: e.target.value })} />
                     </div>
-                    <div className="fs-export-filter-group">
-                      <label>District</label>
-                      <input type="text" placeholder="District name…" value={filters.district} onChange={e => setF({ district: e.target.value })} />
-                    </div>
-                    <div className="fs-export-filter-group">
-                      <label>Logged By</label>
-                      <input type="text" placeholder="Name…" value={filters.createdBy} onChange={e => setF({ createdBy: e.target.value })} />
-                    </div>
-                    <div className="fs-export-filter-group">
-                      <label>Linked Workflow</label>
-                      <select value={filters.linkedWorkflow} onChange={e => setF({ linkedWorkflow: e.target.value })}>
-                        <option value="">Any</option>
-                        <option value="has_task">Has linked task</option>
-                        <option value="has_broadcast">Has linked broadcast</option>
-                        <option value="none">No linked workflow</option>
-                      </select>
-                    </div>
+
                   </div>
                 </div>
               )}
 
-              {/* Field selection */}
+              {/* ── Fields to Export ── */}
               <div className="fs-export-section">
                 <div className="fs-export-section-header">
-                  <h4>Fields to Export</h4>
-                  <div className="fs-export-presets">
-                    <button type="button" className={`fs-preset-btn ${preset === 'summary' ? 'fs-preset-btn--active' : ''}`}
-                      onClick={() => applyPreset('summary')}>Summary</button>
-                    <button type="button" className={`fs-preset-btn ${preset === 'full_audit' ? 'fs-preset-btn--active' : ''}`}
-                      onClick={() => applyPreset('full_audit')}>Full Audit</button>
-                    <button type="button" className={`fs-preset-btn ${preset === 'custom' ? 'fs-preset-btn--active' : ''}`}
-                      onClick={() => setPreset('custom')}>Custom</button>
-                  </div>
+                  <h4 className="fs-export-section-title">Fields to Export</h4>
+                  {scope === 'custom' && (
+                    <div className="fs-export-presets">
+                      <button type="button" className={`fs-preset-btn${preset === 'summary' ? ' fs-preset-btn--active' : ''}`}
+                        onClick={() => applyPreset('summary')}>Summary</button>
+                      <button type="button" className={`fs-preset-btn${preset === 'full_audit' ? ' fs-preset-btn--active' : ''}`}
+                        onClick={() => applyPreset('full_audit')}>Full Audit</button>
+                      <button type="button" className={`fs-preset-btn${preset === 'custom' ? ' fs-preset-btn--active' : ''}`}
+                        onClick={() => setPreset('custom')}>Custom</button>
+                    </div>
+                  )}
                 </div>
 
-                <div className="fs-export-fields-group">
-                  <span className="fs-export-fields-label">Default fields</span>
-                  <div className="fs-export-fields-grid">
-                    {DEFAULT_FIELDS.map(f => (
-                      <label key={f} className="fs-export-field-cb">
-                        {selectedFields.has(f)
-                          ? <CheckBoxOutlined sx={{ fontSize: 18 }} className="fs-cb-checked" />
-                          : <CheckBoxOutlineBlankOutlined sx={{ fontSize: 18 }} />}
-                        <input type="checkbox" checked={selectedFields.has(f)} onChange={() => toggleField(f)} />
-                        <span>{f}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                <div className="fs-export-fields-group">
-                  <span className="fs-export-fields-label">Optional fields</span>
-                  <div className="fs-export-fields-grid">
-                    {OPTIONAL_FIELDS.map(f => (
-                      <label key={f} className="fs-export-field-cb">
-                        {selectedFields.has(f)
-                          ? <CheckBoxOutlined sx={{ fontSize: 18 }} className="fs-cb-checked" />
-                          : <CheckBoxOutlineBlankOutlined sx={{ fontSize: 18 }} />}
-                        <input type="checkbox" checked={selectedFields.has(f)} onChange={() => toggleField(f)} />
-                        <span>{f}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
+                {/* Export All / Search → all columns grayed-out (read-only preview) */}
+                {scope !== 'custom' && (
+                  <>
+                    <p className="fs-export-all-hint">All columns will be included in this export.</p>
+                    <div className="fs-export-fields-group">
+                      <span className="fs-export-fields-label">Default Fields</span>
+                      <div className="fs-export-fields-grid">
+                        {DEFAULT_FIELDS.map(f => (
+                          <label key={f} className="fs-export-field-cb fs-export-field-cb--locked">
+                            <CheckBoxOutlined sx={{ fontSize: 18 }} className="fs-cb-locked" />
+                            <input type="checkbox" checked readOnly disabled />
+                            <span>{f}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="fs-export-fields-group">
+                      <span className="fs-export-fields-label">Additional Fields</span>
+                      <div className="fs-export-fields-grid">
+                        {OPTIONAL_FIELDS.map(f => (
+                          <label key={f} className="fs-export-field-cb fs-export-field-cb--locked">
+                            <CheckBoxOutlined sx={{ fontSize: 18 }} className="fs-cb-locked" />
+                            <input type="checkbox" checked readOnly disabled />
+                            <span>{f}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Custom → interactive column picker */}
+                {scope === 'custom' && (
+                  <>
+                    <div className="fs-export-fields-group">
+                      <span className="fs-export-fields-label">Default Fields</span>
+                      <div className="fs-export-fields-grid">
+                        {DEFAULT_FIELDS.map(f => (
+                          <label key={f} className="fs-export-field-cb">
+                            {selectedFields.has(f)
+                              ? <CheckBoxOutlined sx={{ fontSize: 18 }} className="fs-cb-checked" />
+                              : <CheckBoxOutlineBlankOutlined sx={{ fontSize: 18 }} />}
+                            <input type="checkbox" checked={selectedFields.has(f)} onChange={() => toggleField(f)} />
+                            <span>{f}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="fs-export-fields-group">
+                      <span className="fs-export-fields-label">Optional Fields</span>
+                      <div className="fs-export-fields-grid">
+                        {OPTIONAL_FIELDS.map(f => (
+                          <label key={f} className="fs-export-field-cb">
+                            {selectedFields.has(f)
+                              ? <CheckBoxOutlined sx={{ fontSize: 18 }} className="fs-cb-checked" />
+                              : <CheckBoxOutlineBlankOutlined sx={{ fontSize: 18 }} />}
+                            <input type="checkbox" checked={selectedFields.has(f)} onChange={() => toggleField(f)} />
+                            <span>{f}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </>
           ) : (
