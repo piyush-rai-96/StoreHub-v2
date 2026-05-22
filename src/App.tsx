@@ -18,6 +18,9 @@ import { StoreCenter as StoreDeepDive } from './pages/StoreCenter';
 import { TaskCenter } from './pages/TaskCenter';
 import { MessageCenter } from './pages/MessageCenter';
 import { UserAccessManagement } from './pages/UserAccessManagement';
+import { ProductOpportunitiesPage } from './pages/inventoryManagement/productOpportunities/ProductOpportunitiesPage';
+import { AllocationWorkflowPage } from './pages/inventoryManagement/productOpportunities/AllocationWorkflowPage';
+import { ApprovalsAndExecutionPage } from './pages/inventoryManagement/productOpportunities/ApprovalsAndExecutionPage';
 import { ROUTES } from './types';
 import './App.css';
 
@@ -58,6 +61,11 @@ function App() {
             <Route path={ROUTES.STORE_OPS_HOME} element={<StoreOpsHome />} />
             <Route path="/store-operations/district-intelligence" element={<DistrictIntelligence />} />
             <Route path="/store-operations/store-deep-dive" element={<StoreDeepDive />} />
+            {/* Inventory Management */}
+            <Route path="/inventory-management" element={<Navigate to="/inventory-management/product-opportunities" replace />} />
+            <Route path="/inventory-management/product-opportunities" element={<ProductOpportunitiesPage />} />
+            <Route path="/inventory-management/product-opportunities/:opportunityId/allocation-workflow" element={<AllocationWorkflowPage />} />
+            <Route path="/inventory-management/approvals-and-execution" element={<ApprovalsAndExecutionPage />} />
             {/* Command Center — AI Copilot panel is always mounted globally in MainLayout; route redirects to home */}
             <Route path="/command-center/ai-copilot" element={<Navigate to={ROUTES.STORE_OPS_HOME} replace />} />
             <Route path="/command-center/operations-queue" element={<TaskCenter />} />

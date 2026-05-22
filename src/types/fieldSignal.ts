@@ -17,6 +17,12 @@ export type ExpectedImpact =
 
 export type SignalStatus = 'new' | 'reviewed' | 'closed';
 
+export type LocationScope =
+  | 'stores'
+  | 'zip_code'
+  | 'city'
+  | 'state';
+
 export interface FieldSignalAttachment {
   id: string;
   name: string;
@@ -38,10 +44,15 @@ export interface FieldSignal {
   signalType: SignalType;
   title: string;
   description: string;
-  storeId: string;
+  locationScope?: LocationScope;
+  storeId?: string;
   storeName?: string;
+  affectedStoreIds?: string[];
   districtId?: string;
   districtName?: string;
+  zipCode?: string;
+  city?: string;
+  state?: string;
   department?: string;
   impactStartDate: string;
   impactEndDate: string;
@@ -65,6 +76,8 @@ export interface FieldSignal {
   activityLog: FieldSignalActivity[];
 }
 
+export type FieldSignalNotifyScope = 'all' | 'specific';
+
 export interface LogSignalFormState {
   signalType: SignalType | '';
   title: string;
@@ -72,9 +85,18 @@ export interface LogSignalFormState {
   impactStartDate: string;
   impactEndDate: string;
   expectedImpact: ExpectedImpact | '';
+  locationScope: LocationScope;
   storeId: string;
   storeName: string;
+  affectedStoreIds: string[];
+  districtId: string;
+  districtName: string;
+  zipCode: string;
+  city: string;
+  state: string;
   department: string;
+  notifyScope: FieldSignalNotifyScope;
+  notifyRecipientIds: string[];
 }
 
 export const EMPTY_LOG_SIGNAL_FORM: LogSignalFormState = {
@@ -84,7 +106,16 @@ export const EMPTY_LOG_SIGNAL_FORM: LogSignalFormState = {
   impactStartDate: '',
   impactEndDate: '',
   expectedImpact: '',
+  locationScope: 'stores',
   storeId: '',
   storeName: '',
+  affectedStoreIds: [],
+  districtId: '',
+  districtName: '',
+  zipCode: '',
+  city: '',
+  state: '',
   department: '',
+  notifyScope: 'all',
+  notifyRecipientIds: [],
 };

@@ -37,6 +37,7 @@ const SCREEN_LABELS: Record<ScreenAccess, string> = {
   operations_queue: 'Operations Queue',
   communications: 'Communications',
   user_access_management: 'User Access Management',
+  inventory_management: 'Inventory Management',
 };
 
 const SCOPE_OPTIONS: Record<UserRole, { label: string; options: string[] }> = {

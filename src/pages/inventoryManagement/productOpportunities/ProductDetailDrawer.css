@@ -1,0 +1,224 @@
+/* ============================================================
+   Product Detail Drawer Styles
+   ============================================================ */
+
+.pdd-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Product Header ───────────────────────────────────────── */
+
+.pdd-header-card {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.pdd-product-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--ia-color-border);
+  flex-shrink: 0;
+}
+
+.pdd-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.pdd-header-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pdd-header-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: var(--ia-text-xs);
+  color: var(--ia-color-text-secondary);
+}
+
+.pdd-header-meta strong {
+  font-weight: var(--ia-font-weight-semibold);
+  color: var(--ia-color-text-primary);
+}
+
+/* ── Section ──────────────────────────────────────────────── */
+
+.pdd-section {
+  background: var(--ia-color-surface);
+  border: 1px solid var(--ia-color-border);
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+
+.pdd-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--ia-text-sm);
+  font-weight: var(--ia-font-weight-semibold);
+  color: var(--ia-color-text-primary);
+  margin: 0 0 12px;
+}
+
+.pdd-section-text {
+  font-size: var(--ia-text-13);
+  color: var(--ia-color-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Stat Grid ────────────────────────────────────────────── */
+
+.pdd-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+}
+
+.pdd-stat-grid--3col {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.pdd-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pdd-stat-label {
+  font-size: var(--ia-text-2xs);
+  font-weight: var(--ia-font-weight-medium);
+  color: var(--ia-color-text-tertiary);
+  letter-spacing: 0.02em;
+}
+
+.pdd-stat-value {
+  font-size: var(--ia-text-sm);
+  font-weight: var(--ia-font-weight-semibold);
+  color: var(--ia-color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.pdd-stat--danger {
+  color: var(--ia-color-error);
+}
+
+.pdd-stat--warn {
+  color: var(--ia-color-warning);
+}
+
+.pdd-stat--ok {
+  color: var(--ia-color-success);
+}
+
+/* ── Allocation Grid ──────────────────────────────────────── */
+
+.pdd-allocation-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.pdd-alloc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--ia-color-bg-muted);
+}
+
+.pdd-alloc-row:last-child {
+  border-bottom: none;
+}
+
+.pdd-alloc-label {
+  font-size: var(--ia-text-xs);
+  color: var(--ia-color-text-secondary);
+  font-weight: var(--ia-font-weight-medium);
+}
+
+.pdd-alloc-value {
+  font-size: var(--ia-text-sm);
+  font-weight: var(--ia-font-weight-medium);
+  color: var(--ia-color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.pdd-alloc-value--bold {
+  font-weight: var(--ia-font-weight-bold);
+  font-size: var(--ia-text-md);
+}
+
+.pdd-alloc-value--accent {
+  color: var(--ia-color-primary);
+  font-weight: var(--ia-font-weight-bold);
+}
+
+.pdd-alloc-value--gap {
+  color: var(--ia-color-error);
+  font-weight: var(--ia-font-weight-bold);
+}
+
+/* ── Comparable ───────────────────────────────────────────── */
+
+.pdd-comparable {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ia-color-bg-muted);
+  font-size: var(--ia-text-xs);
+}
+
+.pdd-comparable-label {
+  color: var(--ia-color-text-secondary);
+  margin-right: 6px;
+}
+
+.pdd-comparable-value {
+  color: var(--ia-color-success);
+  font-weight: var(--ia-font-weight-semibold);
+}
+
+/* ── Action Card ──────────────────────────────────────────── */
+
+.pdd-section--action {
+  background: var(--ia-color-primary-soft);
+  border-color: var(--ia-color-primary-border);
+}
+
+.pdd-action-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pdd-action-path {
+  font-size: var(--ia-text-sm);
+  font-weight: var(--ia-font-weight-bold);
+  color: var(--ia-color-primary);
+}
+
+.pdd-action-desc {
+  font-size: var(--ia-text-13);
+  color: var(--ia-color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Footer ───────────────────────────────────────────────── */
+
+.pdd-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 100%;
+}

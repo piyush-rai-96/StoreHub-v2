@@ -1,6 +1,8 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
+import Check from '@mui/icons-material/Check';
 import AttachFileOutlined from '@mui/icons-material/AttachFileOutlined';
 import BoltOutlined from '@mui/icons-material/BoltOutlined';
 import CalendarTodayOutlined from '@mui/icons-material/CalendarTodayOutlined';
@@ -17,7 +19,10 @@ import CheckBoxOutlined from '@mui/icons-material/CheckBoxOutlined';
 import CheckBoxOutlineBlankOutlined from '@mui/icons-material/CheckBoxOutlineBlankOutlined';
 import OpenInNewOutlined from '@mui/icons-material/OpenInNewOutlined';
 import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
-import { Button, Badge, EmptyState } from 'impact-ui';
+import NotificationsOutlined from '@mui/icons-material/NotificationsOutlined';
+import GroupOutlined from '@mui/icons-material/GroupOutlined';
+import PersonOutlined from '@mui/icons-material/PersonOutlined';
+import { Button, Badge, EmptyState, Input } from 'impact-ui';
 import type { User, UserRole } from '../../types';
 import type { FieldSignal, LogSignalFormState } from '../../types/fieldSignal';
 import {
@@ -26,6 +31,12 @@ import {
   SIGNAL_STATUS_CONFIG,
   SIGNAL_TYPE_OPTIONS,
   EXPECTED_IMPACT_OPTIONS,
+  FIELD_SIGNAL_NOTIFY_CONTACTS,
+  FIELD_SIGNAL_NOTIFY_OPTIONS,
+  LOCATION_SCOPE_OPTIONS,
+  DEPARTMENT_OPTIONS,
+  US_STATES,
+  STORE_OPTIONS,
 } from '../../constants/fieldSignals';
 
 // ── Helpers ──
@@ -57,6 +68,247 @@ export const canExportFieldSignals = (role?: UserRole) =>
 export const canReviewFieldSignals = (role?: UserRole) =>
   role === 'DM' || role === 'HQ' || role === 'ADMIN';
 
+// ── Portal dropdowns (Log drawer) — Impact UI tokens, escapes drawer overflow ──
+
+type FsSelectOption = { value: string; label: string; disabled?: boolean };
+
+const FsPortalMenu: React.FC<{
+  anchorEl: HTMLElement | null;
+  open: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  maxHeight?: number;
+}> = ({ anchorEl, open, onClose, children, maxHeight = 280 }) => {
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [style, setStyle] = useState<React.CSSProperties>({
+    position: 'fixed', visibility: 'hidden', zIndex: 1400,
+  });
+
+  const reposition = useCallback(() => {
+    if (!open || !anchorEl || !menuRef.current) return;
+    const anchor = anchorEl.getBoundingClientRect();
+    const menu = menuRef.current.getBoundingClientRect();
+    const vp = { w: window.innerWidth, h: window.innerHeight };
+    const MARGIN = 6;
+    const spaceBelow = vp.h - anchor.bottom - MARGIN;
+    const spaceAbove = anchor.top - MARGIN;
+    const menuH = Math.min(menu.height || maxHeight, maxHeight);
+    const flipUp = spaceBelow < menuH && spaceAbove > spaceBelow;
+    const top = flipUp ? anchor.top - menuH - MARGIN : anchor.bottom + MARGIN;
+    const left = Math.min(anchor.left, vp.w - anchor.width - 8);
+
+    setStyle({
+      position: 'fixed',
+      top,
+      left,
+      width: anchor.width,
+      maxHeight,
+      zIndex: 1400,
+      visibility: 'visible',
+    });
+  }, [open, anchorEl, maxHeight]);
+
+  useEffect(() => {
+    if (!open) {
+      setStyle(s => ({ ...s, visibility: 'hidden' }));
+      return;
+    }
+    setStyle({ position: 'fixed', visibility: 'hidden', zIndex: 1400 });
+    const id = requestAnimationFrame(reposition);
+    return () => cancelAnimationFrame(id);
+  }, [open, reposition]);
+
+  useEffect(() => {
+    if (!open) return;
+    const update = () => reposition();
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('resize', update);
+    };
+  }, [open, reposition]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (
+        menuRef.current?.contains(e.target as Node) ||
+        anchorEl?.contains(e.target as Node)
+      ) return;
+      onClose();
+    };
+    const t = setTimeout(() => document.addEventListener('mousedown', handler), 0);
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener('mousedown', handler);
+    };
+  }, [open, onClose, anchorEl]);
+
+  if (!open) return null;
+
+  return ReactDOM.createPortal(
+    <div ref={menuRef} className="fs-dd-portal" style={style}>
+      <div className="fs-dd-portal-inner">{children}</div>
+    </div>,
+    document.body,
+  );
+};
+
+const FsFormSelect: React.FC<{
+  label: string;
+  isRequired?: boolean;
+  placeholder: string;
+  value: string;
+  options: FsSelectOption[];
+  onChange: (value: string) => void;
+  error?: string;
+}> = ({ label, isRequired, placeholder, value, options, onChange, error }) => {
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const selected = options.find(o => o.value === value);
+
+  return (
+    <div className={`fs-form-field${error ? ' fs-form-field--error' : ''}`}>
+      <label className="fs-form-label">
+        {label}
+        {isRequired && <span className="fs-required"> *</span>}
+      </label>
+      <div className="fs-dd-wrap">
+        <button
+          ref={triggerRef}
+          type="button"
+          className={`fs-dd-trigger${open ? ' fs-dd-trigger--open' : ''}${error ? ' fs-dd-trigger--error' : ''}`}
+          onClick={() => setOpen(v => !v)}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+        >
+          <span className={`fs-dd-trigger-text${!selected ? ' fs-dd-trigger-text--placeholder' : ''}`}>
+            {selected?.label ?? placeholder}
+          </span>
+          <KeyboardArrowDown sx={{ fontSize: 18 }} className={`fs-dd-chevron${open ? ' fs-dd-chevron--open' : ''}`} />
+        </button>
+        <FsPortalMenu anchorEl={triggerRef.current} open={open} onClose={() => setOpen(false)}>
+          {options.map(opt => opt.disabled ? (
+            <div key={opt.value} className="fs-dd-group-header">{opt.label}</div>
+          ) : (
+            <button
+              key={opt.value}
+              type="button"
+              className={`fs-dd-item${opt.value === value ? ' fs-dd-item--active' : ''}`}
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+            >
+              <span>{opt.label}</span>
+              {opt.value === value && <Check sx={{ fontSize: 16 }} />}
+            </button>
+          ))}
+        </FsPortalMenu>
+      </div>
+      {error && <span className="fs-form-error">{error}</span>}
+    </div>
+  );
+};
+
+const FsFormMultiSelect: React.FC<{
+  label: string;
+  placeholder: string;
+  values: string[];
+  options: FsSelectOption[];
+  onChange: (ids: string[]) => void;
+  error?: string;
+  disabled?: boolean;
+  isRequired?: boolean;
+  itemLabel?: string;
+}> = ({ label, placeholder, values, options, onChange, error, disabled, isRequired, itemLabel = 'selected' }) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return options;
+    return options.filter(o => o.label.toLowerCase().includes(q));
+  }, [options, search]);
+
+  const triggerLabel = useMemo(() => {
+    if (values.length === 0) return placeholder;
+    if (values.length === 1) return options.find(o => o.value === values[0])?.label ?? placeholder;
+    return `${values.length} ${itemLabel}`;
+  }, [values, options, placeholder, itemLabel]);
+
+  const toggle = (id: string) => {
+    onChange(values.includes(id) ? values.filter(v => v !== id) : [...values, id]);
+  };
+
+  const allSelected = values.length === options.length && options.length > 0;
+
+  return (
+    <div className={`fs-form-field${error ? ' fs-form-field--error' : ''}`}>
+      <label className="fs-form-label">
+        {label}{isRequired && <span className="fs-required"> *</span>}
+      </label>
+      <div className="fs-dd-wrap">
+        <button
+          ref={triggerRef}
+          type="button"
+          disabled={disabled}
+          className={`fs-dd-trigger${open ? ' fs-dd-trigger--open' : ''}${error ? ' fs-dd-trigger--error' : ''}`}
+          onClick={() => !disabled && setOpen(v => !v)}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+        >
+          <span className={`fs-dd-trigger-text${values.length === 0 ? ' fs-dd-trigger-text--placeholder' : ''}`}>
+            {triggerLabel}
+          </span>
+          <KeyboardArrowDown sx={{ fontSize: 18 }} className={`fs-dd-chevron${open ? ' fs-dd-chevron--open' : ''}`} />
+        </button>
+        <FsPortalMenu anchorEl={triggerRef.current} open={open} onClose={() => { setOpen(false); setSearch(''); }} maxHeight={320}>
+          <div className="fs-dd-search-wrap">
+            <SearchOutlined sx={{ fontSize: 16 }} />
+            <input
+              type="text"
+              className="fs-dd-search"
+              placeholder="Search people…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onClick={e => e.stopPropagation()}
+            />
+          </div>
+          <button
+            type="button"
+            className="fs-dd-item fs-dd-item--all"
+            onClick={() => onChange(allSelected ? [] : options.map(o => o.value))}
+          >
+            <span>Select all</span>
+            {allSelected && <Check sx={{ fontSize: 16 }} />}
+          </button>
+          <div className="fs-dd-divider" />
+          {filtered.map(opt => {
+            const active = values.includes(opt.value);
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                className={`fs-dd-item${active ? ' fs-dd-item--active' : ''}`}
+                onClick={() => toggle(opt.value)}
+              >
+                <span className="fs-dd-item-check">
+                  {active ? <CheckBoxOutlined sx={{ fontSize: 16 }} /> : <CheckBoxOutlineBlankOutlined sx={{ fontSize: 16 }} />}
+                </span>
+                <span className="fs-dd-item-label">{opt.label}</span>
+              </button>
+            );
+          })}
+          {filtered.length === 0 && (
+            <div className="fs-dd-empty">No matches</div>
+          )}
+        </FsPortalMenu>
+      </div>
+      {error && <span className="fs-form-error">{error}</span>}
+    </div>
+  );
+};
+
 // ── Log Field Signal Drawer ──
 
 interface LogFieldSignalDrawerProps {
@@ -72,96 +324,312 @@ export const LogFieldSignalDrawer: React.FC<LogFieldSignalDrawerProps> = ({
   open, form, errors, onClose, onChange, onSubmit,
 }) => {
   if (!open) return null;
+
+  const notifyAll = form.notifyScope === 'all';
+  const notifyCount = notifyAll
+    ? FIELD_SIGNAL_NOTIFY_CONTACTS.length
+    : form.notifyRecipientIds.length;
+
+  const scope = form.locationScope;
+  const scopeLabel = LOCATION_SCOPE_OPTIONS.find(o => o.value === scope)?.label ?? '';
+
   return (
     <div className="fs-log-drawer-overlay" onClick={onClose}>
       <div className="fs-log-drawer" onClick={e => e.stopPropagation()}>
+
+        {/* ── Header ── */}
         <div className="fs-log-drawer-header">
           <div>
             <h3>Log Field Signal</h3>
-            <p className="fs-log-drawer-sub">Capture hyper-local demand and operational context for your store.</p>
+            <p className="fs-log-drawer-sub">Capture hyper-local demand and operational context.</p>
           </div>
           <button type="button" className="fs-drawer-close" onClick={onClose} aria-label="Close">
             <CloseOutlined sx={{ fontSize: 20 }} />
           </button>
         </div>
+
+        {/* ── Body ── */}
         <div className="fs-log-drawer-body">
-          <div className="fs-form-section">
-            <label className="fs-form-label">Signal Type <span className="fs-required">*</span></label>
-            <select
-              className={`fs-form-select ${errors.signalType ? 'fs-form-select--error' : ''}`}
-              value={form.signalType}
-              onChange={e => onChange({ signalType: e.target.value as LogSignalFormState['signalType'] })}
-            >
-              <option value="">Select signal type…</option>
-              {SIGNAL_TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-            {errors.signalType && <span className="fs-form-error">{errors.signalType}</span>}
-          </div>
 
+          {/* Signal Type */}
+          <FsFormSelect
+            label="Signal Type"
+            isRequired
+            placeholder="Select signal type…"
+            value={form.signalType}
+            options={SIGNAL_TYPE_OPTIONS}
+            onChange={v => onChange({ signalType: v as LogSignalFormState['signalType'] })}
+            error={errors.signalType}
+          />
+
+          {/* Event Title */}
           <div className="fs-form-section">
-            <label className="fs-form-label">Event Title <span className="fs-required">*</span></label>
-            <input type="text"
-              className={`fs-form-input ${errors.title ? 'fs-form-input--error' : ''}`}
+            <Input
+              label="Event Title"
+              isRequired
               placeholder="Short title for this local event"
-              value={form.title} onChange={e => onChange({ title: e.target.value })} />
-            {errors.title && <span className="fs-form-error">{errors.title}</span>}
+              value={form.title}
+              onChange={e => onChange({ title: e.target.value })}
+              isError={!!errors.title}
+              helperText={errors.title}
+              size="large"
+            />
           </div>
 
+          {/* Description */}
           <div className="fs-form-section fs-form-section--primary">
             <label className="fs-form-label">Description <span className="fs-required">*</span></label>
-            <p className="fs-form-helper">Describe what is happening locally and how it may affect demand or store operations.</p>
+            <p className="fs-form-helper">Describe what is happening locally and how it may affect demand or operations.</p>
             <textarea
-              className={`fs-form-textarea ${errors.description ? 'fs-form-textarea--error' : ''}`}
+              className={`fs-form-textarea${errors.description ? ' fs-form-textarea--error' : ''}`}
               placeholder="Describe what is happening locally and how it may affect demand or store operations."
-              rows={6} value={form.description} onChange={e => onChange({ description: e.target.value })} />
+              rows={4}
+              value={form.description}
+              onChange={e => onChange({ description: e.target.value })}
+            />
             {errors.description && <span className="fs-form-error">{errors.description}</span>}
           </div>
 
+          {/* Event Date Range */}
           <div className="fs-form-section">
             <label className="fs-form-label">Event Date Range <span className="fs-required">*</span></label>
             <div className="fs-date-range">
-              <input type="date" className={`fs-form-input ${errors.impactStartDate ? 'fs-form-input--error' : ''}`}
-                value={form.impactStartDate} onChange={e => onChange({ impactStartDate: e.target.value })} />
+              <input
+                type="date"
+                className={`fs-form-input${errors.impactStartDate ? ' fs-form-input--error' : ''}`}
+                value={form.impactStartDate}
+                onChange={e => onChange({ impactStartDate: e.target.value })}
+                aria-label="Impact start date"
+              />
               <span className="fs-date-sep">to</span>
-              <input type="date" className={`fs-form-input ${errors.impactEndDate ? 'fs-form-input--error' : ''}`}
-                value={form.impactEndDate} onChange={e => onChange({ impactEndDate: e.target.value })} />
+              <input
+                type="date"
+                className={`fs-form-input${errors.impactEndDate ? ' fs-form-input--error' : ''}`}
+                value={form.impactEndDate}
+                onChange={e => onChange({ impactEndDate: e.target.value })}
+                aria-label="Impact end date"
+              />
             </div>
             {(errors.impactStartDate || errors.impactEndDate) && (
               <span className="fs-form-error">{errors.impactStartDate || errors.impactEndDate}</span>
             )}
           </div>
 
-          <div className="fs-form-section">
-            <label className="fs-form-label">Expected Impact <span className="fs-required">*</span></label>
-            <select
-              className={`fs-form-select ${errors.expectedImpact ? 'fs-form-select--error' : ''}`}
-              value={form.expectedImpact}
-              onChange={e => onChange({ expectedImpact: e.target.value as LogSignalFormState['expectedImpact'] })}
-            >
-              <option value="">Select expected impact…</option>
-              {EXPECTED_IMPACT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-            {errors.expectedImpact && <span className="fs-form-error">{errors.expectedImpact}</span>}
+          {/* Expected Impact */}
+          <FsFormSelect
+            label="Expected Impact"
+            isRequired
+            placeholder="Select expected impact…"
+            value={form.expectedImpact}
+            options={EXPECTED_IMPACT_OPTIONS}
+            onChange={v => onChange({ expectedImpact: v as LogSignalFormState['expectedImpact'] })}
+            error={errors.expectedImpact}
+          />
+
+          {/* ── Location & Category Context section ── */}
+          <div className="fs-form-section-group">
+            <div className="fs-form-section-group-header">
+              <StoreOutlined sx={{ fontSize: 15 }} />
+              <span>Location &amp; Category Context</span>
+            </div>
+
+            {/* Location Scope */}
+            <FsFormSelect
+              label="Location Scope"
+              isRequired
+              placeholder="Select scope…"
+              value={form.locationScope}
+              options={LOCATION_SCOPE_OPTIONS.map(o => ({ value: o.value, label: o.label }))}
+              onChange={v => {
+                const next = v as LogSignalFormState['locationScope'];
+                onChange({ locationScope: next, storeId: '', storeName: '', affectedStoreIds: [], districtId: '', districtName: '', zipCode: '', city: '', state: '' });
+              }}
+              error={errors.locationScope}
+            />
+
+            {/* Stores → multi-select (one or many) */}
+            {scope === 'stores' && (
+              <>
+                <FsFormMultiSelect
+                  label="Store(s)"
+                  isRequired
+                  placeholder="Search and select store(s)…"
+                  values={form.affectedStoreIds}
+                  options={STORE_OPTIONS.map(s => ({ value: s.value, label: s.label }))}
+                  onChange={ids => {
+                    const names = ids.map(id => STORE_OPTIONS.find(s => s.value === id)?.label ?? id).join(', ');
+                    const first = STORE_OPTIONS.find(s => s.value === ids[0]);
+                    onChange({
+                      affectedStoreIds: ids,
+                      storeId: ids[0] ?? '',
+                      storeName: names,
+                      zipCode: ids.length === 1 ? (first?.zip ?? '') : '',
+                      state: ids.length === 1 ? (first?.state ?? '') : '',
+                    });
+                  }}
+                  itemLabel="stores selected"
+                  error={errors.storeName}
+                />
+                {/* Auto-populated meta for single store */}
+                {form.affectedStoreIds.length === 1 && (form.zipCode || form.state) && (
+                  <div className="fs-loc-meta-row">
+                    {form.zipCode && <span className="fs-loc-meta-chip">ZIP {form.zipCode}</span>}
+                    {form.state && <span className="fs-loc-meta-chip">{form.state}</span>}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* ZIP Code */}
+            {scope === 'zip_code' && (
+              <div className="fs-form-section">
+                <Input
+                  label="ZIP Code"
+                  isRequired
+                  placeholder="e.g. 37201"
+                  value={form.zipCode}
+                  onChange={e => onChange({ zipCode: e.target.value })}
+                  isError={!!errors.zipCode}
+                  helperText={errors.zipCode}
+                  size="large"
+                />
+              </div>
+            )}
+
+            {/* City */}
+            {scope === 'city' && (
+              <div className="fs-form-section">
+                <Input
+                  label="City"
+                  isRequired
+                  placeholder="e.g. Nashville"
+                  value={form.city}
+                  onChange={e => onChange({ city: e.target.value })}
+                  isError={!!errors.city}
+                  helperText={errors.city}
+                  size="large"
+                />
+              </div>
+            )}
+
+            {/* State */}
+            {scope === 'state' && (
+              <FsFormSelect
+                label="State"
+                isRequired
+                placeholder="Select state…"
+                value={form.state}
+                options={US_STATES}
+                onChange={v => onChange({ state: v })}
+                error={errors.state}
+              />
+            )}
+
+            {/* Scope hint */}
+            {scope && (
+              <p className="fs-loc-scope-hint">
+                {LOCATION_SCOPE_OPTIONS.find(o => o.value === scope)?.hint}
+              </p>
+            )}
+
+            {/* ── Divider ── */}
+            <div className="fs-form-section-group-divider" />
+
+            {/* Affected Department / Category — inside the group */}
+            <FsFormSelect
+              label="Affected Department / Category"
+              placeholder="All Departments"
+              value={form.department}
+              options={[
+                { value: '', label: '— All Departments' },
+                { value: '__g1', label: 'Food & Beverage', disabled: true },
+                ...DEPARTMENT_OPTIONS.filter(d => d.group === 'Food & Beverage').map(d => ({ value: d.value, label: d.label })),
+                { value: '__g2', label: 'Non-Food & General', disabled: true },
+                ...DEPARTMENT_OPTIONS.filter(d => d.group === 'Non-Food').map(d => ({ value: d.value, label: d.label })),
+                { value: '__g3', label: 'Store Operations', disabled: true },
+                ...DEPARTMENT_OPTIONS.filter(d => d.group === 'Store Operations').map(d => ({ value: d.value, label: d.label })),
+              ]}
+              onChange={v => onChange({ department: v.startsWith('__g') ? form.department : v })}
+            />
+            <p className="fs-loc-scope-hint">Optional — leave blank if this signal applies across all departments.</p>
           </div>
 
-          <div className="fs-form-section">
-            <label className="fs-form-label">Store / Department</label>
-            <input type="text" className="fs-form-input"
-              value={form.storeName ? `${form.storeName}${form.department ? ` · ${form.department}` : ''}` : form.storeId}
-              onChange={e => onChange({ storeName: e.target.value })} placeholder="Store name or ID" />
+          {/* ── Notify section ── */}
+          <div className="fs-form-section-group fs-form-section-group--notify">
+            <div className="fs-form-section-group-header">
+              <NotificationsOutlined sx={{ fontSize: 15 }} />
+              <span>Notify</span>
+            </div>
+            <p className="fs-form-section-group-desc">Choose who gets alerted when this signal is logged.</p>
+
+            <div className="fs-notify-scope" role="group" aria-label="Notification audience">
+              <button
+                type="button"
+                className={`fs-notify-scope-btn${notifyAll ? ' fs-notify-scope-btn--active' : ''}`}
+                onClick={() => onChange({ notifyScope: 'all', notifyRecipientIds: [] })}
+              >
+                <span className="fs-notify-btn-icon"><GroupOutlined sx={{ fontSize: 16 }} /></span>
+                <span className="fs-notify-btn-body">
+                  <span className="fs-notify-btn-title">Everyone</span>
+                  <span className="fs-notify-scope-meta">{FIELD_SIGNAL_NOTIFY_CONTACTS.length} team members</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                className={`fs-notify-scope-btn${!notifyAll ? ' fs-notify-scope-btn--active' : ''}`}
+                onClick={() => onChange({ notifyScope: 'specific' })}
+              >
+                <span className="fs-notify-btn-icon"><PersonOutlined sx={{ fontSize: 16 }} /></span>
+                <span className="fs-notify-btn-body">
+                  <span className="fs-notify-btn-title">Specific People</span>
+                  <span className="fs-notify-scope-meta">Choose recipients</span>
+                </span>
+              </button>
+            </div>
+
+            {notifyAll ? (
+              <div className="fs-notify-all-banner">
+                <NotificationsOutlined sx={{ fontSize: 14 }} />
+                <span>All {FIELD_SIGNAL_NOTIFY_CONTACTS.length} team members will be notified when you submit this signal.</span>
+              </div>
+            ) : (
+              <FsFormMultiSelect
+                label="Recipients"
+                placeholder="Search and select people…"
+                values={form.notifyRecipientIds}
+                options={FIELD_SIGNAL_NOTIFY_OPTIONS}
+                onChange={ids => onChange({ notifyRecipientIds: ids })}
+                error={errors.notifyRecipientIds}
+                itemLabel="people selected"
+              />
+            )}
+            {notifyCount > 0 && (
+              <p className="fs-notify-summary">
+                {notifyAll
+                  ? `Notification will go to all ${notifyCount} team members.`
+                  : `${notifyCount} recipient${notifyCount > 1 ? 's' : ''} selected.`}
+              </p>
+            )}
           </div>
 
-          <div className="fs-form-section">
+          {/* ── Optional Attachment ── */}
+          <div className="fs-form-section--attach">
             <label className="fs-form-label">Optional Attachment</label>
             <button type="button" className="fs-attach-btn">
               <AttachFileOutlined sx={{ fontSize: 18 }} />
               <span>Add attachment</span>
             </button>
           </div>
+
         </div>
+
+        {/* ── Footer ── */}
         <div className="fs-log-drawer-footer">
           <Button variant="outlined" color="primary" size="medium" onClick={onClose}>Cancel</Button>
-          <Button variant="contained" color="primary" size="medium" onClick={onSubmit}>Send Field Signal</Button>
+          <Button variant="contained" color="primary" size="medium" onClick={onSubmit}>
+            Send Field Signal
+            {scopeLabel ? ` · ${scopeLabel}` : ''}
+          </Button>
         </div>
       </div>
     </div>
@@ -543,7 +1011,7 @@ const ExportFieldSignalsDrawer: React.FC<ExportFieldSignalsDrawerProps> = ({
         if (filters.status && s.status !== filters.status) return false;
         if (filters.signalType && s.signalType !== filters.signalType) return false;
         if (filters.expectedImpact && s.expectedImpact !== filters.expectedImpact) return false;
-        if (filters.store && !(s.storeName || s.storeId).includes(filters.store)) return false;
+        if (filters.store && !(s.storeName || s.storeId || '').includes(filters.store)) return false;
         if (filters.district && !(s.districtName || s.districtId || '').includes(filters.district)) return false;
         if (filters.createdBy && !s.createdByName.toLowerCase().includes(filters.createdBy.toLowerCase())) return false;
         return true;
@@ -559,7 +1027,6 @@ const ExportFieldSignalsDrawer: React.FC<ExportFieldSignalsDrawerProps> = ({
 
     const fieldGetters: Record<string, (s: FieldSignal) => string> = {
       'Signal ID': s => s.id,
-      'Store': s => s.storeName || s.storeId,
       'Event Title': s => s.title,
       'Signal Type': s => SIGNAL_TYPE_CONFIG[s.signalType].label,
       'Impact Window': s => `${formatSignalDate(s.impactStartDate)} – ${formatSignalDate(s.impactEndDate)}`,
@@ -569,8 +1036,13 @@ const ExportFieldSignalsDrawer: React.FC<ExportFieldSignalsDrawerProps> = ({
       'Logged Date': s => s.createdAt,
       'Last Updated': s => s.updatedAt,
       'Description': s => s.description,
+      'Location Scope': s => s.locationScope ? LOCATION_SCOPE_OPTIONS.find(o => o.value === s.locationScope)?.label ?? s.locationScope : '',
+      'Store': s => s.storeName || s.storeId || '',
       'District': s => s.districtName || s.districtId || '',
-      'Department': s => s.department || '',
+      'ZIP Code': s => s.zipCode || '',
+      'City': s => s.city || '',
+      'State': s => s.state || '',
+      'Affected Department / Category': s => s.department || '',
       'Event Start Date': s => s.impactStartDate,
       'Event End Date': s => s.impactEndDate,
       'Reviewed By': s => s.reviewedByName || '',

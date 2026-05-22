@@ -1,4 +1,4 @@
-import type { SignalType, ExpectedImpact, FieldSignal } from '../types/fieldSignal';
+import type { SignalType, ExpectedImpact, FieldSignal, LocationScope } from '../types/fieldSignal';
 
 export const SIGNAL_TYPE_CONFIG: Record<
   SignalType,
@@ -45,6 +45,7 @@ export const MOCK_FIELD_SIGNALS: FieldSignal[] = [
     title: 'Nashville Spring Fair — High Foot Traffic',
     description:
       'Annual spring fair at Centennial Park draws heavy weekend foot traffic. Expect increased beverage and snack demand Friday–Sunday. Parking on Main St will be limited.',
+    locationScope: 'stores',
     storeId: '2341',
     storeName: 'Store #2341 — Nashville',
     districtId: 'D14',
@@ -293,3 +294,86 @@ export const SIGNAL_TYPE_OPTIONS = (Object.keys(SIGNAL_TYPE_CONFIG) as SignalTyp
 export const EXPECTED_IMPACT_OPTIONS = (Object.keys(EXPECTED_IMPACT_CONFIG) as ExpectedImpact[]).map(
   key => ({ value: key, label: EXPECTED_IMPACT_CONFIG[key].label })
 );
+
+/** Team members available for Field Signal notifications */
+export const FIELD_SIGNAL_NOTIFY_CONTACTS: { id: string; name: string; role: string }[] = [
+  { id: 'u1', name: 'Sarah Chen', role: 'District Manager' },
+  { id: 'u2', name: 'Mike Rodriguez', role: 'Regional VP' },
+  { id: 'u3', name: 'Emily Parker', role: 'Store Associate' },
+  { id: 'u4', name: 'David Kim', role: 'Loss Prevention' },
+  { id: 'u5', name: 'Lisa Thompson', role: 'Inventory Lead' },
+  { id: 'u6', name: 'James Wilson', role: 'Store Manager' },
+  { id: 'u7', name: 'Anna Martinez', role: 'POG Specialist' },
+  { id: 'u8', name: 'Robert Chang', role: 'Operations Director' },
+  { id: 'u9', name: 'Clarke T', role: 'Platform Administrator' },
+];
+
+export const FIELD_SIGNAL_NOTIFY_OPTIONS = FIELD_SIGNAL_NOTIFY_CONTACTS.map(c => ({
+  value: c.id,
+  label: `${c.name} · ${c.role}`,
+}));
+
+export const LOCATION_SCOPE_OPTIONS: { value: LocationScope; label: string; hint: string }[] = [
+  { value: 'stores',   label: 'Store(s)',            hint: 'Select one or more specific stores' },
+  { value: 'zip_code', label: 'ZIP Code / Local Area', hint: 'Signal is tied to a ZIP code or local neighborhood' },
+  { value: 'city',     label: 'City',                hint: 'Signal applies across an entire city' },
+  { value: 'state',    label: 'State',               hint: 'Signal applies across an entire state' },
+];
+
+export const DEPARTMENT_OPTIONS = [
+  { value: '',             label: 'All Departments',          group: '' },
+  { value: 'Grocery',      label: 'Grocery',                  group: 'Food & Beverage' },
+  { value: 'Beverages',    label: 'Beverages',                group: 'Food & Beverage' },
+  { value: 'Dairy',        label: 'Dairy & Eggs',             group: 'Food & Beverage' },
+  { value: 'Frozen',       label: 'Frozen Foods',             group: 'Food & Beverage' },
+  { value: 'Bakery',       label: 'Bakery & Deli',            group: 'Food & Beverage' },
+  { value: 'Produce',      label: 'Produce',                  group: 'Food & Beverage' },
+  { value: 'Meat',         label: 'Meat & Seafood',           group: 'Food & Beverage' },
+  { value: 'Snacks',       label: 'Snacks & Candy',           group: 'Food & Beverage' },
+  { value: 'Apparel',      label: 'Apparel',                  group: 'Non-Food' },
+  { value: 'Seasonal',     label: 'Seasonal',                 group: 'Non-Food' },
+  { value: 'Health',       label: 'Health & Beauty',          group: 'Non-Food' },
+  { value: 'HomeGarden',   label: 'Home & Garden',            group: 'Non-Food' },
+  { value: 'Electronics',  label: 'Electronics',              group: 'Non-Food' },
+  { value: 'Automotive',   label: 'Automotive',               group: 'Non-Food' },
+  { value: 'Toys',         label: 'Toys & Sporting Goods',    group: 'Non-Food' },
+  { value: 'Office',       label: 'Office & School Supplies', group: 'Non-Food' },
+  { value: 'Pets',         label: 'Pet Supplies',             group: 'Non-Food' },
+  { value: 'Cleaning',     label: 'Cleaning & Household',     group: 'Non-Food' },
+  { value: 'FrontEnd',     label: 'Front End / Checkout',     group: 'Store Operations' },
+  { value: 'Backroom',     label: 'Backroom / Receiving',     group: 'Store Operations' },
+  { value: 'Loss',         label: 'Loss Prevention',          group: 'Store Operations' },
+  { value: 'Pharmacy',     label: 'Pharmacy',                 group: 'Store Operations' },
+];
+
+/** Mock store list for dropdowns */
+export const STORE_OPTIONS = [
+  { value: '2341', label: 'Store #2341 — Nashville, TN',    district: 'D14', zip: '37201', state: 'Tennessee' },
+  { value: '1142', label: 'Store #1142 — Memphis, TN',      district: 'D14', zip: '38103', state: 'Tennessee' },
+  { value: '2034', label: 'Downtown Plaza #2034 — Nashville, TN', district: 'D14', zip: '37219', state: 'Tennessee' },
+  { value: '3021', label: 'Store #3021 — Knoxville, TN',   district: 'D14', zip: '37902', state: 'Tennessee' },
+  { value: '4112', label: 'Store #4112 — Chattanooga, TN', district: 'D15', zip: '37402', state: 'Tennessee' },
+  { value: '4523', label: 'Store #4523 — Murfreesboro, TN',district: 'D15', zip: '37130', state: 'Tennessee' },
+  { value: '5001', label: 'Store #5001 — Atlanta, GA',      district: 'D22', zip: '30301', state: 'Georgia' },
+  { value: '5219', label: 'Store #5219 — Alpharetta, GA',   district: 'D22', zip: '30004', state: 'Georgia' },
+];
+
+/** Mock district list for dropdowns */
+export const DISTRICT_OPTIONS = [
+  { value: 'D14', label: 'District 14 — Tennessee (Central)', state: 'Tennessee' },
+  { value: 'D15', label: 'District 15 — Tennessee (East)',    state: 'Tennessee' },
+  { value: 'D22', label: 'District 22 — Georgia',            state: 'Georgia' },
+  { value: 'D31', label: 'District 31 — Alabama',            state: 'Alabama' },
+  { value: 'D40', label: 'District 40 — Kentucky',           state: 'Kentucky' },
+];
+
+export const US_STATES = [
+  'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
+  'Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa',
+  'Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan',
+  'Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire',
+  'New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio',
+  'Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota',
+  'Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia',
+  'Wisconsin','Wyoming',
+].map(s => ({ value: s, label: s }));

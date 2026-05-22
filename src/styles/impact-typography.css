@@ -108,4 +108,98 @@
   --ia-color-error-soft:        #FCEEEE;
   --ia-color-error-bg:          #FCEEEE;
   --ia-color-destructive:       #E15554;
+
+  /* ============================================================
+     Accent Palette — 5 semantic accent colors
+     Inspired by ItemSmart/Impact Analytics product design language.
+     Use these for KPI tile icons, card accents, and category badges.
+     RULE: Never use raw hex for accent colors — always use these tokens.
+
+     Color    | Semantic use
+     ---------|---------------------------------------------
+     rose     | Activity, engagement, attention, urgency
+     amber    | Pending, review needed, warm warnings
+     mint     | Success, efficiency, savings, growth
+     violet   | Business value, revenue, strategic insight
+     teal     | Operational, data sync, inventory
+
+     Each accent has 4 variants:
+       --ia-color-accent-{name}          icon / strong text color
+       --ia-color-accent-{name}-bg       card / tile background (very light)
+       --ia-color-accent-{name}-soft     inner icon tile background
+       --ia-color-accent-{name}-border   border / outline color
+     ============================================================ */
+
+  /* Rose — activity / engagement / urgency */
+  --ia-color-accent-rose:         #D63F82;
+  --ia-color-accent-rose-bg:      #FFF0F7;
+  --ia-color-accent-rose-soft:    #FFD6EC;
+  --ia-color-accent-rose-border:  #FFA8D4;
+
+  /* Amber — pending / review / warm warning */
+  --ia-color-accent-amber:        #C96A2A;
+  --ia-color-accent-amber-bg:     #FFF5EE;
+  --ia-color-accent-amber-soft:   #FFD8BC;
+  --ia-color-accent-amber-border: #FFB48A;
+
+  /* Mint — success / efficiency / savings / growth */
+  --ia-color-accent-mint:         #0E9B52;
+  --ia-color-accent-mint-bg:      #F0FBF5;
+  --ia-color-accent-mint-soft:    #C2EDD5;
+  --ia-color-accent-mint-border:  #90D9B0;
+
+  /* Violet — revenue / business value / strategic */
+  --ia-color-accent-violet:       #6B3EC2;
+  --ia-color-accent-violet-bg:    #F4EEFF;
+  --ia-color-accent-violet-soft:  #DDD0F8;
+  --ia-color-accent-violet-border:#B9A2EE;
+
+  /* Teal — operational / data sync / inventory */
+  --ia-color-accent-teal:         #0882A0;
+  --ia-color-accent-teal-bg:      #EDF9FB;
+  --ia-color-accent-teal-soft:    #B4E8F0;
+  --ia-color-accent-teal-border:  #78D0DC;
+
+  /* ============================================================
+     Semantic Role Aliases
+     Map domain-specific roles to the accent palette.
+     RULE: Use these aliases in product UI, not the accent names directly,
+     so role intent is clear at the call site.
+     ============================================================ */
+
+  /* Execution / Store operations → primary blue */
+  --ia-color-execution:           var(--ia-color-primary);
+  --ia-color-execution-bg:        var(--ia-color-primary-soft);
+  --ia-color-execution-soft:      #C8D4FC;
+  --ia-color-execution-border:    var(--ia-color-primary-border);
+
+  /* Commercial / Sales / Revenue → violet */
+  --ia-color-commercial:          var(--ia-color-accent-violet);
+  --ia-color-commercial-bg:       var(--ia-color-accent-violet-bg);
+  --ia-color-commercial-soft:     var(--ia-color-accent-violet-soft);
+  --ia-color-commercial-border:   var(--ia-color-accent-violet-border);
+
+  /* Operations / Inventory / Sync → teal */
+  --ia-color-ops:                 var(--ia-color-accent-teal);
+  --ia-color-ops-bg:              var(--ia-color-accent-teal-bg);
+  --ia-color-ops-soft:            var(--ia-color-accent-teal-soft);
+  --ia-color-ops-border:          var(--ia-color-accent-teal-border);
+
+  /* Customer / VoC / Satisfaction → mint */
+  --ia-color-customer:            var(--ia-color-accent-mint);
+  --ia-color-customer-bg:         var(--ia-color-accent-mint-bg);
+  --ia-color-customer-soft:       var(--ia-color-accent-mint-soft);
+  --ia-color-customer-border:     var(--ia-color-accent-mint-border);
+
+  /* Compliance / Audit / Risk → amber */
+  --ia-color-compliance:          var(--ia-color-accent-amber);
+  --ia-color-compliance-bg:       var(--ia-color-accent-amber-bg);
+  --ia-color-compliance-soft:     var(--ia-color-accent-amber-soft);
+  --ia-color-compliance-border:   var(--ia-color-accent-amber-border);
+
+  /* Engagement / Attention / Urgency → rose */
+  --ia-color-engagement:          var(--ia-color-accent-rose);
+  --ia-color-engagement-bg:       var(--ia-color-accent-rose-bg);
+  --ia-color-engagement-soft:     var(--ia-color-accent-rose-soft);
+  --ia-color-engagement-border:   var(--ia-color-accent-rose-border);
 }

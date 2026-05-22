@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import StoreOutlined from '@mui/icons-material/StoreOutlined';
 import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
@@ -37,7 +37,8 @@ import FilterListOutlined from '@mui/icons-material/FilterListOutlined';
 import GridOnOutlined from '@mui/icons-material/GridOnOutlined';
 import ShowChartOutlined from '@mui/icons-material/ShowChartOutlined';
 import OpenInNewOutlined from '@mui/icons-material/OpenInNewOutlined';
-import { Button, Badge, Card, Tabs } from 'impact-ui';
+import { Button, Badge, Chips, Card, Tabs, Tooltip, Tag } from 'impact-ui';
+import { ImFilterSelect } from '../components/common/ImFilterSelect';
 import { AIDailyBrief, AIDailyBriefData } from '../components/common/AIDailyBrief';
 import { useAuth } from '../context/AuthContext';
 import { useExecutionTasks } from '../context/ExecutionTasksContext';
@@ -160,9 +161,15 @@ interface InventoryItem {
   sku: string;
   name: string;
   status: 'in-stock' | 'low' | 'out-of-stock' | 'inbound';
-  quantity: number;
-  daysOfSupply: number;
-  inboundEta?: string;
+  quantity: number;       // Store on-hand (floor + backroom)
+  onOrder: number;        // Units ordered from DC, not yet shipped
+  inTransit: number;      // Units shipped from DC, not yet received
+  daysOfSupply: number;   // Used to derive FWOS = daysOfSupply / 7
+  inboundEta?: string;    // Expected arrival for in-transit units
+  department: string;
+  subDept: string;
+  itemClass: string;
+  brand: string;
 }
 
 // ── Store-level AI Daily Brief — tier-aware narrative ──────────
@@ -542,38 +549,49 @@ const getVoCData = (store: StoreMeta): VoCItem[] => [
 ];
 
 const getInventoryData = (store: StoreMeta): InventoryItem[] => [
-  { sku: 'WOM-BLZ-001', name: "Women's Classic Blazer", status: 'in-stock', quantity: 48, daysOfSupply: 14 },
-  { sku: 'MEN-DNM-003', name: "Men's Slim Denim", status: store.dpi >= 80 ? 'in-stock' : 'low', quantity: store.dpi >= 80 ? 32 : 6, daysOfSupply: store.dpi >= 80 ? 10 : 2 },
-  { sku: 'KID-TSH-012', name: "Kids Color Block Tee", status: 'in-stock', quantity: 64, daysOfSupply: 21 },
-  { sku: 'ACC-BAG-005', name: "Canvas Tote Bag", status: store.risk === 'high' ? 'out-of-stock' : 'in-stock', quantity: store.risk === 'high' ? 0 : 22, daysOfSupply: store.risk === 'high' ? 0 : 8 },
-  { sku: 'WOM-DRS-008', name: "Summer Midi Dress", status: 'inbound', quantity: 12, daysOfSupply: 3, inboundEta: '2 days' },
-  { sku: 'MEN-PLO-002', name: "Men's Polo Classic", status: store.dpi >= 75 ? 'in-stock' : 'low', quantity: store.dpi >= 75 ? 28 : 4, daysOfSupply: store.dpi >= 75 ? 9 : 1 },
-  { sku: 'SEA-JKT-004', name: "Seasonal Rain Jacket", status: 'inbound', quantity: 0, daysOfSupply: 0, inboundEta: '5 days' },
-  { sku: 'ACC-SCF-009', name: "Silk Blend Scarf", status: 'in-stock', quantity: 36, daysOfSupply: 18 },
-  { sku: 'WOM-TOP-014', name: "Women's V-Neck Basics", status: store.risk !== 'low' ? 'out-of-stock' : 'low', quantity: store.risk !== 'low' ? 0 : 5, daysOfSupply: store.risk !== 'low' ? 0 : 1 },
-  { sku: 'MEN-CHN-007', name: "Men's Stretch Chino", status: 'inbound', quantity: 4, daysOfSupply: 1, inboundEta: '7 days (delayed)' },
-  { sku: 'KID-SHT-019', name: "Kids Cargo Shorts", status: 'low', quantity: 7, daysOfSupply: 2 },
-  { sku: 'ACC-BLT-011', name: "Leather Belt Classic", status: 'in-stock', quantity: 54, daysOfSupply: 25 },
+  { sku: 'WOM-BLZ-001', name: "Women's Classic Blazer",  status: 'in-stock',     quantity: 48, onOrder: 0,  inTransit: 0,  daysOfSupply: 14, department: "Women's", subDept: 'Tops', itemClass: 'Blazers', brand: 'House Brand' },
+  { sku: 'MEN-DNM-003', name: "Men's Slim Denim",         status: store.dpi >= 80 ? 'in-stock' : 'low', quantity: store.dpi >= 80 ? 32 : 6,  onOrder: store.dpi >= 80 ? 24 : 36, inTransit: store.dpi >= 80 ? 12 : 0,  daysOfSupply: store.dpi >= 80 ? 10 : 2, department: "Men's", subDept: 'Bottoms', itemClass: 'Denim', brand: 'Core Range' },
+  { sku: 'KID-TSH-012', name: "Kids Color Block Tee",     status: 'in-stock',     quantity: 64, onOrder: 48, inTransit: 0,  daysOfSupply: 21, department: 'Kids', subDept: 'Tops', itemClass: 'Tees', brand: 'House Brand' },
+  { sku: 'ACC-BAG-005', name: "Canvas Tote Bag",           status: store.risk === 'high' ? 'out-of-stock' : 'in-stock', quantity: store.risk === 'high' ? 0 : 22, onOrder: store.risk === 'high' ? 36 : 12, inTransit: store.risk === 'high' ? 24 : 0, daysOfSupply: store.risk === 'high' ? 0 : 8, department: 'Accessories', subDept: 'Bags', itemClass: 'Totes', brand: 'Premium Line' },
+  { sku: 'WOM-DRS-008', name: "Summer Midi Dress",         status: 'inbound',      quantity: 12, onOrder: 0,  inTransit: 30, daysOfSupply: 3,  inboundEta: '2 days', department: "Women's", subDept: 'Dresses', itemClass: 'Midi Dresses', brand: 'House Brand' },
+  { sku: 'MEN-PLO-002', name: "Men's Polo Classic",        status: store.dpi >= 75 ? 'in-stock' : 'low', quantity: store.dpi >= 75 ? 28 : 4,  onOrder: store.dpi >= 75 ? 18 : 24, inTransit: store.dpi >= 75 ? 0  : 12, daysOfSupply: store.dpi >= 75 ? 9  : 1, department: "Men's", subDept: 'Tops', itemClass: 'Polos', brand: 'Core Range' },
+  { sku: 'SEA-JKT-004', name: "Seasonal Rain Jacket",      status: 'inbound',      quantity: 0,  onOrder: 0,  inTransit: 48, daysOfSupply: 0,  inboundEta: '5 days', department: 'Seasonal', subDept: 'Outerwear', itemClass: 'Jackets', brand: 'Premium Line' },
+  { sku: 'ACC-SCF-009', name: "Silk Blend Scarf",           status: 'in-stock',     quantity: 36, onOrder: 24, inTransit: 0,  daysOfSupply: 18, department: 'Accessories', subDept: 'Scarves', itemClass: 'Scarves', brand: 'Premium Line' },
+  { sku: 'WOM-TOP-014', name: "Women's V-Neck Basics",     status: store.risk !== 'low' ? 'out-of-stock' : 'low', quantity: store.risk !== 'low' ? 0 : 5, onOrder: 48, inTransit: store.risk !== 'low' ? 0 : 0, daysOfSupply: store.risk !== 'low' ? 0 : 1, department: "Women's", subDept: 'Tops', itemClass: 'Basics', brand: 'Core Range' },
+  { sku: 'MEN-CHN-007', name: "Men's Stretch Chino",        status: 'inbound',      quantity: 4,  onOrder: 0,  inTransit: 36, daysOfSupply: 1,  inboundEta: '7 days (delayed)', department: "Men's", subDept: 'Bottoms', itemClass: 'Chinos', brand: 'House Brand' },
+  { sku: 'KID-SHT-019', name: "Kids Cargo Shorts",          status: 'low',          quantity: 7,  onOrder: 24, inTransit: 12, daysOfSupply: 2, department: 'Kids', subDept: 'Bottoms', itemClass: 'Shorts', brand: 'Core Range' },
+  { sku: 'ACC-BLT-011', name: "Leather Belt Classic",       status: 'in-stock',     quantity: 54, onOrder: 0,  inTransit: 0,  daysOfSupply: 25, department: 'Accessories', subDept: 'Belts', itemClass: 'Belts', brand: 'House Brand' },
 ];
+
+const buildInvFilterOptions = (
+  items: InventoryItem[],
+  key: 'department' | 'subDept' | 'itemClass' | 'brand',
+  allLabel: string,
+) => {
+  const unique = [...new Set(items.map(i => i[key]))].sort();
+  return [{ value: 'All', label: allLabel }, ...unique.map(v => ({ value: v, label: v }))];
+};
 
 type InventoryRisk = 'critical' | 'at-risk' | 'watch' | 'healthy';
 
 const classifyInventoryRisk = (item: InventoryItem): InventoryRisk => {
-  // Out of stock → critical
-  if (item.status === 'out-of-stock') return 'critical';
-  // Inbound that is delayed (text contains "delayed") and qty is 0/very low → at-risk
+  const pipeline = item.onOrder + item.inTransit;
+  // Out of stock: critical only if NO pipeline inventory to recover
+  if (item.status === 'out-of-stock') return pipeline > 0 ? 'at-risk' : 'critical';
+  // Inbound: delayed shipment → at-risk; qty 0 but something coming → at-risk; otherwise watch
   if (item.status === 'inbound') {
     const delayed = !!item.inboundEta && /delay/i.test(item.inboundEta);
     if (delayed) return 'at-risk';
     if (item.quantity === 0) return 'at-risk';
-    if (item.daysOfSupply > 0 && item.daysOfSupply < 4) return 'watch';
     return 'watch';
   }
-  // Low stock with very low DoS → critical
-  if (item.status === 'low' && item.daysOfSupply <= 2) return 'critical';
+  // Low stock with FWOS < 0.3 weeks (≈ 2 days) and no pipeline → critical
+  if (item.status === 'low' && item.daysOfSupply <= 2 && pipeline === 0) return 'critical';
+  // Low stock with FWOS < 0.3 weeks but has pipeline → at-risk
+  if (item.status === 'low' && item.daysOfSupply <= 2) return 'at-risk';
   // Low stock → at-risk
   if (item.status === 'low') return 'at-risk';
-  // In-stock but DoS < 7 → watch
+  // In-stock but FWOS < 1 week → watch
   if (item.status === 'in-stock' && item.daysOfSupply < 7) return 'watch';
   return 'healthy';
 };
@@ -1256,6 +1274,12 @@ export const StoreCenter: React.FC = () => {
   const { addTasks } = useExecutionTasks();
   const [activeTab, setActiveTab] = useState<'voc' | 'inventory' | 'benchmarking'>('inventory');
   const [inventoryView, setInventoryView] = useState<'at-risk' | 'all'>('at-risk');
+  const [invPage, setInvPage] = useState(0);
+  const [invSearch, setInvSearch] = useState('');
+  const [invDept, setInvDept] = useState('All');
+  const [invSubDept, setInvSubDept] = useState('All');
+  const [invClass, setInvClass] = useState('All');
+  const [invBrand, setInvBrand] = useState('All');
   const [vocExpanded, setVocExpanded] = useState(false);
   // Benchmarking section: view toggle
   const [benchView, setBenchView] = useState<'cards' | 'table'>('cards');
@@ -1439,6 +1463,36 @@ export const StoreCenter: React.FC = () => {
   const aiInsight = getAIInsight(store);
   const vocData = getVoCData(store);
   const inventoryData = getInventoryData(store);
+  const invDeptOptions = useMemo(
+    () => buildInvFilterOptions(inventoryData, 'department', 'All Departments'),
+    [inventoryData],
+  );
+  const invSubDeptOptions = useMemo(
+    () => buildInvFilterOptions(inventoryData, 'subDept', 'All Sub Depts'),
+    [inventoryData],
+  );
+  const invClassOptions = useMemo(
+    () => buildInvFilterOptions(inventoryData, 'itemClass', 'All Classes'),
+    [inventoryData],
+  );
+  const invBrandOptions = useMemo(
+    () => buildInvFilterOptions(inventoryData, 'brand', 'All Brands'),
+    [inventoryData],
+  );
+  const invFiltersActive =
+    invSearch.trim() !== '' ||
+    invDept !== 'All' ||
+    invSubDept !== 'All' ||
+    invClass !== 'All' ||
+    invBrand !== 'All';
+  const clearInvFilters = useCallback(() => {
+    setInvSearch('');
+    setInvDept('All');
+    setInvSubDept('All');
+    setInvClass('All');
+    setInvBrand('All');
+    setInvPage(0);
+  }, []);
   const alertBuckets = getAlertBuckets(store);
 
   // Filter broadcasts to only those where this store has a non-completed status
@@ -2128,7 +2182,7 @@ export const StoreCenter: React.FC = () => {
                   <span className="ocv-tab-label">
                     <Badge
                       label={bc.priority.toUpperCase()}
-                      color={bc.priority === 'critical' ? 'error' : bc.priority === 'high' ? 'warning' : 'default'}
+                      color={bc.priority === 'critical' ? 'error' : bc.priority === 'high' ? 'warning' : 'info'}
                       size="small"
                       variant="subtle"
                     />
@@ -2155,7 +2209,7 @@ export const StoreCenter: React.FC = () => {
                         <div className="ocv-bc-meta">
                           <Badge
                             label={bc.priority.toUpperCase()}
-                            color={bc.priority === 'critical' ? 'error' : bc.priority === 'high' ? 'warning' : 'default'}
+                            color={bc.priority === 'critical' ? 'error' : bc.priority === 'high' ? 'warning' : 'info'}
                             size="small"
                             variant="subtle"
                           />
@@ -2406,90 +2460,76 @@ export const StoreCenter: React.FC = () => {
           </div>
         </div>
 
-        {/* ── Alert Buckets ──────────────────────────────── */}
-        <div className="sc-deepdive-section sc-alert-section">
-          <div className="sc-section-header sc-alerts-section-header">
-            <div className="sc-section-title-row">
-              <WarningAmberOutlined sx={{ fontSize: 20, color: 'var(--ia-color-warning)' }}/>
-              <h3>Alerts</h3>
+        {/* ── Alert Buckets (matches Overview alerts exactly) ── */}
+        <div className="sc-deepdive-section sc-alert-section insights-section-v3">
+          <div className="section-header-v3">
+            <div className="section-title-v3">
+              <WarningAmberOutlined sx={{ fontSize: 16 }} className="header-icon-risk"/>
+              <h2>Alerts</h2>
             </div>
-            <span className="sc-section-subtitle">
-              Grouped issues requiring review — {alertBuckets.reduce((s, b) => s + b.issues.length, 0)} items across {alertBuckets.length} alert types
-            </span>
+            <div className="insights-meta">
+              <span className="meta-positive">{alertBuckets.length} Alerts</span>
+            </div>
           </div>
 
-          <div className="sc-alert-buckets-grid">
+          <div className="insights-content-v3">
             {alertBuckets.map(bucket => {
-              const priorityClass = bucket.priority === 'High' ? 'sc-alert-priority--high'
-                : bucket.priority === 'Medium' ? 'sc-alert-priority--medium'
-                : 'sc-alert-priority--low';
-              const accentColor = bucket.priority === 'High' ? 'var(--ia-color-error-strong, #dc2626)'
-                : bucket.priority === 'Medium' ? 'var(--ia-color-warning)'
-                : 'var(--ia-color-primary)';
-              const bucketIcon =
-                bucket.id === 'boh-sync' ? <InventoryOutlined sx={{ fontSize: 18 }}/>
-                : bucket.id === 'phantom-stock' ? <ErrorOutlined sx={{ fontSize: 18 }}/>
-                : <GridOnOutlined sx={{ fontSize: 18 }}/>;
+              const isHigh = bucket.priority === 'High';
+              const isMedium = bucket.priority === 'Medium';
+              const signalClass = isHigh ? 'critical' : isMedium ? 'warning' : '';
+              const typeLabel =
+                bucket.id === 'boh-sync' ? 'Replenishment'
+                : bucket.id === 'phantom-stock' ? 'Inventory Risk'
+                : 'Compliance';
+              const impactIcon =
+                bucket.id === 'boh-sync' ? <InventoryOutlined sx={{ fontSize: 14 }}/>
+                : bucket.id === 'phantom-stock' ? <ErrorOutlined sx={{ fontSize: 14 }}/>
+                : <GridOnOutlined sx={{ fontSize: 14 }}/>;
+              const impactText = [
+                `${bucket.issues.length} issue${bucket.issues.length === 1 ? '' : 's'}`,
+                ...bucket.metrics.slice(0, 2).map(m => `${m.value} ${m.label.toLowerCase()}`),
+              ].join(' · ');
               return (
                 <Card
                   key={bucket.id}
+                  size="extraSmall"
+                  sx={{ maxWidth: '100%', minHeight: 0, padding: 0, overflow: 'hidden', marginBottom: 'var(--space-lg)' }}
                   onClick={() => { setAlertDrawer(bucket); setSelectedIssues(new Set()); }}
-                  sx={{
-                    padding: 0,
-                    maxWidth: '100%',
-                    minHeight: 'unset',
-                    width: '100%',
-                    borderRadius: '14px',
-                    border: '1px solid var(--ia-color-border)',
-                    boxShadow: '0 2px 8px rgba(15,23,42,0.06)',
-                    cursor: 'pointer',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    transition: 'all 0.15s ease',
-                    '&:hover': {
-                      boxShadow: '0 6px 20px rgba(15,23,42,0.1)',
-                      borderColor: 'var(--ia-color-border-strong)',
-                      transform: 'translateY(-2px)',
-                    },
-                  }}
                 >
-                  {/* Colour accent top bar */}
-                  <div style={{ height: 4, background: accentColor, flexShrink: 0 }} />
-
-                  <div className="sc-alert-bucket-body">
-                    {/* Icon + priority */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div className="sc-alert-bucket-icon">{bucketIcon}</div>
-                      <span className={`sc-alert-priority-badge ${priorityClass}`}>{bucket.priority}</span>
+                  <div className="hero-card-content" style={{ cursor: 'pointer' }}>
+                    <div className="hero-card-header">
+                      <div className={`hero-signal${signalClass ? ` ${signalClass}` : ''}`}>
+                        <WarningAmberOutlined sx={{ fontSize: 14 }}/>
+                        <span>{bucket.priority.toUpperCase()}</span>
+                      </div>
+                      <div className="hero-overdue">
+                        <span>{typeLabel}</span>
+                      </div>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      <h4 className="sc-alert-bucket-name">{bucket.name}</h4>
-                      <p className="sc-alert-bucket-desc">{bucket.shortDesc}</p>
+                    <h2 className="hero-headline">{bucket.name}</h2>
+                    <p className="hero-context">{bucket.shortDesc}</p>
+
+                    <div className="hero-impact">
+                      {impactIcon}
+                      <span>{impactText}</span>
                     </div>
 
-                    {/* Metric chips */}
-                    <div className="sc-alert-bucket-metrics">
-                      {bucket.metrics.map(m => (
-                        <div
-                          key={m.label}
-                          className={`sc-alert-metric-chip${m.tooltip ? ' sc-alert-metric-chip--tip' : ''}${m.value === 'Recovery estimate unavailable' ? ' sc-alert-metric-chip--muted-val' : ''}`}
-                          title={m.tooltip}
-                        >
-                          <span className="sc-alert-metric-val">{m.value}</span>
-                          <span className="sc-alert-metric-lbl">{m.label}</span>
-                        </div>
-                      ))}
+                    <div className="hero-top-store">
+                      <StoreOutlined sx={{ fontSize: 12 }}/>
+                      <span>{store.name} — {bucket.issues.length} item{bucket.issues.length === 1 ? '' : 's'} requiring review</span>
                     </div>
 
-                    {/* Review CTA */}
-                    <div className="sc-alert-bucket-footer">
-                      <button className="sc-alert-review-btn"
-                        onClick={e => { e.stopPropagation(); setAlertDrawer(bucket); setSelectedIssues(new Set()); }}>
-                        Review
-                        <KeyboardArrowRight sx={{ fontSize: 16 }}/>
-                      </button>
+                    <div className="hero-actions">
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        className="hero-action-primary"
+                        endIcon={<KeyboardArrowRight sx={{ fontSize: 16 }}/>}
+                        onClick={e => { e.stopPropagation(); setAlertDrawer(bucket); setSelectedIssues(new Set()); }}
+                      >
+                        Review Issues
+                      </Button>
                     </div>
                   </div>
                 </Card>
@@ -2506,9 +2546,12 @@ export const StoreCenter: React.FC = () => {
               <div className="sc-alert-drawer-header">
                 <div className="sc-alert-drawer-title-block">
                   <div className="sc-alert-drawer-eyebrow">
-                    <span className={`sc-alert-priority-badge ${alertDrawer.priority === 'High' ? 'sc-alert-priority--high' : alertDrawer.priority === 'Medium' ? 'sc-alert-priority--medium' : 'sc-alert-priority--low'}`}>
-                      {alertDrawer.priority} Priority
-                    </span>
+                    <Badge
+                      label={`${alertDrawer.priority} Priority`}
+                      color={alertDrawer.priority === 'High' ? 'error' : alertDrawer.priority === 'Medium' ? 'warning' : 'info'}
+                      variant="subtle"
+                      size="small"
+                    />
                     <span className="sc-alert-drawer-type">Alert</span>
                   </div>
                   <h2 className="sc-alert-drawer-name">{alertDrawer.name}</h2>
@@ -2573,123 +2616,126 @@ export const StoreCenter: React.FC = () => {
                   return (
                     <div
                       key={issue.id}
-                      className={`sc-alert-issue-row${isSelected ? ' sc-alert-issue-row--selected' : ''}${isCreated ? ' sc-alert-issue-row--done' : ''}${isReviewed && !isCreated ? ' sc-alert-issue-row--reviewed' : ''}`}
+                      className={`sc-issue-card${isSelected ? ' sc-issue-card--selected' : ''}${isCreated ? ' sc-issue-card--done' : ''}${isReviewed && !isCreated ? ' sc-issue-card--reviewed' : ''}`}
                     >
-                      {/* Checkbox */}
-                      <div className="sc-alert-issue-select" onClick={() => {
-                        if (isCreated) return;
-                        setSelectedIssues(prev => {
-                          const next = new Set(prev);
-                          if (next.has(issue.id)) next.delete(issue.id); else next.add(issue.id);
-                          return next;
-                        });
-                      }}>
-                        {isCreated
-                          ? <CheckCircleOutlined sx={{ fontSize: 18 }} className="sc-alert-issue-done-icon"/>
-                          : isSelected
-                          ? <CheckCircleOutlined sx={{ fontSize: 18 }} className="sc-alert-issue-sel-icon"/>
-                          : <div className="sc-alert-issue-checkbox"/>}
-                      </div>
-
-                      <div className="sc-alert-issue-body">
-                        {/* Title row */}
-                        <div className="sc-alert-issue-top">
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <span className="sc-alert-issue-name">{issue.itemName}</span>
-                            <span className="sc-alert-issue-sku">SKU: {issue.sku} · {issue.department}</span>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                            {isReviewed && !isCreated && (
-                              <span className="sc-alert-reviewed-badge">Reviewed</span>
-                            )}
-                            {issue.confidenceScore && (
-                              <span className="sc-alert-issue-conf">AI {issue.confidenceScore}%</span>
-                            )}
-                          </div>
+                      {/* ── Row 1: checkbox + product info + status badge ── */}
+                      <div className="sc-issue-card-top">
+                        <div
+                          className="sc-issue-card-check"
+                          onClick={() => {
+                            if (isCreated) return;
+                            setSelectedIssues(prev => {
+                              const next = new Set(prev);
+                              if (next.has(issue.id)) next.delete(issue.id); else next.add(issue.id);
+                              return next;
+                            });
+                          }}
+                        >
+                          {isCreated
+                            ? <CheckCircleOutlined sx={{ fontSize: 18 }} className="sc-issue-icon--done"/>
+                            : isSelected
+                            ? <CheckCircleOutlined sx={{ fontSize: 18 }} className="sc-issue-icon--sel"/>
+                            : <span className="sc-issue-checkbox"/>}
                         </div>
 
-                        {/* Tags row */}
-                        <div className="sc-alert-issue-detail-row">
-                          <div className="sc-alert-issue-tag sc-alert-tag--warn">
-                            <WarningAmberOutlined sx={{ fontSize: 11 }}/>
-                            {issue.issue}
-                          </div>
-                          {(issue.aisle || issue.bay) && (
-                            <div className="sc-alert-issue-tag sc-alert-tag--muted">
-                              {[issue.aisle, issue.bay].filter(Boolean).join(' · ')}
-                            </div>
+                        <div className="sc-issue-card-product">
+                          <span className="sc-issue-card-name">{issue.itemName}</span>
+                          <span className="sc-issue-card-sku">SKU: {issue.sku} · {issue.department}</span>
+                        </div>
+
+                        <div className="sc-issue-card-badges">
+                          {isCreated && <Badge label="Task Created" color="success" variant="subtle" size="small"/>}
+                          {isReviewed && !isCreated && <Badge label="Reviewed" color="success" variant="subtle" size="small"/>}
+                          {issue.confidenceScore && !isCreated && !isReviewed && (
+                            <Badge label={`AI ${issue.confidenceScore}%`} color="info" variant="subtle" size="small"/>
                           )}
                         </div>
+                      </div>
 
-                        {/* Stats row */}
-                        <div className="sc-alert-issue-stats">
+                      {/* ── Row 2: alert tag + location tag ── */}
+                      <div className="sc-issue-card-tags">
+                        <span className="sc-issue-tag sc-issue-tag--warn">
+                          <WarningAmberOutlined sx={{ fontSize: 11 }}/>
+                          {issue.issue}
+                        </span>
+                        {(issue.aisle || issue.bay) && (
+                          <span className="sc-issue-tag sc-issue-tag--loc">
+                            {[issue.aisle, issue.bay].filter(Boolean).join(' · ')}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* ── Row 3: stat strip + actions right-aligned ── */}
+                      <div className="sc-issue-card-bottom">
+                        <div className="sc-issue-card-stats">
                           {isBoh && (
                             <>
-                              <div className="sc-alert-issue-stat">
-                                <span className="sc-ais-label">BOH Available</span>
-                                <span className="sc-ais-value sc-ais-value--pos">{issue.bohQty} units</span>
+                              <div className="sc-issue-stat">
+                                <span className="sc-issue-stat-lbl">BOH Available</span>
+                                <span className="sc-issue-stat-val sc-issue-stat-val--pos">{issue.bohQty} units</span>
                               </div>
-                              <div className="sc-alert-issue-stat">
-                                <span className="sc-ais-label">Shelf Detected</span>
-                                <span className="sc-ais-value sc-ais-value--neg">{issue.shelfQty} units</span>
+                              <div className="sc-issue-stat">
+                                <span className="sc-issue-stat-lbl">Shelf Detected</span>
+                                <span className="sc-issue-stat-val sc-issue-stat-val--neg">{issue.shelfQty} units</span>
                               </div>
                               {issue.weeklyOpportunity != null && (
-                                <div className="sc-alert-issue-stat">
-                                  <span className="sc-ais-label">Weekly Opportunity</span>
-                                  <span className="sc-ais-value sc-ais-value--opp">${issue.weeklyOpportunity}/wk</span>
+                                <div className="sc-issue-stat">
+                                  <span className="sc-issue-stat-lbl">Weekly Opportunity</span>
+                                  <span className="sc-issue-stat-val sc-issue-stat-val--opp">${issue.weeklyOpportunity}/wk</span>
                                 </div>
                               )}
                             </>
                           )}
                           {alertDrawer.id === 'phantom-stock' && (
                             <>
-                              <div className="sc-alert-issue-stat">
-                                <span className="sc-ais-label">Units on Hand</span>
-                                <span className="sc-ais-value">{issue.bohQty} units</span>
+                              <div className="sc-issue-stat">
+                                <span className="sc-issue-stat-lbl">Units on Hand</span>
+                                <span className="sc-issue-stat-val">{issue.bohQty} units</span>
                               </div>
                               {issue.zeroSalesDays != null && (
-                                <div className="sc-alert-issue-stat">
-                                  <span className="sc-ais-label">Zero-Sales Days</span>
-                                  <span className="sc-ais-value sc-ais-value--neg">{issue.zeroSalesDays} days</span>
+                                <div className="sc-issue-stat">
+                                  <span className="sc-issue-stat-lbl">Zero-Sales Days</span>
+                                  <span className="sc-issue-stat-val sc-issue-stat-val--neg">{issue.zeroSalesDays} days</span>
                                 </div>
                               )}
-                              <div className="sc-alert-issue-stat" title={PHANTOM_RECOVERY_TOOLTIP}>
-                                <span className="sc-ais-label sc-ais-label--tip">Sales Recovery Est.</span>
-                                <span className={`sc-ais-value${issue.recoveryEstimate != null ? ' sc-ais-value--opp' : ' sc-ais-value--muted'}`}>
-                                  {issue.recoveryEstimate != null
-                                    ? `$${Math.round(issue.recoveryEstimate)}/wk`
-                                    : 'Unavailable'}
+                              <div className="sc-issue-stat" title={PHANTOM_RECOVERY_TOOLTIP}>
+                                <span className="sc-issue-stat-lbl sc-issue-stat-lbl--tip">Sales Recovery Est.</span>
+                                <span className={`sc-issue-stat-val${issue.recoveryEstimate != null ? ' sc-issue-stat-val--opp' : ' sc-issue-stat-val--muted'}`}>
+                                  {issue.recoveryEstimate != null ? `$${Math.round(issue.recoveryEstimate)}/wk` : 'N/A'}
                                 </span>
                               </div>
                             </>
                           )}
                           {alertDrawer.id === 'pog-compliance' && issue.confidenceScore != null && (
-                            <div className="sc-alert-issue-stat">
-                              <span className="sc-ais-label">AI Confidence</span>
-                              <span className="sc-ais-value">{issue.confidenceScore}%</span>
+                            <div className="sc-issue-stat">
+                              <span className="sc-issue-stat-lbl">AI Confidence</span>
+                              <span className="sc-issue-stat-val">{issue.confidenceScore}%</span>
                             </div>
                           )}
                         </div>
-                      </div>
 
-                      {/* Row CTA */}
-                      <div className="sc-alert-issue-cta">
-                        {isCreated ? (
-                          <span className="sc-alert-task-created-label">Task Created</span>
-                        ) : (
-                          <button
-                            className="sc-alert-create-task-btn"
-                            onClick={e => { e.stopPropagation(); setTaskConfirmIssue(issue); }}>
-                            Create Task
-                          </button>
-                        )}
-                        {!isCreated && !isReviewed && (
-                          <button
-                            className="sc-alert-dismiss-btn"
-                            onClick={() => setReviewedIssues(prev => new Set(prev).add(issue.id))}>
-                            Mark Reviewed
-                          </button>
-                        )}
+                        <div className="sc-issue-card-actions">
+                          {!isCreated && (
+                            <Button
+                              variant="outlined"
+                              color="primary"
+                              size="small"
+                              onClick={e => { e.stopPropagation(); setTaskConfirmIssue(issue); }}
+                            >
+                              Create Task
+                            </Button>
+                          )}
+                          {!isCreated && !isReviewed && (
+                            <Button
+                              variant="text"
+                              color="primary"
+                              size="small"
+                              onClick={() => setReviewedIssues(prev => new Set(prev).add(issue.id))}
+                            >
+                              Mark Reviewed
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -2992,10 +3038,60 @@ export const StoreCenter: React.FC = () => {
               const delayedInboundCount = inventoryEnriched.filter(i => i.status === 'inbound' && i.inboundEta && /delay/i.test(i.inboundEta)).length;
               const totalAtRisk = inventoryEnriched.filter(i => i.risk === 'critical' || i.risk === 'at-risk').length;
 
-              const filteredInventory = (inventoryView === 'at-risk'
-                ? inventoryEnriched.filter(i => i.risk !== 'healthy')
-                : inventoryEnriched
-              ).slice().sort((a, b) => RISK_RANK[a.risk] - RISK_RANK[b.risk] || a.daysOfSupply - b.daysOfSupply);
+              const INV_PAGE_SIZE = 8;
+              const searchLower = invSearch.trim().toLowerCase();
+              const filteredInventory = inventoryEnriched
+                .filter(i =>
+                  (inventoryView === 'all' || i.risk !== 'healthy') &&
+                  (invDept === 'All' || i.department === invDept) &&
+                  (invSubDept === 'All' || i.subDept === invSubDept) &&
+                  (invClass === 'All' || i.itemClass === invClass) &&
+                  (invBrand === 'All' || i.brand === invBrand) &&
+                  (searchLower === '' ||
+                    i.name.toLowerCase().includes(searchLower) ||
+                    i.sku.toLowerCase().includes(searchLower)),
+                )
+                .sort((a, b) => RISK_RANK[a.risk] - RISK_RANK[b.risk] || a.daysOfSupply - b.daysOfSupply);
+
+              const handleShareInventory = () => {
+                const headers = [
+                  'SKU', 'Product', 'Department', 'Sub Dept', 'Class', 'Brand',
+                  'Risk', 'Status', 'Store On Hand', 'On Order', 'In Transit', 'FWOS',
+                ];
+                const escapeCsv = (val: string | number) => {
+                  const s = String(val);
+                  return s.includes(',') || s.includes('"') ? `"${s.replace(/"/g, '""')}"` : s;
+                };
+                const rows = filteredInventory.map(i => [
+                  i.sku,
+                  i.name,
+                  i.department,
+                  i.subDept,
+                  i.itemClass,
+                  i.brand,
+                  RISK_LABELS[i.risk],
+                  i.status,
+                  i.quantity,
+                  i.onOrder,
+                  i.inTransit,
+                  i.daysOfSupply > 0 ? `${(i.daysOfSupply / 7).toFixed(1)}w` : '0',
+                ]);
+                const csv = [headers, ...rows].map(r => r.map(escapeCsv).join(',')).join('\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `inventory-${store.number}-${Date.now()}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+              };
+
+              const totalInvPages = Math.ceil(filteredInventory.length / INV_PAGE_SIZE);
+              const currentInvPage = Math.min(invPage, Math.max(0, totalInvPages - 1));
+              const pagedInventory = filteredInventory.slice(
+                currentInvPage * INV_PAGE_SIZE,
+                (currentInvPage + 1) * INV_PAGE_SIZE,
+              );
 
               const criticalSkus = inventoryEnriched.filter(i => i.risk === 'critical');
               const insightLine = totalAtRisk === 0
@@ -3005,7 +3101,7 @@ export const StoreCenter: React.FC = () => {
                 ? `Expedite replenishment for ${criticalSkus.length} OOS SKU${criticalSkus.length === 1 ? '' : 's'}${delayedInboundCount > 0 ? ` and follow up with DC on the ${delayedInboundCount} delayed shipment${delayedInboundCount === 1 ? '' : 's'}` : ''}.`
                 : delayedInboundCount > 0
                   ? `Follow up with DC on ${delayedInboundCount} delayed shipment${delayedInboundCount === 1 ? '' : 's'} to prevent OOS escalation.`
-                  : `Monitor low-DoS SKUs daily; trigger reorder when DoS drops below safety stock.`;
+                  : `Monitor low-FWOS SKUs daily; trigger reorder when FWOS drops below 1 week.`;
 
               return (
                 <div className="sc-inventory-tab">
@@ -3042,7 +3138,97 @@ export const StoreCenter: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Toolbar with toggle */}
+                  {/* Filter bar — premium single-row */}
+                  <div className="sc-inv-premium-filter-bar">
+                    <div className="sc-inv-search">
+                      <SearchOutlined sx={{ fontSize: 15 }}/>
+                      <input
+                        type="text"
+                        placeholder="Search products or SKU…"
+                        value={invSearch}
+                        onChange={e => {
+                          setInvSearch(e.target.value);
+                          setInvPage(0);
+                        }}
+                      />
+                      {invSearch && (
+                        <button
+                          className="sc-inv-search-clear"
+                          onClick={() => { setInvSearch(''); setInvPage(0); }}
+                          aria-label="Clear search"
+                        >
+                          <CloseOutlined sx={{ fontSize: 13 }}/>
+                        </button>
+                      )}
+                    </div>
+                    <div className="sc-inv-filter-divider" aria-hidden="true"/>
+                    <div className="sc-inv-filter-fields">
+                      <ImFilterSelect
+                        placeholder="Department"
+                        value={invDept}
+                        options={invDeptOptions}
+                        isClearable={invDept !== 'All'}
+                        minWidth={168}
+                        onChange={v => {
+                          setInvDept(v || 'All');
+                          setInvPage(0);
+                        }}
+                      />
+                      <ImFilterSelect
+                        placeholder="Sub Dept"
+                        value={invSubDept}
+                        options={invSubDeptOptions}
+                        isClearable={invSubDept !== 'All'}
+                        minWidth={168}
+                        onChange={v => {
+                          setInvSubDept(v || 'All');
+                          setInvPage(0);
+                        }}
+                      />
+                      <ImFilterSelect
+                        placeholder="Class"
+                        value={invClass}
+                        options={invClassOptions}
+                        isClearable={invClass !== 'All'}
+                        minWidth={148}
+                        onChange={v => {
+                          setInvClass(v || 'All');
+                          setInvPage(0);
+                        }}
+                      />
+                      <ImFilterSelect
+                        placeholder="Brand"
+                        value={invBrand}
+                        options={invBrandOptions}
+                        isClearable={invBrand !== 'All'}
+                        minWidth={148}
+                        onChange={v => {
+                          setInvBrand(v || 'All');
+                          setInvPage(0);
+                        }}
+                      />
+                    </div>
+                    {invFiltersActive && (
+                      <Chips label="Clear filters" onClick={clearInvFilters}/>
+                    )}
+                    <Tooltip title="Download filtered SKU list as CSV">
+                      <span className="sc-inv-export-wrap">
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          size="medium"
+                          className="sc-inv-export-btn"
+                          startIcon={<FileDownloadOutlined sx={{ fontSize: 18 }}/>}
+                          onClick={handleShareInventory}
+                          disabled={filteredInventory.length === 0}
+                        >
+                          Export
+                        </Button>
+                      </span>
+                    </Tooltip>
+                  </div>
+
+                  {/* Toolbar with view toggle */}
                   <div className="sc-inv-toolbar">
                     <div className="sc-inv-toolbar-title">
                       <InventoryOutlined sx={{ fontSize: 14 }}/>
@@ -3050,61 +3236,152 @@ export const StoreCenter: React.FC = () => {
                       <span className="sc-inv-count-badge">{filteredInventory.length}</span>
                     </div>
                     <div className="sc-inv-toggle">
-                      <button
-                        className={`sc-inv-toggle-btn ${inventoryView === 'at-risk' ? 'active' : ''}`}
-                        onClick={() => setInventoryView('at-risk')}
-                      >
-                        <WarningAmberOutlined sx={{ fontSize: 12 }}/> At Risk
-                      </button>
-                      <button
-                        className={`sc-inv-toggle-btn ${inventoryView === 'all' ? 'active' : ''}`}
-                        onClick={() => setInventoryView('all')}
-                      >
-                        <PlaylistAddCheckOutlined sx={{ fontSize: 12 }}/> All SKUs
-                      </button>
+                      <Chips
+                        label="At Risk"
+                        isActive={inventoryView === 'at-risk'}
+                        onClick={() => { setInventoryView('at-risk'); setInvPage(0); }}
+                      />
+                      <Chips
+                        label="All SKUs"
+                        isActive={inventoryView === 'all'}
+                        onClick={() => { setInventoryView('all'); setInvPage(0); }}
+                      />
                     </div>
                   </div>
 
                   {filteredInventory.length === 0 ? (
                     <div className="sc-inv-empty">
                       <TaskAltOutlined sx={{ fontSize: 20 }}/>
-                      <p>All SKUs are healthy — no action required.</p>
+                      <p>
+                        {invFiltersActive
+                          ? 'No SKUs match your filters. Try adjusting search or filters.'
+                          : inventoryView === 'at-risk'
+                            ? 'All SKUs are healthy — no action required.'
+                            : 'No inventory SKUs to display.'}
+                      </p>
                     </div>
                   ) : (
-                    <table className="sc-inv-table wow-table">
-                      <thead>
-                        <tr>
-                          <th>SKU</th>
-                          <th>Product</th>
-                          <th>Risk</th>
-                          <th>Status</th>
-                          <th>Qty</th>
-                          <th>Days of Supply</th>
-                          <th>ETA</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredInventory.map(item => (
-                          <tr key={item.sku} className={`sc-inv-row sc-inv--${item.status} sc-inv-row--${item.risk}`}>
-                            <td className="sc-inv-sku">{item.sku}</td>
-                            <td>{item.name}</td>
-                            <td>
-                              <span className={`sc-inv-risk sc-inv-risk--${item.risk}`}>
-                                {item.risk === 'critical' && <ErrorOutlined sx={{ fontSize: 11 }}/>}
-                                {item.risk === 'at-risk' && <WarningAmberOutlined sx={{ fontSize: 11 }}/>}
-                                {item.risk === 'watch' && <AccessTimeOutlined sx={{ fontSize: 11 }}/>}
-                                {item.risk === 'healthy' && <TaskAltOutlined sx={{ fontSize: 11 }}/>}
-                                {RISK_LABELS[item.risk]}
-                              </span>
-                            </td>
-                            <td><span className={`sc-inv-status sc-inv-status--${item.status}`}>{item.status.replace('-', ' ')}</span></td>
-                            <td className="sc-inv-qty">{item.quantity}</td>
-                            <td className="sc-inv-dos">{item.daysOfSupply > 0 ? `${item.daysOfSupply}d` : '—'}</td>
-                            <td className="sc-inv-eta">{item.inboundEta || '—'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                    <>
+                      <div className="wow-table-wrap sc-inv-wow-table-wrap">
+                        <table className="wow-table sc-inv-table">
+                          <thead>
+                            <tr>
+                              <th>SKU</th>
+                              <th>Product</th>
+                              <th>Risk</th>
+                              <th>Status</th>
+                              <th>Store On Hand</th>
+                              <th>On Order + In Transit</th>
+                              <th>FWOS</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {pagedInventory.map(item => {
+                              const pipeline = item.onOrder + item.inTransit;
+                              const fwos = item.daysOfSupply > 0
+                                ? (item.daysOfSupply / 7).toFixed(1) + 'w'
+                                : '—';
+                                  const riskColor: 'error' | 'warning' | 'info' | 'success' =
+                                    item.risk === 'critical' ? 'error' :
+                                    item.risk === 'at-risk'  ? 'warning' :
+                                    item.risk === 'watch'    ? 'info' : 'success';
+                                  const statusColor: 'success' | 'warning' | 'error' | 'info' =
+                                    item.status === 'in-stock'    ? 'success' :
+                                    item.status === 'low'          ? 'warning' :
+                                    item.status === 'out-of-stock' ? 'error' : 'info';
+                                  const statusLabel =
+                                    item.status === 'in-stock'    ? 'In Stock' :
+                                    item.status === 'low'          ? 'Low' :
+                                    item.status === 'out-of-stock' ? 'Out of Stock' : 'Inbound';
+                              return (
+                                <tr key={item.sku} className={`sc-inv-row sc-inv-row--${item.risk}`}>
+                                  <td className="sc-inv-sku">{item.sku}</td>
+                                  <td className="sc-inv-name">{item.name}</td>
+                                  <td>
+                                    <Badge
+                                      label={RISK_LABELS[item.risk]}
+                                      color={riskColor}
+                                      size="small"
+                                      variant="subtle"
+                                      isIcon
+                                      icon={
+                                        item.risk === 'critical' ? <ErrorOutlined sx={{ fontSize: 12 }}/> :
+                                        item.risk === 'at-risk'  ? <WarningAmberOutlined sx={{ fontSize: 12 }}/> :
+                                        item.risk === 'watch'    ? <AccessTimeOutlined sx={{ fontSize: 12 }}/> :
+                                        <TaskAltOutlined sx={{ fontSize: 12 }}/>
+                                      }
+                                    />
+                                  </td>
+                                  <td>
+                                    <Badge
+                                      label={statusLabel}
+                                      color={statusColor}
+                                      size="small"
+                                      variant="subtle"
+                                    />
+                                  </td>
+                                  <td className="sc-inv-qty">
+                                    <span className="sc-inv-qty-value">{item.quantity}</span>
+                                    <span className="sc-inv-qty-unit">units</span>
+                                  </td>
+                                  <td className="sc-inv-pipeline">
+                                    {pipeline === 0 ? (
+                                      <span className="sc-inv-pipeline-none">—</span>
+                                    ) : (
+                                      <div className="sc-inv-pipeline-cell">
+                                        <span className="sc-inv-pipeline-total wow-num">{pipeline}</span>
+                                        <span className="sc-inv-pipeline-split">
+                                          {item.onOrder > 0 && item.inTransit > 0
+                                            ? `${item.onOrder} ordered · ${item.inTransit} transit`
+                                            : item.onOrder > 0
+                                              ? `${item.onOrder} on order`
+                                              : `${item.inTransit} in transit`}
+                                          {item.inboundEta ? ` · ETA ${item.inboundEta}` : ''}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td className="sc-inv-fwos">
+                                    <span className={`sc-inv-fwos-value${item.daysOfSupply === 0 ? ' sc-inv-fwos--zero' : item.daysOfSupply < 7 ? ' sc-inv-fwos--low' : ''}`}>
+                                      {fwos}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {totalInvPages > 1 && (
+                        <div className="wow-table-footer sc-inv-table-footer">
+                          <span>
+                            Showing {currentInvPage * INV_PAGE_SIZE + 1}–{Math.min((currentInvPage + 1) * INV_PAGE_SIZE, filteredInventory.length)} of {filteredInventory.length} SKUs
+                          </span>
+                          <div className="sc-inv-pagination-controls">
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              disabled={currentInvPage === 0}
+                              onClick={() => setInvPage(p => Math.max(0, p - 1))}
+                            >
+                              ← Prev
+                            </Button>
+                            <span className="sc-inv-pagination-page">
+                              {currentInvPage + 1} / {totalInvPages}
+                            </span>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              disabled={currentInvPage >= totalInvPages - 1}
+                              onClick={() => setInvPage(p => Math.min(totalInvPages - 1, p + 1))}
+                            >
+                              Next →
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               );
@@ -3396,8 +3673,8 @@ export const StoreCenter: React.FC = () => {
                           </div>
                           <div className="sc-bench-kpi-ctx-right">
                             <span className="sc-bench-kpi-ctx-vs">vs</span>
-                            <span className="sc-bench-kpi-ctx-cluster">{clusterConfig.label} Cluster Avg</span>
-                            <Badge label={`${clusterConfig.size} peers`} color="primary" variant="subtle" size="small" />
+                            <Tag label={`${clusterConfig.label} Cluster Avg`} variant="stroke" size="small" />
+                            <Badge label={`${clusterConfig.size} peers`} color="info" variant="subtle" size="small" />
                           </div>
                         </div>
 
@@ -3442,7 +3719,12 @@ export const StoreCenter: React.FC = () => {
                                           variant="subtle"
                                           size="small"
                                         />
-                                        <span className="sc-bench-kpi-rank-txt">#{b.rank} of {b.rankTotal}</span>
+                                        <Tooltip
+                                          title={`Ranked #${b.rank} out of ${b.rankTotal} stores in the ${clusterConfig.label} cluster`}
+                                          orientation="top"
+                                        >
+                                          <span className="sc-bench-kpi-rank-txt">#{b.rank} of {b.rankTotal}</span>
+                                        </Tooltip>
                                       </div>
                                     </div>
                                   </td>
@@ -3452,9 +3734,12 @@ export const StoreCenter: React.FC = () => {
                                   </td>
                                   {/* Store % vs LY */}
                                   <td className="sc-bench-kpi-td sc-bench-kpi-td--num sc-bench-kpi-td--store">
-                                    <span className={`sc-bench-kpi-chg${storeYoY >= 0 ? ' pos' : ' neg'}`}>
-                                      {storeYoY >= 0 ? '+' : ''}{storeYoY.toFixed(1)}%
-                                    </span>
+                                    <Badge
+                                      label={`${storeYoY >= 0 ? '+' : ''}${storeYoY.toFixed(1)}%`}
+                                      color={storeYoY >= 0 ? 'success' : 'error'}
+                                      variant="subtle"
+                                      size="small"
+                                    />
                                   </td>
                                   {/* Cluster TY */}
                                   <td className="sc-bench-kpi-td sc-bench-kpi-td--num sc-bench-kpi-td--cluster">
@@ -3462,12 +3747,15 @@ export const StoreCenter: React.FC = () => {
                                   </td>
                                   {/* Cluster % vs LY */}
                                   <td className="sc-bench-kpi-td sc-bench-kpi-td--num sc-bench-kpi-td--cluster">
-                                    <span className={`sc-bench-kpi-chg sc-bench-kpi-chg--muted${clusterYoY >= 0 ? ' pos' : ' neg'}`}>
-                                      {clusterYoY >= 0 ? '+' : ''}{clusterYoY.toFixed(1)}%
-                                    </span>
+                                    <Badge
+                                      label={`${clusterYoY >= 0 ? '+' : ''}${clusterYoY.toFixed(1)}%`}
+                                      color={clusterYoY >= 0 ? 'success' : 'error'}
+                                      variant="subtle"
+                                      size="small"
+                                    />
                                   </td>
                                   {/* TY Gap vs Cluster */}
-                                  <td className="sc-bench-kpi-td sc-bench-kpi-td--num sc-bench-kpi-td--compare">
+                                  <td className="sc-bench-kpi-td sc-bench-kpi-td--compare">
                                     <Badge
                                       label={`${ahead ? '↑' : '↓'} ${fmtDelta(b.vsCluster, b.unit)}`}
                                       color={ahead ? 'success' : 'error'}
@@ -3476,7 +3764,7 @@ export const StoreCenter: React.FC = () => {
                                     />
                                   </td>
                                   {/* % Change Gap pp */}
-                                  <td className="sc-bench-kpi-td sc-bench-kpi-td--num sc-bench-kpi-td--compare">
+                                  <td className="sc-bench-kpi-td sc-bench-kpi-td--compare">
                                     <Badge
                                       label={`${changeGapPP >= 0 ? '+' : ''}${changeGapPP.toFixed(1)} pp`}
                                       color={changeGapPP >= 0 ? 'success' : 'error'}

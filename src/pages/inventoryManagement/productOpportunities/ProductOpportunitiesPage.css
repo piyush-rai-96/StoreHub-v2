@@ -1,0 +1,320 @@
+/* ============================================================
+   Product Opportunities Page
+   ============================================================ */
+
+.po-page {
+  min-height: 100%;
+  background: var(--ia-color-surface);
+  padding-bottom: 40px;
+}
+
+/* ── Page Header — District Intelligence pattern ── */
+
+.po-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  background: var(--ia-color-surface);
+  border-bottom: 1px solid var(--ia-color-border);
+}
+
+.po-page-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.po-page-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.po-page-title-row h1 {
+  font-size: var(--ia-text-lg);
+  font-weight: var(--ia-font-weight-bold);
+  color: var(--ia-color-text-primary);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.po-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px 32px 0;
+}
+
+.po-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Store Picker — gradient pill */
+
+.po-store-picker-wrap {
+  position: relative;
+}
+
+.po-store-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, var(--ia-color-primary-soft) 0%, var(--ia-color-primary-border) 30%, var(--ia-color-primary-soft) 100%);
+  border: 1px solid var(--ia-color-primary-border);
+  border-radius: 8px;
+  font-size: var(--ia-text-13);
+  font-weight: var(--ia-font-weight-semibold);
+  color: var(--ia-color-primary-hover);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.po-store-picker:hover {
+  background: linear-gradient(135deg, var(--ia-color-primary-border) 0%, var(--ia-color-primary-soft) 100%);
+}
+
+.po-store-picker .po-rotated {
+  transform: rotate(180deg);
+}
+
+.po-store-picker-id {
+  font-size: var(--ia-text-2xs);
+  font-weight: var(--ia-font-weight-medium);
+  color: var(--ia-color-primary);
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 4px;
+}
+
+/* Dropdown */
+
+.po-store-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 340px;
+  background: var(--ia-color-surface);
+  border: 1px solid var(--ia-color-border);
+  border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  z-index: 200;
+  padding: 6px;
+  animation: poDropIn 0.15s ease;
+}
+
+@keyframes poDropIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.po-store-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.1s;
+  position: relative;
+}
+
+.po-store-option:hover {
+  background: var(--ia-color-bg-subtle);
+}
+
+.po-store-option.active {
+  background: var(--ia-color-primary-soft);
+}
+
+.po-store-option-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.po-store-option-main svg {
+  color: var(--ia-color-primary);
+  flex-shrink: 0;
+}
+
+.po-store-option-label {
+  font-size: var(--ia-text-13);
+  font-weight: var(--ia-font-weight-semibold);
+  color: var(--ia-color-text-primary);
+}
+
+.po-store-option-meta {
+  display: flex;
+  gap: 10px;
+  font-size: var(--ia-text-2xs);
+  color: var(--ia-color-text-tertiary);
+  flex-shrink: 0;
+}
+
+.po-store-check {
+  color: var(--ia-color-primary);
+  flex-shrink: 0;
+}
+
+/* Cycle pill — matches District Intelligence period-selector */
+
+.po-cycle-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--ia-color-surface);
+  border: 1px solid var(--ia-color-border);
+  border-radius: 6px;
+  font-size: var(--ia-text-13);
+  font-weight: var(--ia-font-weight-medium);
+  color: var(--ia-color-text-secondary);
+}
+
+/* Updated timestamp */
+
+.po-last-refresh {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--ia-text-xs);
+  color: var(--ia-color-text-tertiary);
+}
+
+/* ── Summary Cards Grid ───────────────────────────────────── */
+
+.po-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 12px;
+}
+
+.po-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.po-summary-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.po-summary-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.po-summary-value {
+  font-size: var(--ia-text-lg);
+  font-weight: var(--ia-font-weight-bold);
+  color: var(--ia-color-text-primary);
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.po-summary-label {
+  font-size: var(--ia-text-2xs);
+  font-weight: var(--ia-font-weight-medium);
+  color: var(--ia-color-text-tertiary);
+  letter-spacing: 0.02em;
+  margin-top: 2px;
+}
+
+/* ── Toolbar (Tabs + Filters) ─────────────────────────────── */
+
+.po-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.po-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Table Enhancements ───────────────────────────────────── */
+
+.po-product-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--ia-color-border);
+}
+
+.po-product-name {
+  font-weight: var(--ia-font-weight-semibold);
+  color: var(--ia-color-text-primary);
+}
+
+.po-sku {
+  font-size: var(--ia-text-xs);
+  color: var(--ia-color-text-secondary);
+  font-family: var(--ia-font-mono, monospace);
+}
+
+.po-opp-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--ia-text-xs);
+  font-weight: var(--ia-font-weight-medium);
+}
+
+.po-gap {
+  font-weight: var(--ia-font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.po-gap--critical {
+  color: var(--ia-color-error);
+}
+
+.po-gap--warn {
+  color: var(--ia-color-warning);
+}
+
+.po-owner-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.po-owner {
+  font-weight: var(--ia-font-weight-medium);
+  font-size: var(--ia-text-13);
+}
+
+.po-stage {
+  font-size: var(--ia-text-2xs);
+  color: var(--ia-color-text-tertiary);
+}
+
+.po-date {
+  font-size: var(--ia-text-xs);
+  color: var(--ia-color-text-secondary);
+  white-space: nowrap;
+}

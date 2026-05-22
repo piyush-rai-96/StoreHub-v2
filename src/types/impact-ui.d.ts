@@ -28,15 +28,19 @@ declare module 'impact-ui' {
 
   export type ChipsVariant = 'filled' | 'outlined' | 'stroke' | 'solid';
   export type ChipsColor = 'primary' | 'secondary' | 'default';
+  export type ChipsType = 'default' | 'single' | 'multi';
 
   export interface ChipsProps {
     label: ReactNode;
     variant?: ChipsVariant;
     color?: ChipsColor;
     size?: 'small' | 'medium' | 'large';
-    onClick?: (e: ReactMouseEvent) => void;
+    type?: ChipsType;
+    isActive?: boolean;
+    onClick?: (label?: ReactNode) => void;
     className?: string;
     icon?: ReactNode;
+    disabled?: boolean;
     isRemovable?: boolean;
     onDelete?: (e: ReactMouseEvent) => void;
   }

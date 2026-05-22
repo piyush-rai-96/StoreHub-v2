@@ -1,0 +1,288 @@
+/* ============================================================
+   Allocation Workflow Page
+   ============================================================ */
+
+.aw-page {
+  min-height: 100%;
+  background: var(--ia-color-surface);
+  padding: 24px 32px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.aw-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 60px 20px;
+  color: var(--ia-color-text-secondary);
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+
+.aw-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.aw-header-content {
+  background: var(--ia-color-surface);
+  border: 1px solid var(--ia-color-border);
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+
+.aw-header-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.aw-title {
+  font-size: var(--ia-text-xl);
+  font-weight: var(--ia-font-weight-bold);
+  color: var(--ia-color-text-primary);
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.aw-subtitle {
+  font-size: var(--ia-text-sm);
+  color: var(--ia-color-text-secondary);
+  margin: 0 0 12px;
+}
+
+.aw-context {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-size: var(--ia-text-xs);
+  color: var(--ia-color-text-secondary);
+}
+
+.aw-context strong {
+  font-weight: var(--ia-font-weight-semibold);
+  color: var(--ia-color-text-primary);
+}
+
+/* ── Grid Layout ──────────────────────────────────────────── */
+
+.aw-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.aw-panel--full {
+  grid-column: 1 / -1;
+}
+
+.aw-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--ia-color-text-primary);
+}
+
+.aw-panel-header h3 {
+  font-size: var(--ia-text-md);
+  font-weight: var(--ia-font-weight-semibold);
+  margin: 0;
+}
+
+/* ── Allocation Grid (reused from drawer) ─────────────────── */
+
+.aw-alloc-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.aw-alloc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--ia-color-bg-muted);
+}
+
+.aw-alloc-row:last-child {
+  border-bottom: none;
+}
+
+.aw-alloc-label {
+  font-size: var(--ia-text-xs);
+  color: var(--ia-color-text-secondary);
+  font-weight: var(--ia-font-weight-medium);
+}
+
+.aw-alloc-value {
+  font-size: var(--ia-text-sm);
+  font-weight: var(--ia-font-weight-medium);
+  color: var(--ia-color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.aw-alloc-value--bold {
+  font-weight: var(--ia-font-weight-bold);
+  font-size: var(--ia-text-md);
+}
+
+.aw-alloc-value--accent {
+  color: var(--ia-color-primary);
+  font-weight: var(--ia-font-weight-bold);
+}
+
+.aw-alloc-value--gap {
+  color: var(--ia-color-error);
+  font-weight: var(--ia-font-weight-bold);
+}
+
+/* ── Edit Form ────────────────────────────────────────────── */
+
+.aw-edit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+}
+
+.aw-edit-field--full {
+  grid-column: 1 / -1;
+}
+
+.aw-edit-label {
+  display: block;
+  font-size: var(--ia-text-xs);
+  font-weight: var(--ia-font-weight-semibold);
+  color: var(--ia-color-text-primary);
+  margin-bottom: 6px;
+}
+
+.aw-required {
+  font-weight: var(--ia-font-weight-regular);
+  color: var(--ia-color-error);
+  font-size: var(--ia-text-2xs);
+  margin-left: 6px;
+}
+
+.aw-textarea {
+  width: 100%;
+  border: 1px solid var(--ia-color-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: var(--ia-font-sans);
+  font-size: var(--ia-text-sm);
+  color: var(--ia-color-text-primary);
+  background: var(--ia-color-surface);
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.aw-textarea:focus {
+  border-color: var(--ia-color-primary);
+}
+
+/* ── Comparison Strip ─────────────────────────────────────── */
+
+.aw-comparison-strip {
+  display: flex;
+  gap: 0;
+  margin-top: 20px;
+  border-top: 1px solid var(--ia-color-border);
+  padding-top: 16px;
+}
+
+.aw-comparison-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0 12px;
+  border-right: 1px solid var(--ia-color-bg-muted);
+}
+
+.aw-comparison-item:last-child {
+  border-right: none;
+}
+
+.aw-comparison-label {
+  font-size: var(--ia-text-2xs);
+  color: var(--ia-color-text-tertiary);
+  font-weight: var(--ia-font-weight-medium);
+}
+
+.aw-comparison-value {
+  font-size: var(--ia-text-md);
+  font-weight: var(--ia-font-weight-semibold);
+  color: var(--ia-color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.aw-comparison--positive {
+  color: var(--ia-color-success);
+}
+
+.aw-comparison--negative {
+  color: var(--ia-color-error);
+}
+
+.aw-comparison--bold {
+  font-weight: var(--ia-font-weight-bold);
+}
+
+/* ── Actions ──────────────────────────────────────────────── */
+
+.aw-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 4px;
+}
+
+.aw-actions-right {
+  display: flex;
+  gap: 10px;
+}
+
+/* ── Submitted State ──────────────────────────────────────── */
+
+.aw-submitted-card {
+  max-width: 560px;
+  margin: 40px auto 0;
+}
+
+.aw-submitted-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 40px 32px;
+}
+
+.aw-submitted-content h2 {
+  font-size: var(--ia-text-lg);
+  font-weight: var(--ia-font-weight-bold);
+  color: var(--ia-color-text-primary);
+  margin: 0;
+}
+
+.aw-submitted-content p {
+  font-size: var(--ia-text-sm);
+  color: var(--ia-color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.aw-submitted-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}

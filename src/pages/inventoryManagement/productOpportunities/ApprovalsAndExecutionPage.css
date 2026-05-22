@@ -1,0 +1,281 @@
+/* ============================================================
+   Approvals & Execution Combined Page
+   ============================================================ */
+
+.aep-page {
+  min-height: 100%;
+  background: var(--ia-color-surface);
+  padding-bottom: 40px;
+}
+
+/* ── Header — matches District Intelligence pattern ───────── */
+
+.aep-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  background: var(--ia-color-surface);
+  border-bottom: 1px solid var(--ia-color-border);
+}
+
+.aep-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aep-header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.aep-header-title h1 {
+  font-size: var(--ia-text-lg);
+  font-weight: var(--ia-font-weight-bold);
+  color: var(--ia-color-text-primary);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.aep-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--ia-text-xs);
+  color: var(--ia-color-text-tertiary);
+}
+
+/* ── Content Area ─────────────────────────────────────────── */
+
+.aep-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px 32px 0;
+}
+
+/* ── Main Tabs ────────────────────────────────────────────── */
+
+.aep-main-tabs {
+  margin-bottom: -4px;
+}
+
+/* ── Toolbar ──────────────────────────────────────────────── */
+
+.aep-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Table Cells ──────────────────────────────────────────── */
+
+.aep-mono {
+  font-family: var(--ia-font-mono, monospace);
+  font-size: var(--ia-text-xs);
+  color: var(--ia-color-primary);
+  font-weight: var(--ia-font-weight-medium);
+}
+
+.aep-secondary {
+  color: var(--ia-color-text-secondary);
+}
+
+.aep-thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--ia-color-border);
+}
+
+.aep-product-name {
+  font-weight: var(--ia-font-weight-semibold);
+}
+
+.aep-date {
+  font-size: var(--ia-text-xs);
+  color: var(--ia-color-text-secondary);
+  white-space: nowrap;
+}
+
+.aep-diff-highlight {
+  color: var(--ia-color-warning);
+  font-weight: var(--ia-font-weight-semibold);
+}
+
+.aep-downstream {
+  font-size: var(--ia-text-xs);
+  color: var(--ia-color-text-secondary);
+}
+
+.aep-owner-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.aep-owner {
+  font-weight: var(--ia-font-weight-medium);
+  font-size: var(--ia-text-13);
+}
+
+.aep-stage {
+  font-size: var(--ia-text-2xs);
+  color: var(--ia-color-text-tertiary);
+}
+
+/* ── Drawer Detail ────────────────────────────────────────── */
+
+.aep-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.aep-detail-section {
+  background: var(--ia-color-surface);
+  border: 1px solid var(--ia-color-border);
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+
+.aep-detail-title {
+  font-size: var(--ia-text-sm);
+  font-weight: var(--ia-font-weight-semibold);
+  color: var(--ia-color-text-primary);
+  margin: 0 0 12px;
+}
+
+.aep-detail-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.aep-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ia-color-bg-muted);
+}
+
+.aep-detail-row:last-child {
+  border-bottom: none;
+}
+
+.aep-detail-label {
+  font-size: var(--ia-text-xs);
+  color: var(--ia-color-text-secondary);
+}
+
+.aep-detail-value {
+  font-size: var(--ia-text-sm);
+  font-weight: var(--ia-font-weight-medium);
+  color: var(--ia-color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.aep-detail-comment {
+  font-size: var(--ia-text-13);
+  color: var(--ia-color-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+  padding: 10px 14px;
+  background: var(--ia-color-bg-muted);
+  border-radius: 8px;
+}
+
+/* ── Comparison Cards ─────────────────────────────────────── */
+
+.aep-comparison-cards {
+  display: flex;
+  gap: 10px;
+}
+
+.aep-card-label {
+  display: block;
+  font-size: var(--ia-text-2xs);
+  color: var(--ia-color-text-tertiary);
+  font-weight: var(--ia-font-weight-medium);
+  margin-bottom: 4px;
+}
+
+.aep-card-value {
+  font-size: var(--ia-text-lg);
+  font-weight: var(--ia-font-weight-bold);
+  color: var(--ia-color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.aep-card-value--accent {
+  color: var(--ia-color-primary);
+}
+
+.aep-card-value--bold {
+  color: var(--ia-color-success);
+}
+
+/* ── Stats ────────────────────────────────────────────────── */
+
+.aep-stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.aep-stat-row:last-child {
+  margin-bottom: 0;
+}
+
+.aep-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.aep-stat-label {
+  font-size: var(--ia-text-2xs);
+  color: var(--ia-color-text-tertiary);
+  font-weight: var(--ia-font-weight-medium);
+}
+
+.aep-stat-value {
+  font-size: var(--ia-text-sm);
+  font-weight: var(--ia-font-weight-semibold);
+  color: var(--ia-color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Textarea ─────────────────────────────────────────────── */
+
+.aep-textarea {
+  width: 100%;
+  border: 1px solid var(--ia-color-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: var(--ia-font-sans);
+  font-size: var(--ia-text-sm);
+  color: var(--ia-color-text-primary);
+  background: var(--ia-color-surface);
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.aep-textarea:focus {
+  border-color: var(--ia-color-primary);
+}
+
+/* ── Footer ───────────────────────────────────────────────── */
+
+.aep-drawer-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 100%;
+  align-items: center;
+}

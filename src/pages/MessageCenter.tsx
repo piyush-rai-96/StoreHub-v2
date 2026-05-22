@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import SendOutlined from '@mui/icons-material/SendOutlined';
@@ -24,13 +25,13 @@ import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined';
 import LayersOutlined from '@mui/icons-material/LayersOutlined';
 import ForumOutlined from '@mui/icons-material/ForumOutlined';
 import SensorsOutlined from '@mui/icons-material/SensorsOutlined';
-import { Button, Chips, Badge, Tabs, EmptyState } from 'impact-ui';
+import { Button, Chips, Badge, EmptyState } from 'impact-ui';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { openAskAlan } from '../utils/openAskAlan';
 import type { FieldSignal, LogSignalFormState } from '../types/fieldSignal';
 import { EMPTY_LOG_SIGNAL_FORM } from '../types/fieldSignal';
-import { MOCK_FIELD_SIGNALS } from '../constants/fieldSignals';
+import { MOCK_FIELD_SIGNALS, FIELD_SIGNAL_NOTIFY_CONTACTS, STORE_OPTIONS, DISTRICT_OPTIONS } from '../constants/fieldSignals';
 import {
   LogFieldSignalDrawer,
   FieldSignalChatCard,
@@ -108,6 +109,86 @@ const contacts: Contact[] = [
   { id: 'u8', name: 'Robert Chang',   avatar: 'RC', role: 'Operations Director',    roleCode: 'OPS',   online: true },
   { id: 'u9', name: 'Clarke T',       avatar: 'CT', role: 'Platform Administrator', roleCode: 'ADMIN', online: true },
 ];
+
+/** Portal-positioned create menu — Impact UI tokens, avoids sidebar overflow clipping */
+const McHeaderAddPortalMenu: React.FC<{
+  anchorEl: HTMLElement | null;
+  open: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}> = ({ anchorEl, open, onClose, children }) => {
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [style, setStyle] = useState<React.CSSProperties>({
+    position: 'fixed', visibility: 'hidden', zIndex: 1400,
+  });
+
+  const reposition = useCallback(() => {
+    if (!open || !anchorEl || !menuRef.current) return;
+    const anchor = anchorEl.getBoundingClientRect();
+    const menu = menuRef.current.getBoundingClientRect();
+    const MARGIN = 8;
+    const top = anchor.bottom + MARGIN;
+    const left = Math.max(8, anchor.right - (menu.width || 280));
+    setStyle({
+      position: 'fixed',
+      top,
+      left,
+      zIndex: 1400,
+      visibility: 'visible',
+    });
+  }, [open, anchorEl]);
+
+  useEffect(() => {
+    if (!open) {
+      setStyle(s => ({ ...s, visibility: 'hidden' }));
+      return;
+    }
+    setStyle({ position: 'fixed', visibility: 'hidden', zIndex: 1400 });
+    const id = requestAnimationFrame(reposition);
+    return () => cancelAnimationFrame(id);
+  }, [open, reposition]);
+
+  useEffect(() => {
+    if (!open) return;
+    const update = () => reposition();
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('resize', update);
+    };
+  }, [open, reposition]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (
+        menuRef.current?.contains(e.target as Node) ||
+        anchorEl?.contains(e.target as Node)
+      ) return;
+      onClose();
+    };
+    const t = setTimeout(() => document.addEventListener('mousedown', handler), 0);
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener('mousedown', handler);
+    };
+  }, [open, onClose, anchorEl]);
+
+  if (!open) return null;
+
+  return ReactDOM.createPortal(
+    <div
+      ref={menuRef}
+      className="mc-add-menu-portal"
+      style={style}
+      onMouseDown={e => e.stopPropagation()}
+    >
+      {children}
+    </div>,
+    document.body,
+  );
+};
 
 const ROLE_BADGE: Record<UserRole, { label: string; cls: string }> = {
   ADMIN: { label: 'Admin', cls: 'mc-role--admin' },
@@ -507,6 +588,7 @@ export const MessageCenter: React.FC = () => {
   const [fsFilters, setFsFilters]           = useState<FieldSignalFilters>(EMPTY_FS_FILTERS);
   const [showComposerAdd, setShowComposerAdd] = useState(false);
   const [showHeaderMenu, setShowHeaderMenu] = useState(false);
+  const headerAddRef = useRef<HTMLDivElement>(null);
   const [threadSignalFilter, setThreadSignalFilter] = useState(false);
   const [prefillBroadcastFromSignal, setPrefillBroadcastFromSignal] = useState<FieldSignal | null>(null);
   const chatEndRef  = useRef<HTMLDivElement>(null);
@@ -516,7 +598,7 @@ export const MessageCenter: React.FC = () => {
   const visibleSignals = useMemo(() => filterSignalsForRole(fieldSignals, user), [fieldSignals, user]);
   const activeSignal = activeSignalId ? fieldSignals.find(s => s.id === activeSignalId) ?? null : null;
   const storeOptions = useMemo(
-    () => [...new Set(visibleSignals.map(s => s.storeName || s.storeId))].sort(),
+    () => [...new Set(visibleSignals.map(s => s.storeName || s.storeId || ''))].filter(Boolean).sort() as string[],
     [visibleSignals]
   );
   const threadActiveSignals = activeChat
@@ -621,11 +703,17 @@ export const MessageCenter: React.FC = () => {
   const openLogSignalDrawer = () => {
     const today = new Date().toISOString().slice(0, 10);
     const end = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
+    const myStore = STORE_OPTIONS.find(s => s.value === (user?.storeId || ''));
     setLogSignalForm({
       ...EMPTY_LOG_SIGNAL_FORM,
+      locationScope: 'stores',
       storeId: user?.storeId || '',
-      storeName: user?.store || user?.district || '',
-      department: '',
+      storeName: myStore?.label || user?.store || '',
+      affectedStoreIds: user?.storeId ? [user.storeId] : [],
+      districtId: myStore?.district || user?.districtId || '',
+      districtName: myStore ? (DISTRICT_OPTIONS.find(d => d.value === myStore.district)?.label ?? user?.district ?? '') : (user?.district || ''),
+      zipCode: myStore?.zip || '',
+      state: myStore?.state || '',
       impactStartDate: today,
       impactEndDate: end,
     });
@@ -641,6 +729,25 @@ export const MessageCenter: React.FC = () => {
     if (!logSignalForm.impactStartDate) err.impactStartDate = 'Required';
     if (!logSignalForm.impactEndDate) err.impactEndDate = 'Required';
     if (!logSignalForm.expectedImpact) err.expectedImpact = 'Required';
+
+    // Location scope conditional validation
+    const scope = logSignalForm.locationScope;
+    if (scope === 'stores' && logSignalForm.affectedStoreIds.length === 0) {
+      err.storeName = 'Select at least one store';
+    }
+    if (scope === 'zip_code' && !logSignalForm.zipCode.trim()) {
+      err.zipCode = 'Required for this scope';
+    }
+    if (scope === 'city' && !logSignalForm.city.trim()) {
+      err.city = 'Required for this scope';
+    }
+    if (scope === 'state' && !logSignalForm.state.trim()) {
+      err.state = 'Required for this scope';
+    }
+
+    if (logSignalForm.notifyScope === 'specific' && logSignalForm.notifyRecipientIds.length === 0) {
+      err.notifyRecipientIds = 'Select at least one recipient';
+    }
     if (logSignalForm.impactStartDate && logSignalForm.impactEndDate
       && logSignalForm.impactEndDate < logSignalForm.impactStartDate) {
       err.impactEndDate = 'End date must be on or after start date';
@@ -653,15 +760,23 @@ export const MessageCenter: React.FC = () => {
     if (!validateLogSignalForm() || !logSignalForm.signalType || !logSignalForm.expectedImpact) return;
     const now = new Date().toISOString();
     const id = `FS-${Date.now().toString().slice(-6)}`;
+    const notifyNote = logSignalForm.notifyScope === 'all'
+      ? `Notified all ${FIELD_SIGNAL_NOTIFY_CONTACTS.length} team members`
+      : `Notified ${logSignalForm.notifyRecipientIds.length} recipient${logSignalForm.notifyRecipientIds.length > 1 ? 's' : ''}`;
+
     const signal: FieldSignal = {
       id,
       signalType: logSignalForm.signalType,
       title: logSignalForm.title.trim(),
       description: logSignalForm.description.trim(),
-      storeId: logSignalForm.storeId || '—',
+      locationScope: logSignalForm.locationScope,
+      storeId: logSignalForm.storeId || undefined,
       storeName: logSignalForm.storeName || undefined,
-      districtId: user?.districtId,
-      districtName: user?.district,
+      districtId: logSignalForm.districtId || user?.districtId,
+      districtName: logSignalForm.districtName || user?.district,
+      zipCode: logSignalForm.zipCode || undefined,
+      city: logSignalForm.city || undefined,
+      state: logSignalForm.state || undefined,
       department: logSignalForm.department || undefined,
       impactStartDate: logSignalForm.impactStartDate,
       impactEndDate: logSignalForm.impactEndDate,
@@ -672,14 +787,24 @@ export const MessageCenter: React.FC = () => {
       createdAt: now,
       updatedAt: now,
       originalThreadId: activeChat || undefined,
-      activityLog: [{
-        id: `fsa-${Date.now()}`,
-        fieldSignalId: id,
-        action: 'Field Signal created',
-        actorUserId: user?.id || 'me',
-        actorName: user?.name || 'You',
-        timestamp: now,
-      }],
+      activityLog: [
+        {
+          id: `fsa-${Date.now()}`,
+          fieldSignalId: id,
+          action: 'Field Signal created',
+          actorUserId: user?.id || 'me',
+          actorName: user?.name || 'You',
+          timestamp: now,
+        },
+        {
+          id: `fsa-${Date.now()}-notify`,
+          fieldSignalId: id,
+          action: notifyNote,
+          actorUserId: user?.id || 'me',
+          actorName: user?.name || 'You',
+          timestamp: now,
+        },
+      ],
     };
     setFieldSignals(prev => [signal, ...prev]);
     if (activeChat) {
@@ -701,7 +826,12 @@ export const MessageCenter: React.FC = () => {
     }
     setShowLogSignal(false);
     setLogSignalForm(EMPTY_LOG_SIGNAL_FORM);
-    showToast('Field Signal Logged Successfully', 'success');
+    showToast(
+      logSignalForm.notifyScope === 'all'
+        ? 'Field Signal Logged And Team Notified'
+        : 'Field Signal Logged And Recipients Notified',
+      'success',
+    );
   };
 
   const updateSignal = (id: string, updater: (s: FieldSignal) => FieldSignal) => {
@@ -943,31 +1073,70 @@ export const MessageCenter: React.FC = () => {
             <ForumOutlined sx={{ fontSize: 20 }} />
             <h2>Communications</h2>
           </div>
-          <div className="mc-header-add-wrap">
+          <div className="mc-header-add-wrap" ref={headerAddRef}>
             <Button
               variant="contained" color="primary" size="small"
-              className="mc-new-chat-btn"
-              onClick={() => setShowHeaderMenu(v => !v)}
-              aria-label="New"
+              className={`mc-new-chat-btn${showHeaderMenu ? ' mc-new-chat-btn--open' : ''}`}
+              onClick={e => { e.stopPropagation(); setShowHeaderMenu(v => !v); }}
+              aria-label="Create new"
+              aria-expanded={showHeaderMenu}
+              aria-haspopup="menu"
             >
               <Add sx={{ fontSize: 18 }} />
             </Button>
-            {showHeaderMenu && (
-              <div className="mc-header-add-menu">
-                <button type="button" onClick={() => { setShowHeaderMenu(false); setShowNewChat(true); setModalStep('main'); }}>
-                  <ChatOutlined sx={{ fontSize: 16 }} />
-                  <span>New Message</span>
+            <McHeaderAddPortalMenu
+              anchorEl={headerAddRef.current}
+              open={showHeaderMenu}
+              onClose={() => setShowHeaderMenu(false)}
+            >
+              <div className="mc-add-menu-panel" role="menu">
+                <p className="mc-add-menu-heading">Create</p>
+                <button
+                  type="button"
+                  className="mc-add-menu-item"
+                  role="menuitem"
+                  onClick={() => { setShowHeaderMenu(false); setShowNewChat(true); setModalStep('main'); }}
+                >
+                  <span className="mc-add-menu-icon mc-add-menu-icon--message">
+                    <ChatOutlined sx={{ fontSize: 18 }} />
+                  </span>
+                  <span className="mc-add-menu-copy">
+                    <span className="mc-add-menu-title">New Message</span>
+                    <span className="mc-add-menu-desc">Direct chat or group conversation</span>
+                  </span>
                 </button>
-                <button type="button" onClick={() => { setShowHeaderMenu(false); setShowNewChat(true); setModalStep('broadcast'); }}>
-                  <CampaignOutlined sx={{ fontSize: 16 }} />
-                  <span>New Broadcast</span>
+                <div className="mc-add-menu-divider" />
+                <button
+                  type="button"
+                  className="mc-add-menu-item"
+                  role="menuitem"
+                  onClick={() => { setShowHeaderMenu(false); setShowNewChat(true); setModalStep('broadcast'); }}
+                >
+                  <span className="mc-add-menu-icon mc-add-menu-icon--broadcast">
+                    <CampaignOutlined sx={{ fontSize: 18 }} />
+                  </span>
+                  <span className="mc-add-menu-copy">
+                    <span className="mc-add-menu-title">New Broadcast</span>
+                    <span className="mc-add-menu-desc">Send to multiple stores or roles</span>
+                  </span>
                 </button>
-                <button type="button" onClick={() => { setShowHeaderMenu(false); openLogSignalDrawer(); }}>
-                  <SensorsOutlined sx={{ fontSize: 16 }} />
-                  <span>Log Field Signal</span>
+                <div className="mc-add-menu-divider" />
+                <button
+                  type="button"
+                  className="mc-add-menu-item"
+                  role="menuitem"
+                  onClick={() => { setShowHeaderMenu(false); openLogSignalDrawer(); }}
+                >
+                  <span className="mc-add-menu-icon mc-add-menu-icon--signal">
+                    <SensorsOutlined sx={{ fontSize: 18 }} />
+                  </span>
+                  <span className="mc-add-menu-copy">
+                    <span className="mc-add-menu-title">Log Field Signal</span>
+                    <span className="mc-add-menu-desc">Local demand and operational context</span>
+                  </span>
                 </button>
               </div>
-            )}
+            </McHeaderAddPortalMenu>
           </div>
         </div>
 
@@ -1019,15 +1188,25 @@ export const MessageCenter: React.FC = () => {
 
             {/* Conversation filter tabs (messages only) */}
             {section === 'messages' && (
-              <Tabs
-                tabNames={[
-                  { value: 'all',    label: 'All' },
-                  { value: 'direct', label: 'Direct', icon: <ChatOutlined sx={{ fontSize: 12 }} /> },
-                  { value: 'groups', label: 'Groups', icon: <GroupOutlined sx={{ fontSize: 12 }} /> },
-                ]}
-                tabPanels={[]} value={activeTab}
-                onChange={(_, val) => setActiveTab(val as Tab)}
-              />
+              <div className="mc-filter-tabs-wrap" role="tablist">
+                {([
+                  { value: 'all',    label: 'All',    icon: null },
+                  { value: 'direct', label: 'Direct', icon: <ChatOutlined sx={{ fontSize: 14 }} /> },
+                  { value: 'groups', label: 'Groups', icon: <GroupOutlined sx={{ fontSize: 14 }} /> },
+                ] as { value: Tab; label: string; icon: React.ReactNode }[]).map(t => (
+                  <button
+                    key={t.value}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === t.value}
+                    className={`mc-filter-tab${activeTab === t.value ? ' mc-filter-tab--active' : ''}`}
+                    onClick={() => setActiveTab(t.value)}
+                  >
+                    {t.icon}
+                    {t.label}
+                  </button>
+                ))}
+              </div>
             )}
 
             {/* Chat list */}

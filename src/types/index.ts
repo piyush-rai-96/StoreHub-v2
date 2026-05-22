@@ -34,7 +34,8 @@ export type ScreenAccess =
   | 'ai_copilot'
   | 'operations_queue'
   | 'communications'
-  | 'user_access_management';
+  | 'user_access_management'
+  | 'inventory_management';
 
 // User type
 export interface User {
@@ -102,6 +103,7 @@ export const SCREEN_TO_PATH: Record<ScreenAccess, string> = {
   operations_queue: '/command-center/operations-queue',
   communications: '/command-center/communications',
   user_access_management: '/app-config/user-access',
+  inventory_management: '/inventory-management',
 };
 
 // Get the default landing route for a user based on their access
@@ -117,19 +119,20 @@ export const ROLE_ACCESS: Record<UserRole, ScreenAccess[]> = {
     'home', 'district_intelligence', 'store_deep_dive',
     'master_pog_management', 'pog_rule_management', 'pog_localization_engine',
     'ai_copilot', 'operations_queue', 'communications', 'user_access_management',
+    'inventory_management',
   ],
   DM: [
     'home', 'district_intelligence', 'store_deep_dive',
     'master_pog_management', 'pog_rule_management', 'pog_localization_engine',
-    'ai_copilot', 'operations_queue', 'communications',
+    'ai_copilot', 'operations_queue', 'communications', 'inventory_management',
   ],
   SM: [
     'store_deep_dive',
-    'ai_copilot', 'operations_queue', 'communications',
+    'ai_copilot', 'operations_queue', 'communications', 'inventory_management',
   ],
   HQ: [
     'home', 'district_intelligence',
     'master_pog_management', 'pog_rule_management', 'pog_localization_engine',
-    'ai_copilot', 'operations_queue', 'communications',
+    'ai_copilot', 'operations_queue', 'communications', 'inventory_management',
   ],
 };

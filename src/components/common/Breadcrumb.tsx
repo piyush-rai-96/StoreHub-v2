@@ -7,6 +7,9 @@ const ROUTE_LABELS: Record<string, string> = {
   '/store-operations/home': 'Dashboard',
   '/store-operations/district-intelligence': 'District Intelligence',
   '/store-operations/store-deep-dive': 'Store Deep Dive',
+  '/inventory-management': 'Inventory Management',
+  '/inventory-management/product-opportunities': 'Product Opportunities',
+  '/inventory-management/approvals-and-execution': 'Approvals & Execution',
   '/planogram/master-pog': 'Master POG Management',
   '/planogram/rule-management': 'POG Rule Management',
   '/planogram/localization-engine': 'POG Localization Engine',
@@ -18,6 +21,7 @@ const ROUTE_LABELS: Record<string, string> = {
 
 const SECTION_LABELS: Record<string, string> = {
   'store-operations': 'Store Operations Hub',
+  'inventory-management': 'Inventory Management',
   'planogram': 'Planogram Intelligence',
   'command-center': 'Command Center',
   'app-config': 'Application Config',

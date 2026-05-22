@@ -13,7 +13,10 @@ import ForumOutlined from '@mui/icons-material/ForumOutlined';
 import GroupOutlined from '@mui/icons-material/GroupOutlined';
 import AssignmentOutlined from '@mui/icons-material/AssignmentOutlined';
 import WarehouseOutlined from '@mui/icons-material/WarehouseOutlined';
+import Inventory2Outlined from '@mui/icons-material/Inventory2Outlined';
 import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined';
+import TrendingUpOutlined from '@mui/icons-material/TrendingUpOutlined';
+import GavelOutlined from '@mui/icons-material/GavelOutlined';
 import { User, ScreenAccess, ROUTES } from '../../../types';
 import './AppSidebar.css';
 
@@ -42,6 +45,7 @@ const SUB_MODULE_ACCESS: Record<string, ScreenAccess> = {
   'operations-queue': 'operations_queue',
   communications: 'communications',
   'user-access': 'user_access_management',
+  'inventory-management': 'inventory_management',
 };
 
 const PORTAL_ONLY_ROUTES: SidebarRoute[] = [
@@ -62,6 +66,15 @@ const ALL_MODULES: SidebarRoute[] = [
       { value: 'store-ops-home', label: 'Dashboard', icon: <HomeOutlined sx={{ fontSize: 18 }} />, link: '/store-operations/home' },
       { value: 'district-intelligence', label: 'District Intelligence', icon: <PlaceOutlined sx={{ fontSize: 18 }} />, link: '/store-operations/district-intelligence' },
       { value: 'store-deep-dive', label: 'Store Deep Dive', icon: <StoreOutlined sx={{ fontSize: 18 }} />, link: '/store-operations/store-deep-dive' },
+    ],
+  },
+  {
+    value: 'inventory-management',
+    label: 'Inventory Management',
+    icon: <Inventory2Outlined sx={{ fontSize: 20 }} />,
+    children: [
+      { value: 'product-opportunities', label: 'Product Opportunities', icon: <TrendingUpOutlined sx={{ fontSize: 18 }} />, link: '/inventory-management/product-opportunities' },
+      { value: 'approvals-execution', label: 'Approvals & Execution', icon: <GavelOutlined sx={{ fontSize: 18 }} />, link: '/inventory-management/approvals-and-execution' },
     ],
   },
   {
@@ -103,7 +116,11 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ user, isOpen, setIsOpen,
     if (isPortal) return PORTAL_ONLY_ROUTES;
     return ALL_MODULES
       .map(module => {
-        if (!module.children) return module;
+        if (!module.children) {
+          const screenKey = SUB_MODULE_ACCESS[module.value];
+          if (screenKey && !user.accessRoutes.includes(screenKey)) return null;
+          return module;
+        }
         const allowed = module.children.filter(sub => {
           const screenKey = SUB_MODULE_ACCESS[sub.value];
           return screenKey ? user.accessRoutes.includes(screenKey) : true;
@@ -116,6 +133,9 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ user, isOpen, setIsOpen,
   const { parentActive, childActive } = useMemo(() => {
     if (isPortal) return { parentActive: 'portal', childActive: '' };
     for (const m of filteredRoutes) {
+      if (m.link && location.pathname.startsWith(m.link)) {
+        return { parentActive: m.value, childActive: '' };
+      }
       for (const c of m.children || []) {
         if (c.link && location.pathname.startsWith(c.link)) {
           return { parentActive: m.value, childActive: c.value };

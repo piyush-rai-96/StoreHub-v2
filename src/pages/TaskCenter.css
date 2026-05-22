@@ -102,11 +102,12 @@
   letter-spacing: 0.01em;
 }
 
-/* ── Summary Strip — matches BCA KPI strip exactly ── */
+/* ── Summary Strip — colored KPI cards matching bca-kpi-card pattern ── */
 .tc-summary-strip {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0;
+  gap: 8px;
+  padding: 8px 20px 16px;
 }
 
 .tc-stat-pill {
@@ -114,17 +115,51 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px 16px;
-  border-right: 1px solid var(--ia-color-bg-muted);
-  transition: background 0.15s ease;
+  padding: 20px 14px 18px;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
   text-align: center;
-  background: transparent;
-  border-radius: 0;
+  border-radius: 12px;
+  border: 1px solid transparent;
   gap: 0;
 }
 
-.tc-stat-pill:last-child { border-right: none; }
-.tc-stat-pill:hover { background: var(--ia-color-bg-subtle); }
+/* Card 1 — Total: execution/blue */
+.tc-stat-pill:nth-child(1) {
+  background: linear-gradient(145deg, var(--ia-color-execution-soft) 0%, var(--ia-color-execution-bg) 100%);
+  border-color: var(--ia-color-execution-border);
+}
+.tc-stat-pill:nth-child(1) .tc-stat-pill-value {
+  color: var(--ia-color-execution);
+}
+/* Card 2 — To Do: ops/teal */
+.tc-stat-pill:nth-child(2) {
+  background: linear-gradient(145deg, var(--ia-color-ops-soft) 0%, var(--ia-color-ops-bg) 100%);
+  border-color: var(--ia-color-ops-border);
+}
+.tc-stat-pill:nth-child(2) .tc-stat-pill-value {
+  color: var(--ia-color-ops);
+}
+/* Card 3 — In Progress: compliance/amber */
+.tc-stat-pill:nth-child(3) {
+  background: linear-gradient(145deg, var(--ia-color-compliance-soft) 0%, var(--ia-color-compliance-bg) 100%);
+  border-color: var(--ia-color-compliance-border);
+}
+.tc-stat-pill:nth-child(3) .tc-stat-pill-value {
+  color: var(--ia-color-compliance);
+}
+/* Card 4 — Done: customer/mint */
+.tc-stat-pill:nth-child(4) {
+  background: linear-gradient(145deg, var(--ia-color-customer-soft) 0%, var(--ia-color-customer-bg) 100%);
+  border-color: var(--ia-color-customer-border);
+}
+.tc-stat-pill:nth-child(4) .tc-stat-pill-value {
+  color: var(--ia-color-customer);
+}
+
+.tc-stat-pill:hover {
+  box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+  filter: brightness(0.97);
+}
 
 .tc-stat-pill-label {
   font-size: var(--ia-text-3xs);
@@ -145,9 +180,10 @@
   letter-spacing: -0.5px;
 }
 
+/* Semantic overrides still respected for any explicit class usage */
 .tc-stat-pill-value--neutral  { color: var(--ia-color-text-primary); }
-.tc-stat-pill-value--warning  { color: var(--ia-color-warning-text); }
-.tc-stat-pill-value--success  { color: var(--ia-color-success); }
+.tc-stat-pill-value--warning  { color: var(--ia-color-compliance); }
+.tc-stat-pill-value--success  { color: var(--ia-color-customer); }
 
 .tc-stat-pill-context {
   font-size: var(--ia-text-3xs);
@@ -155,7 +191,7 @@
   letter-spacing: 0.2px;
 }
 
-/* remove old modifier classes — no longer needed */
+/* remove old modifier classes */
 .tc-stat-pill--neutral,
 .tc-stat-pill--success,
 .tc-stat-pill--warning { background: transparent; border-color: var(--ia-color-bg-muted); }
@@ -676,7 +712,7 @@
 
 .tc-status-pill--completed {
   background: var(--ia-color-success-bg);
-  border-color: #a7f3d0;
+  border-color: var(--ia-color-success-soft);
   color: var(--ia-color-success);
 }
 .tc-status-pill--completed .tc-status-pill-dot { background: var(--ia-color-success); }
@@ -1566,14 +1602,14 @@
 
 .tc-sla--met {
   background: var(--ia-color-success-bg);
-  border-color: #a7f3d0;
+  border-color: var(--ia-color-success-soft);
   color: var(--ia-color-success);
 }
 
 .tc-sla--ok {
-  background: var(--ia-color-bg-subtle);
-  border-color: #bae6fd;
-  color: #0369a1;
+  background: var(--ia-color-ops-bg);
+  border-color: var(--ia-color-ops-border);
+  color: var(--ia-color-ops);
 }
 
 .tc-sla--urgent {
@@ -1764,6 +1800,6 @@
   animation: tc-prefill-flash 1.6s ease-out;
 }
 @keyframes tc-prefill-flash {
-  0% { background: #fef08a; }
+  0% { background: var(--ia-color-compliance-soft); }
   100% { background: var(--ia-color-warning-bg); }
 }
