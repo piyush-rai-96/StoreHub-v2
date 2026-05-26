@@ -2,15 +2,16 @@
 
 /* ── Page Shell ─────────────────────────────────────────────────────────── */
 .pex-page {
-  padding: 28px 32px;
-  max-width: 1400px;
-  min-height: 100vh;
+  min-height: 100%;
+  background: var(--ia-color-bg-subtle);
+  padding-bottom: 48px;
 }
 
 .pex-page-header {
   margin-bottom: 24px;
 }
 
+/* legacy — kept for detail page only */
 .pex-page-title {
   font-size: 20px;
   font-weight: 700;
@@ -488,9 +489,9 @@ table.pex-table {
 
 /* ── Detail Page ─────────────────────────────────────────────────────────── */
 .pex-detail-page {
-  padding: 28px 32px;
-  max-width: 1400px;
-  min-height: 100vh;
+  padding: 0 0 48px;
+  min-height: 100%;
+  background: var(--ia-color-bg-subtle);
 }
 
 .pex-back-btn {
@@ -1619,7 +1620,9 @@ table.pex-table {
 }
 
 @media (max-width: 800px) {
-  .pex-page, .pex-detail-page { padding: 16px; }
+  .pex-content { padding: 12px 16px 0; }
+  .pex-page-header { padding: 12px 16px; }
+  .pex-detail-page { padding: 0 0 24px; }
   .pex-kpi-row { grid-template-columns: repeat(2, 1fr); }
   .pex-issues-grid { grid-template-columns: repeat(2, 1fr); }
   .pex-perf-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1633,34 +1636,102 @@ table.pex-table {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Page header with icon + action button ──────────────────────────────── */
+/* ── Header — exact District Intelligence / ProductOpportunities pattern ── */
 .pex-page-header {
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-.pex-page-header-left {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-}
-.pex-page-icon-wrap {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: #e8f1ff;
-  color: #2563eb;
-  display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  margin-top: 2px;
+  padding: 16px 32px;
+  background: var(--ia-color-surface);
+  border-bottom: 1px solid var(--ia-color-border);
 }
 
-/* ── Summary row alignment ──────────────────────────────────────────────── */
+.pex-page-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pex-page-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pex-page-title-row svg {
+  color: var(--ia-color-primary);
+}
+
+.pex-page-title-row h1 {
+  font-size: var(--ia-text-lg);
+  font-weight: var(--ia-font-weight-bold);
+  color: var(--ia-color-text-primary);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.pex-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pex-header-store-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, var(--ia-color-primary-soft) 0%, var(--ia-color-primary-border) 100%);
+  border: 1px solid var(--ia-color-primary-border);
+  border-radius: 8px;
+  font-size: var(--ia-text-13);
+  font-weight: var(--ia-font-weight-semibold);
+  color: var(--ia-color-primary-hover);
+}
+
+.pex-header-store-id {
+  font-size: var(--ia-text-2xs);
+  font-weight: var(--ia-font-weight-medium);
+  color: var(--ia-color-primary);
+  padding: 2px 7px;
+  background: rgba(255,255,255,0.7);
+  border-radius: 4px;
+}
+
+.pex-header-cycle-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--ia-color-surface);
+  border: 1px solid var(--ia-color-border);
+  border-radius: 8px;
+  font-size: var(--ia-text-13);
+  font-weight: var(--ia-font-weight-medium);
+  color: var(--ia-color-text-secondary);
+}
+
+.pex-header-updated {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--ia-text-xs);
+  color: var(--ia-color-text-tertiary);
+}
+
+/* ── Content area ────────────────────────────────────────────────────────── */
+.pex-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 32px 0;
+}
+
+/* ── Summary row — override sc-inv-summary to 5 columns ─────────────────── */
 .pex-summary-row {
-  margin-bottom: 20px;
+  grid-template-columns: repeat(5, 1fr) !important;
+  padding: 0;
+  margin-bottom: 0;
 }
 
 /* ── Table cell helpers ─────────────────────────────────────────────────── */

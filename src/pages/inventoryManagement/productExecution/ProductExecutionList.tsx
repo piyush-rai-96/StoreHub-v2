@@ -11,6 +11,9 @@ import GridViewOutlined from '@mui/icons-material/GridViewOutlined';
 import ChevronLeftOutlined from '@mui/icons-material/ChevronLeftOutlined';
 import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
+import StoreOutlined from '@mui/icons-material/StoreOutlined';
+import CalendarTodayOutlined from '@mui/icons-material/CalendarTodayOutlined';
+import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined';
 import { Button, Badge } from 'impact-ui';
 import { ImFilterSelect } from '../../../components/common/ImFilterSelect';
 import {
@@ -135,30 +138,44 @@ export const ProductExecutionList: React.FC = () => {
     return <span className="pex-value-empty">—</span>;
   }
 
+  const updatedTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
   return (
     <div className="pex-page">
-      {/* ── Page Header ── */}
+      {/* ── Header — District Intelligence pattern ── */}
       <div className="pex-page-header">
         <div className="pex-page-header-left">
-          <div className="pex-page-icon-wrap">
-            <AssignmentOutlined sx={{ fontSize: 20 }}/>
+          <div className="pex-page-title-row">
+            <AssignmentOutlined sx={{ fontSize: 22 }} />
+            <h1>Product Execution Workspace</h1>
           </div>
-          <div>
-            <h1 className="pex-page-title">Product Execution Workspace</h1>
-            <p className="pex-page-subtitle">
-              Product-level opportunities and automated alerts — linked to Operations Queue for one source of truth.
-            </p>
+          <div className="pex-header-meta">
+            <div className="pex-header-store-pill">
+              <StoreOutlined sx={{ fontSize: 14 }} />
+              <span>Downtown Flagship</span>
+              <span className="pex-header-store-id">STR-001</span>
+            </div>
+            <div className="pex-header-cycle-pill">
+              <CalendarTodayOutlined sx={{ fontSize: 13 }} />
+              <span>Week of May 19–25</span>
+            </div>
+            <span className="pex-header-updated">
+              <AccessTimeOutlined sx={{ fontSize: 12 }} />
+              Updated {updatedTime}
+            </span>
           </div>
         </div>
         <Button
           variant="outlined"
           color="primary"
-          size="small"
           onClick={() => navigate('/command-center/operations-queue')}
         >
           Open Operations Queue
         </Button>
       </div>
+
+      {/* ── Content area ── */}
+      <div className="pex-content">
 
       {/* ── KPI Summary Tiles ── */}
       <div className="sc-inv-summary pex-summary-row">
@@ -387,6 +404,8 @@ export const ProductExecutionList: React.FC = () => {
           </div>
         )}
       </div>
+
+      </div>{/* end pex-content */}
     </div>
   );
 };
