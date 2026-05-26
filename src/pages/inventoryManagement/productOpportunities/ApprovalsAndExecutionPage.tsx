@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import CancelOutlined from '@mui/icons-material/CancelOutlined';
@@ -32,9 +32,15 @@ const EXEC_STATUS_TABS: (OpportunityStatus | 'all')[] = [
 ];
 
 export const ApprovalsAndExecutionPage: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const [mainTab, setMainTab] = useState('approvals');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
+
+  useEffect(() => {
+    const t = setTimeout(() => setIsLoading(false), 600);
+    return () => clearTimeout(t);
+  }, []);
 
   /* ── Approval state ─────────────────────────────────────── */
   const [selectedReq, setSelectedReq] = useState<AllocationRequest | null>(null);
@@ -95,6 +101,17 @@ export const ApprovalsAndExecutionPage: React.FC = () => {
     setActionComment('');
     setActionTaken(null);
   };
+
+  if (isLoading) {
+    return (
+      <div className="aep-page">
+        <div className="po-loading">
+          <div className="po-loading-spinner" />
+          <p>Loading Approvals & Execution...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="aep-page">

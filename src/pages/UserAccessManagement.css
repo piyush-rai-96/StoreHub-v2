@@ -1062,120 +1062,355 @@
    Premium Screen Access Panel — Expanded Row
    ═══════════════════════════════════════════════════════════════════ */
 
+/* ═══════════════════════════════════════════════════════════════
+   Screen Access Panel — premium redesign
+   ═══════════════════════════════════════════════════════════════ */
 .uam-screen-access-panel {
-  padding: 20px 22px 22px !important;
-  background: #fff !important;
-  border: 1.5px solid #e8ecf0 !important;
-  border-radius: 14px !important;
-  box-shadow: 0 2px 12px rgba(15, 26, 46, 0.05) !important;
+  padding: 24px 26px 26px !important;
+  background: linear-gradient(160deg, #f8faff 0%, #ffffff 60%) !important;
+  border: 1.5px solid #e4eaf3 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(15, 26, 46, 0.07) !important;
 }
 
-.uam-screen-access-header {
+/* Panel header */
+.uam-sap-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #edf0f5;
+}
+.uam-sap-header-left {
   display: flex;
   align-items: center;
-  gap: 7px;
-  margin-bottom: 16px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid #f0f3f6;
+  gap: 12px;
 }
-
-.uam-screen-access-title {
-  font-size: 12.5px;
+.uam-sap-header-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border: 1px solid #bfdbfe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+.uam-sap-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.3;
+}
+.uam-sap-subtitle {
+  font-size: 11.5px;
+  color: #667085;
+  margin-top: 2px;
+}
+.uam-sap-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.uam-sap-count {
+  font-size: 12px;
   font-weight: 600;
   color: #344054;
-  letter-spacing: 0.1px;
-}
-
-.uam-screen-access-count {
-  margin-left: auto;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #667085;
-  background: #f4f6f8;
-  padding: 2px 10px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
   border-radius: 20px;
-  border: 1px solid #e8ecf0;
+  padding: 4px 14px;
+  white-space: nowrap;
+}
+.uam-sap-count span {
+  color: #94a3b8;
+  font-weight: 500;
 }
 
 /* Module grid */
 .uam-screen-access-modules {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
 }
 
-.uam-screen-module {
-  border: 1.5px solid #eaecef;
-  border-radius: 11px;
-  padding: 13px 14px;
-  background: #fafbfc;
+/* Premium module card */
+.uam-screen-module--premium {
+  position: relative;
+  border: 1.5px solid #e8edf5;
+  border-radius: 13px;
+  padding: 0;
+  background: #fff;
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  overflow: hidden;
+  box-shadow: 0 1px 6px rgba(15,26,46,0.05);
+  transition: box-shadow 0.15s;
+}
+.uam-screen-module--premium:hover {
+  box-shadow: 0 3px 14px rgba(15,26,46,0.09);
 }
 
-.uam-screen-module-header {
+.uam-mod-accent {
+  height: 3px;
+  width: 100%;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.uam-screen-module--premium .uam-screen-module-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 14px 11px;
+  background: #fafbfc;
+  border-bottom: 1px solid #f0f3f6;
+}
+
+/* Top row: dot + name + count */
+.uam-mod-header-top {
   display: flex;
   align-items: center;
   gap: 7px;
+  width: 100%;
+}
+
+/* Bottom row: toggle or lock badge — full width */
+.uam-mod-header-action {
+  display: flex;
+  width: 100%;
+}
+
+.uam-screen-module--hidden {
+  opacity: 0.5;
+  filter: grayscale(0.3);
 }
 
 .uam-screen-module-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
-  opacity: 0.75;
 }
 
 .uam-screen-module-name {
   font-size: 10.5px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.55px;
-  color: #667085;
+  letter-spacing: 0.6px;
+  color: #475569;
   flex: 1;
 }
 
 .uam-screen-module-count {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 600;
-  color: #8c96a5;
+  color: #94a3b8;
+  background: #f1f5f9;
+  padding: 1px 7px;
+  border-radius: 20px;
 }
 
-.uam-screen-module-items {
+/* Module toggle button — full width in action row */
+.uam-module-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  padding: 5px 10px;
+  border-radius: 7px;
+  border: 1.5px solid #d4e2ff;
+  background: #f0f4ff;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.uam-module-toggle-btn:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+.uam-module-toggle-btn--off {
+  background: #f8f9fa;
+  border-color: #e2e8f0;
+  color: #94a3b8;
+}
+.uam-module-toggle-btn--off:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #ef4444;
+}
+
+/* Lock badge for protected modules — full width in action row */
+.uam-module-lock-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  font-size: 11px;
+  font-weight: 600;
+  color: #92400e;
+  background: linear-gradient(135deg, #fef9c3, #fef3c7);
+  border: 1.5px solid #fcd34d;
+  border-radius: 7px;
+  padding: 5px 10px;
+  letter-spacing: 0.1px;
+}
+
+/* Screen item list */
+.uam-screen-module--premium .uam-screen-module-items {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0;
+  padding: 8px 10px;
 }
 
 .uam-screen-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 10px;
-  background: #fff;
-  border: 1.5px solid #e8ecf0;
-  border-radius: 8px;
-  transition: border-color 0.12s, box-shadow 0.12s;
+  gap: 9px;
+  padding: 9px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 9px;
+  transition: background 0.12s, box-shadow 0.12s;
 }
 
-.uam-screen-item:hover {
-  border-color: #c5d0dc;
-  box-shadow: 0 1px 4px rgba(15,26,46,0.06);
+.uam-screen-item--on {
+  background: transparent;
+}
+.uam-screen-item--hidden {
+  opacity: 0.4;
+}
+.uam-screen-item--hidden .uam-screen-item-label {
+  color: #9ba3af;
+  text-decoration: line-through;
+}
+
+.uam-screen-item--editable {
+  cursor: pointer;
+}
+.uam-screen-item--editable:hover {
+  background: #f1f5ff;
+}
+
+.uam-screen-item--locked {
+  cursor: default;
 }
 
 .uam-screen-item-icon {
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  color: #667085;
+  color: #94a3b8;
 }
 
 .uam-screen-item-label {
   font-size: 12.5px;
   font-weight: 500;
-  color: #344054;
+  color: #334155;
   line-height: 1.2;
+  flex: 1;
+}
+
+/* Visibility indicator */
+.uam-screen-item-vis {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  opacity: 0.5;
+  transition: opacity 0.12s;
+}
+.uam-screen-item--editable:hover .uam-screen-item-vis {
+  opacity: 1;
+}
+.uam-screen-item-vis--on {
+  color: #2563eb;
+}
+.uam-screen-item-vis--off {
+  color: #ef4444;
+}
+
+/* Lock icon on individual screens */
+.uam-screen-item-lock {
+  display: flex;
+  align-items: center;
+  color: #b45309;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+/* ── Save button ─────────────────────────────────────────────────────────── */
+.uam-save-access-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 15px;
+  border-radius: 8px;
+  border: none;
+  background: var(--ia-color-primary, #2563eb);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  box-shadow: 0 2px 6px rgba(37,99,235,0.25);
+  white-space: nowrap;
+}
+.uam-save-access-btn:hover {
+  background: #1d4ed8;
+  box-shadow: 0 3px 10px rgba(37,99,235,0.35);
+}
+
+/* ── Saved confirmation pill ───────────────────────────────────────────── */
+.uam-access-saved-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 20px;
+  padding: 4px 12px;
+  white-space: nowrap;
+}
+
+/* ── Wizard: module groups in step 3 ────────────────────────────────────── */
+.uam-m-access-modules {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.uam-m-access-module-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.uam-m-access-module-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #667085;
+}
+.uam-m-access-module-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 

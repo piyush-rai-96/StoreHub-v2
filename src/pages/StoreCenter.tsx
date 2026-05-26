@@ -3567,7 +3567,7 @@ export const StoreCenter: React.FC = () => {
                   i.quantity,
                   i.onOrder,
                   i.inTransit,
-                  i.daysOfSupply > 0 ? `${(i.daysOfSupply / 7).toFixed(1)}w` : '0',
+                  i.daysOfSupply > 0 ? `${Math.round(i.daysOfSupply / 7)}w` : '0',
                 ]);
                 const csv = [headers, ...rows].map(r => r.map(escapeCsv).join(',')).join('\n');
                 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -3772,7 +3772,7 @@ export const StoreCenter: React.FC = () => {
                             {pagedInventory.map(item => {
                               const pipeline = item.onOrder + item.inTransit;
                               const fwos = item.daysOfSupply > 0
-                                ? (item.daysOfSupply / 7).toFixed(1) + 'w'
+                                ? Math.round(item.daysOfSupply / 7) + 'w'
                                 : '—';
                                   const riskColor: 'error' | 'warning' | 'info' | 'success' =
                                     item.risk === 'critical' ? 'error' :

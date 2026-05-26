@@ -8,7 +8,8 @@ import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined';
 import AssignmentOutlined from '@mui/icons-material/AssignmentOutlined';
 import ForumOutlined from '@mui/icons-material/ForumOutlined';
 import ManageAccountsOutlined from '@mui/icons-material/ManageAccountsOutlined';
-import Inventory2Outlined from '@mui/icons-material/Inventory2Outlined';
+import TrendingUpOutlined from '@mui/icons-material/TrendingUpOutlined';
+import GavelOutlined from '@mui/icons-material/GavelOutlined';
 import PersonAddAlt1Outlined from '@mui/icons-material/PersonAddAlt1Outlined';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
@@ -26,6 +27,10 @@ import SecurityOutlined from '@mui/icons-material/SecurityOutlined';
 import RotateLeftOutlined from '@mui/icons-material/RotateLeftOutlined';
 import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
 import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
+import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
+import VisibilityOffOutlined from '@mui/icons-material/VisibilityOffOutlined';
+import SaveOutlined from '@mui/icons-material/SaveOutlined';
+import LockOutlined from '@mui/icons-material/LockOutlined';
 import {
   Button, Badge, Card,
   Toast, Avatar, EmptyState, Tooltip,
@@ -46,22 +51,26 @@ const SCREEN_LABELS: Record<ScreenAccess, string> = {
   operations_queue: 'Operations Queue',
   communications: 'Communications',
   user_access_management: 'User Access Management',
-  inventory_management: 'Inventory Management',
+  inv_product_execution: 'Product Execution',
+  inv_product_opportunities: 'Product Opportunities',
+  inv_approvals_execution: 'Approvals & Execution',
 };
 
 interface ScreenMeta { label: string; icon: React.ReactNode; module: string; color: string; }
 const SCREEN_META: Record<ScreenAccess, ScreenMeta> = {
-  home:                   { label: 'Dashboard',              icon: <HomeOutlined sx={{ fontSize: 15 }}/>,            module: 'Store Operations',     color: '#2563eb' },
-  district_intelligence:  { label: 'District Intelligence',  icon: <PlaceOutlinedIcon sx={{ fontSize: 15 }}/>,       module: 'Store Operations',     color: '#2563eb' },
-  store_deep_dive:        { label: 'Store Deep Dive',         icon: <StoreOutlined sx={{ fontSize: 15 }}/>,           module: 'Store Operations',     color: '#2563eb' },
-  master_pog_management:  { label: 'Master POG Management',  icon: <LayersOutlined sx={{ fontSize: 15 }}/>,          module: 'Planogram Intelligence', color: '#7c3aed' },
-  pog_rule_management:    { label: 'POG Rule Management',    icon: <LayersOutlined sx={{ fontSize: 15 }}/>,          module: 'Planogram Intelligence', color: '#7c3aed' },
-  pog_localization_engine:{ label: 'POG Localization Engine',icon: <AutoAwesomeOutlined sx={{ fontSize: 15 }}/>,     module: 'Planogram Intelligence', color: '#7c3aed' },
-  inventory_management:   { label: 'Inventory Management',   icon: <Inventory2Outlined sx={{ fontSize: 15 }}/>,      module: 'Inventory Management', color: '#0891b2' },
-  operations_queue:       { label: 'Operations Queue',       icon: <AssignmentOutlined sx={{ fontSize: 15 }}/>,      module: 'Command Center',       color: '#059669' },
-  communications:         { label: 'Communications',         icon: <ForumOutlined sx={{ fontSize: 15 }}/>,           module: 'Command Center',       color: '#059669' },
-  ai_copilot:             { label: 'Ask Alan',               icon: <AutoAwesomeOutlined sx={{ fontSize: 15 }}/>,     module: 'Command Center',       color: '#059669' },
-  user_access_management: { label: 'User Access Management', icon: <ManageAccountsOutlined sx={{ fontSize: 15 }}/>,  module: 'Administration',       color: '#b45309' },
+  home:                    { label: 'Dashboard',              icon: <HomeOutlined sx={{ fontSize: 15 }}/>,            module: 'Store Operations',     color: '#2563eb' },
+  district_intelligence:   { label: 'District Intelligence',  icon: <PlaceOutlinedIcon sx={{ fontSize: 15 }}/>,       module: 'Store Operations',     color: '#2563eb' },
+  store_deep_dive:         { label: 'Store Deep Dive',        icon: <StoreOutlined sx={{ fontSize: 15 }}/>,           module: 'Store Operations',     color: '#2563eb' },
+  master_pog_management:   { label: 'Master POG Management',  icon: <LayersOutlined sx={{ fontSize: 15 }}/>,          module: 'Planogram Intelligence', color: '#7c3aed' },
+  pog_rule_management:     { label: 'POG Rule Management',    icon: <LayersOutlined sx={{ fontSize: 15 }}/>,          module: 'Planogram Intelligence', color: '#7c3aed' },
+  pog_localization_engine: { label: 'POG Localization Engine',icon: <AutoAwesomeOutlined sx={{ fontSize: 15 }}/>,     module: 'Planogram Intelligence', color: '#7c3aed' },
+  inv_product_execution:   { label: 'Product Execution',      icon: <AssignmentOutlined sx={{ fontSize: 15 }}/>,      module: 'Inventory Management', color: '#0891b2' },
+  inv_product_opportunities:{ label: 'Product Opportunities', icon: <TrendingUpOutlined sx={{ fontSize: 15 }}/>,      module: 'Inventory Management', color: '#0891b2' },
+  inv_approvals_execution: { label: 'Approvals & Execution',  icon: <GavelOutlined sx={{ fontSize: 15 }}/>,           module: 'Inventory Management', color: '#0891b2' },
+  operations_queue:        { label: 'Operations Queue',       icon: <AssignmentOutlined sx={{ fontSize: 15 }}/>,      module: 'Command Center',       color: '#059669' },
+  communications:          { label: 'Communications',         icon: <ForumOutlined sx={{ fontSize: 15 }}/>,           module: 'Command Center',       color: '#059669' },
+  ai_copilot:              { label: 'Ask Alan',               icon: <AutoAwesomeOutlined sx={{ fontSize: 15 }}/>,     module: 'Command Center',       color: '#059669' },
+  user_access_management:  { label: 'User Access Management', icon: <ManageAccountsOutlined sx={{ fontSize: 15 }}/>,  module: 'Administration',       color: '#b45309' },
 };
 
 const MODULE_ORDER = ['Store Operations', 'Inventory Management', 'Planogram Intelligence', 'Command Center', 'Administration'];
@@ -89,7 +98,7 @@ const ROLE_DESCRIPTIONS: Record<UserRole, string> = {
 };
 
 export const UserAccessManagement: React.FC = () => {
-  const { allUsers, addUser, removeUser, user: currentUser } = useAuth();
+  const { allUsers, addUser, removeUser, updateUser, user: currentUser } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -97,6 +106,9 @@ export const UserAccessManagement: React.FC = () => {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<User | null>(null);
   const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
+  // Per-user live access edits (keyed by user.id → current accessRoutes draft)
+  const [accessDrafts, setAccessDrafts] = useState<Record<string, ScreenAccess[]>>({});
+  const [accessSaved, setAccessSaved] = useState<string | null>(null);
 
   const handleConfirmDelete = () => {
     if (!confirmDelete) return;
@@ -106,6 +118,51 @@ export const UserAccessManagement: React.FC = () => {
     setExpandedRow(prev => prev === confirmDelete.id ? null : prev);
     setDeleteSuccess(removedName);
     setTimeout(() => setDeleteSuccess(null), 2800);
+  };
+
+  // ── Access edit helpers ─────────────────────────────────────────────────
+  // Administration module is always locked — admins can never lose platform config access
+  const LOCKED_MODULES = new Set(['Administration']);
+  const LOCKED_SCREENS = new Set<ScreenAccess>(['user_access_management']);
+
+  const getDraft = (userId: string, base: ScreenAccess[]): ScreenAccess[] =>
+    accessDrafts[userId] ?? [...base];
+
+  const toggleScreen = (userId: string, base: ScreenAccess[], screen: ScreenAccess) => {
+    if (LOCKED_SCREENS.has(screen)) return;
+    const draft = getDraft(userId, base);
+    const next = draft.includes(screen) ? draft.filter(s => s !== screen) : [...draft, screen];
+    setAccessDrafts(prev => ({ ...prev, [userId]: next }));
+  };
+
+  const toggleModule = (userId: string, base: ScreenAccess[], moduleName: string) => {
+    if (LOCKED_MODULES.has(moduleName)) return;
+    const draft = getDraft(userId, base);
+    const moduleScreens = (Object.keys(SCREEN_META) as ScreenAccess[]).filter(
+      s => SCREEN_META[s].module === moduleName && !LOCKED_SCREENS.has(s)
+    );
+    const allOn = moduleScreens.every(s => draft.includes(s));
+    let next: ScreenAccess[];
+    if (allOn) {
+      next = draft.filter(s => !moduleScreens.includes(s));
+    } else {
+      next = [...new Set([...draft, ...moduleScreens])];
+    }
+    setAccessDrafts(prev => ({ ...prev, [userId]: next }));
+  };
+
+  const saveAccessDraft = (userId: string) => {
+    const draft = accessDrafts[userId];
+    if (!draft) return;
+    // Enforce: ADMIN always keeps user_access_management regardless of draft
+    const targetUser = allUsers.find(u => u.id === userId);
+    let finalRoutes = [...draft];
+    if (targetUser?.role === 'ADMIN' && !finalRoutes.includes('user_access_management')) {
+      finalRoutes = [...finalRoutes, 'user_access_management'];
+    }
+    updateUser(userId, { accessRoutes: finalRoutes });
+    setAccessSaved(userId);
+    setTimeout(() => setAccessSaved(null), 2500);
   };
 
   const [newName, setNewName] = useState('');
@@ -452,46 +509,133 @@ export const UserAccessManagement: React.FC = () => {
                   </td>
                 </tr>
                 {/* Expanded detail row */}
-                {expandedRow === u.id && (
-                  <tr className="uam-expand-row">
-                    <td colSpan={6}>
-                      <div className="uam-expand-content uam-screen-access-panel">
-                        <div className="uam-screen-access-header">
-                          <GppGoodOutlined sx={{ fontSize: 15, color: '#2563eb' }}/>
-                          <span className="uam-screen-access-title">Screen Access</span>
-                          <span className="uam-screen-access-count">{u.accessRoutes.length} of {Object.keys(SCREEN_META).length} screens</span>
-                        </div>
-                        <div className="uam-screen-access-modules">
-                          {MODULE_ORDER.map(module => {
-                            const screens = u.accessRoutes.filter(s => SCREEN_META[s]?.module === module);
-                            if (screens.length === 0) return null;
-                            const style = MODULE_STYLES[module];
-                            return (
-                              <div key={module} className="uam-screen-module" style={{ background: style.bg, borderColor: style.border }}>
-                                <div className="uam-screen-module-header">
-                                  <span className="uam-screen-module-dot" style={{ background: style.dot }}/>
-                                  <span className="uam-screen-module-name" style={{ color: style.text }}>{module}</span>
-                                  <span className="uam-screen-module-count" style={{ color: style.text }}>{screens.length}</span>
-                                </div>
-                                <div className="uam-screen-module-items">
-                                  {screens.map(screen => {
-                                    const meta = SCREEN_META[screen];
-                                    return (
-                                      <div key={screen} className="uam-screen-item">
-                                        <span className="uam-screen-item-icon" style={{ color: style.dot }}>{meta.icon}</span>
-                                        <span className="uam-screen-item-label">{meta.label}</span>
-                                      </div>
-                                    );
-                                  })}
+                {expandedRow === u.id && (() => {
+                  const draft = getDraft(u.id, u.accessRoutes);
+                  // Admin can edit anyone's access (including their own), except the locked Administration module
+                  const canEdit = currentUser?.role === 'ADMIN';
+                  const isDirty = !!accessDrafts[u.id];
+                  const allScreens = Object.keys(SCREEN_META) as ScreenAccess[];
+                  return (
+                    <tr className="uam-expand-row">
+                      <td colSpan={6}>
+                        <div className="uam-expand-content uam-screen-access-panel">
+
+                          {/* Header row */}
+                          <div className="uam-sap-header">
+                            <div className="uam-sap-header-left">
+                              <div className="uam-sap-header-icon">
+                                <GppGoodOutlined sx={{ fontSize: 16 }}/>
+                              </div>
+                              <div>
+                                <div className="uam-sap-title">Screen Access</div>
+                                <div className="uam-sap-subtitle">
+                                  {canEdit ? 'Click a screen or module to grant or hide access' : 'Screens this user can access on the platform'}
                                 </div>
                               </div>
-                            );
-                          })}
+                            </div>
+                            <div className="uam-sap-header-right">
+                              <span className="uam-sap-count">
+                                {draft.length} <span>of</span> {allScreens.length} screens
+                              </span>
+                              {canEdit && isDirty && (
+                                <button className="uam-save-access-btn" onClick={() => saveAccessDraft(u.id)}>
+                                  <SaveOutlined sx={{ fontSize: 13 }}/> Save Changes
+                                </button>
+                              )}
+                              {accessSaved === u.id && (
+                                <span className="uam-access-saved-pill">
+                                  <Check sx={{ fontSize: 12 }}/> Saved
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Module grid */}
+                          <div className="uam-screen-access-modules">
+                            {MODULE_ORDER.map(module => {
+                              // Administration is exclusively for ADMIN role — never show/grant to others
+                              if (module === 'Administration' && u.role !== 'ADMIN') return null;
+
+                              const moduleScreens = allScreens.filter(s => SCREEN_META[s].module === module);
+                              const activeInDraft = moduleScreens.filter(s => draft.includes(s));
+                              const style = MODULE_STYLES[module];
+                              const isLocked = LOCKED_MODULES.has(module);
+                              const moduleOn = activeInDraft.length > 0;
+                              return (
+                                <div
+                                  key={module}
+                                  className={`uam-screen-module uam-screen-module--premium${!moduleOn ? ' uam-screen-module--hidden' : ''}`}
+                                  style={{ '--mod-color': style.dot } as React.CSSProperties}
+                                >
+                                  {/* Colored left accent */}
+                                  <div className="uam-mod-accent" style={{ background: style.dot }}/>
+
+                                  <div className="uam-screen-module-header">
+                                    {/* Row 1: dot + name + count */}
+                                    <div className="uam-mod-header-top">
+                                      <span className="uam-screen-module-dot" style={{ background: style.dot }}/>
+                                      <span className="uam-screen-module-name">{module}</span>
+                                      <span className="uam-screen-module-count">{activeInDraft.length}/{moduleScreens.length}</span>
+                                    </div>
+                                    {/* Row 2: toggle or lock badge */}
+                                    {canEdit && (
+                                      <div className="uam-mod-header-action">
+                                        {isLocked ? (
+                                          <span className="uam-module-lock-badge" title="Administration access is required and cannot be removed">
+                                            <LockOutlined sx={{ fontSize: 12 }}/> Always Required
+                                          </span>
+                                        ) : (
+                                          <button
+                                            className={`uam-module-toggle-btn${moduleOn ? '' : ' uam-module-toggle-btn--off'}`}
+                                            title={moduleOn ? 'Hide entire module' : 'Show entire module'}
+                                            onClick={() => toggleModule(u.id, u.accessRoutes, module)}
+                                          >
+                                            {moduleOn
+                                              ? <><VisibilityOutlined sx={{ fontSize: 12 }}/><span>Module Visible</span></>
+                                              : <><VisibilityOffOutlined sx={{ fontSize: 12 }}/><span>Module Hidden</span></>}
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="uam-screen-module-items">
+                                    {moduleScreens.map(screen => {
+                                      const meta = SCREEN_META[screen];
+                                      const on = draft.includes(screen);
+                                      const isScreenLocked = LOCKED_SCREENS.has(screen);
+                                      const clickable = canEdit && !isScreenLocked;
+                                      return (
+                                        <div
+                                          key={screen}
+                                          className={`uam-screen-item${on ? ' uam-screen-item--on' : ' uam-screen-item--hidden'}${clickable ? ' uam-screen-item--editable' : ''}${isScreenLocked ? ' uam-screen-item--locked' : ''}`}
+                                          onClick={clickable ? () => toggleScreen(u.id, u.accessRoutes, screen) : undefined}
+                                          title={isScreenLocked ? 'This screen access is required and cannot be removed' : clickable ? (on ? 'Click to hide' : 'Click to grant access') : undefined}
+                                        >
+                                          <span className="uam-screen-item-icon" style={{ color: on ? style.dot : undefined }}>{meta.icon}</span>
+                                          <span className="uam-screen-item-label">{meta.label}</span>
+                                          {isScreenLocked ? (
+                                            <span className="uam-screen-item-lock"><LockOutlined sx={{ fontSize: 11 }}/></span>
+                                          ) : canEdit ? (
+                                            <span className={`uam-screen-item-vis${on ? ' uam-screen-item-vis--on' : ' uam-screen-item-vis--off'}`}>
+                                              {on ? <VisibilityOutlined sx={{ fontSize: 12 }}/> : <VisibilityOffOutlined sx={{ fontSize: 12 }}/>}
+                                            </span>
+                                          ) : on ? (
+                                            <Check sx={{ fontSize: 12, color: style.dot }}/>
+                                          ) : null}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                  </tr>
-                )}
+                      </td>
+                    </tr>
+                  );
+                })()}
               </React.Fragment>
             ))}
             {filteredUsers.length === 0 && (
@@ -727,28 +871,47 @@ export const UserAccessManagement: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="uam-m-access-grid">
-                    {(Object.keys(SCREEN_LABELS) as ScreenAccess[]).map(screen => {
-                      const isAutoAssigned = ROLE_ACCESS[newRole].includes(screen);
-                      const isChecked = customizeAccess ? customAccess.includes(screen) : isAutoAssigned;
-                      if (!customizeAccess && !isAutoAssigned) return null;
-                      return customizeAccess ? (
-                        <div key={screen} className={`uam-m-access-item uam-m-access-item--interactive ${isChecked ? 'uam-m-access-item--checked' : ''}`}>
-                          <Checkbox
-                            label={
-                              <span className="uam-m-access-checkbox-label">
-                                {SCREEN_LABELS[screen]}
-                                {isAutoAssigned && <span className="uam-m-access-default" title="Default for this role">default</span>}
-                              </span>
-                            }
-                            checked={isChecked}
-                            onChange={() => toggleCustomScreen(screen)}
-                          />
-                        </div>
-                      ) : (
-                        <div key={screen} className="uam-m-access-item">
-                          <Check sx={{ fontSize: 12 }}/>
-                          <span>{SCREEN_LABELS[screen]}</span>
+                  <div className="uam-m-access-modules">
+                    {MODULE_ORDER.map(module => {
+                      const moduleScreens = (Object.keys(SCREEN_LABELS) as ScreenAccess[]).filter(
+                        s => SCREEN_META[s]?.module === module
+                      );
+                      const visibleScreens = customizeAccess
+                        ? moduleScreens
+                        : moduleScreens.filter(s => ROLE_ACCESS[newRole].includes(s));
+                      if (visibleScreens.length === 0) return null;
+                      const style = MODULE_STYLES[module];
+                      return (
+                        <div key={module} className="uam-m-access-module-group">
+                          <div className="uam-m-access-module-label">
+                            <span className="uam-m-access-module-dot" style={{ background: style.dot }}/>
+                            {module}
+                          </div>
+                          <div className="uam-m-access-grid">
+                            {visibleScreens.map(screen => {
+                              const isAutoAssigned = ROLE_ACCESS[newRole].includes(screen);
+                              const isChecked = customizeAccess ? customAccess.includes(screen) : isAutoAssigned;
+                              return customizeAccess ? (
+                                <div key={screen} className={`uam-m-access-item uam-m-access-item--interactive ${isChecked ? 'uam-m-access-item--checked' : ''}`}>
+                                  <Checkbox
+                                    label={
+                                      <span className="uam-m-access-checkbox-label">
+                                        {SCREEN_LABELS[screen]}
+                                        {isAutoAssigned && <span className="uam-m-access-default" title="Default for this role">default</span>}
+                                      </span>
+                                    }
+                                    checked={isChecked}
+                                    onChange={() => toggleCustomScreen(screen)}
+                                  />
+                                </div>
+                              ) : (
+                                <div key={screen} className="uam-m-access-item">
+                                  <Check sx={{ fontSize: 12 }}/>
+                                  <span>{SCREEN_LABELS[screen]}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       );
                     })}

@@ -45,7 +45,9 @@ const SUB_MODULE_ACCESS: Record<string, ScreenAccess> = {
   'operations-queue': 'operations_queue',
   communications: 'communications',
   'user-access': 'user_access_management',
-  'inventory-management': 'inventory_management',
+  'product-execution': 'inv_product_execution',
+  'product-opportunities': 'inv_product_opportunities',
+  'approvals-execution': 'inv_approvals_execution',
 };
 
 const PORTAL_ONLY_ROUTES: SidebarRoute[] = [
@@ -73,8 +75,8 @@ const ALL_MODULES: SidebarRoute[] = [
     label: 'Inventory Management',
     icon: <Inventory2Outlined sx={{ fontSize: 20 }} />,
     children: [
-      { value: 'product-opportunities', label: 'Product Opportunities', icon: <TrendingUpOutlined sx={{ fontSize: 18 }} />, link: '/inventory-management/product-opportunities' },
       { value: 'product-execution', label: 'Product Execution', icon: <AssignmentOutlined sx={{ fontSize: 18 }} />, link: '/inventory-management/product-execution' },
+      { value: 'product-opportunities', label: 'Product Opportunities', icon: <TrendingUpOutlined sx={{ fontSize: 18 }} />, link: '/inventory-management/product-opportunities' },
       { value: 'approvals-execution', label: 'Approvals & Execution', icon: <GavelOutlined sx={{ fontSize: 18 }} />, link: '/inventory-management/approvals-and-execution' },
     ],
   },

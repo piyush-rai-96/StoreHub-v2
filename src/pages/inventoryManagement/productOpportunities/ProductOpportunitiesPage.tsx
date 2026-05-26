@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import TrendingUpOutlined from '@mui/icons-material/TrendingUpOutlined';
@@ -40,6 +40,7 @@ const TYPE_ICONS: Record<OpportunityType, React.ReactNode> = {
 
 export const ProductOpportunitiesPage: React.FC = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
   const [storeId, setStoreId] = useState(DEFAULT_STORE_ID);
   const [showStoreDropdown, setShowStoreDropdown] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
@@ -47,6 +48,11 @@ export const ProductOpportunitiesPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const [selectedOpp, setSelectedOpp] = useState<ProductOpportunity | null>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setIsLoading(false), 600);
+    return () => clearTimeout(t);
+  }, []);
 
   const store = useMemo(() => getStoreById(storeId), [storeId]);
   const allOpportunities = useMemo(() => getOpportunitiesByStore(storeId), [storeId]);
@@ -96,6 +102,17 @@ export const ProductOpportunitiesPage: React.FC = () => {
   const topPerformingCount = allOpportunities.filter(o => o.opportunityType === 'top_performing').length;
   const emergingCount      = allOpportunities.filter(o => o.opportunityType === 'emerging').length;
   const atRiskCount        = allOpportunities.filter(o => o.opportunityType === 'at_risk').length;
+
+  if (isLoading) {
+    return (
+      <div className="po-page">
+        <div className="po-loading">
+          <div className="po-loading-spinner" />
+          <p>Loading Product Opportunities...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="po-page">

@@ -35,7 +35,9 @@ export type ScreenAccess =
   | 'operations_queue'
   | 'communications'
   | 'user_access_management'
-  | 'inventory_management';
+  | 'inv_product_execution'
+  | 'inv_product_opportunities'
+  | 'inv_approvals_execution';
 
 // User type
 export interface User {
@@ -103,7 +105,9 @@ export const SCREEN_TO_PATH: Record<ScreenAccess, string> = {
   operations_queue: '/command-center/operations-queue',
   communications: '/command-center/communications',
   user_access_management: '/app-config/user-access',
-  inventory_management: '/inventory-management',
+  inv_product_execution: '/inventory-management/product-execution',
+  inv_product_opportunities: '/inventory-management/product-opportunities',
+  inv_approvals_execution: '/inventory-management/approvals-and-execution',
 };
 
 // Get the default landing route for a user based on their access
@@ -119,20 +123,23 @@ export const ROLE_ACCESS: Record<UserRole, ScreenAccess[]> = {
     'home', 'district_intelligence', 'store_deep_dive',
     'master_pog_management', 'pog_rule_management', 'pog_localization_engine',
     'ai_copilot', 'operations_queue', 'communications', 'user_access_management',
-    'inventory_management',
+    'inv_product_execution', 'inv_product_opportunities', 'inv_approvals_execution',
   ],
   DM: [
     'home', 'district_intelligence', 'store_deep_dive',
     'master_pog_management', 'pog_rule_management', 'pog_localization_engine',
-    'ai_copilot', 'operations_queue', 'communications', 'inventory_management',
+    'ai_copilot', 'operations_queue', 'communications',
+    'inv_product_execution', 'inv_product_opportunities', 'inv_approvals_execution',
   ],
   SM: [
     'store_deep_dive',
-    'ai_copilot', 'operations_queue', 'communications', 'inventory_management',
+    'ai_copilot', 'operations_queue', 'communications',
+    'inv_product_execution', 'inv_product_opportunities', 'inv_approvals_execution',
   ],
   HQ: [
     'home', 'district_intelligence',
     'master_pog_management', 'pog_rule_management', 'pog_localization_engine',
-    'ai_copilot', 'operations_queue', 'communications', 'inventory_management',
+    'ai_copilot', 'operations_queue', 'communications',
+    'inv_product_opportunities', 'inv_approvals_execution',
   ],
 };

@@ -159,6 +159,18 @@ const makeSalesTrend = (base: number, clusterBase: number, chainBase: number): P
   }));
 };
 
+// Declining sales trend — product was selling, then dropped to near-zero
+const makeDecliningTrend = (normalBase: number, clusterBase: number, chainBase: number): PexWeeklySales[] => {
+  const weeks = ['W16', 'W17', 'W18', 'W19', 'W20', 'W21'];
+  const dropFactors = [1.0, 0.95, 0.5, 0.1, 0, 0];
+  return weeks.map((w, i) => ({
+    week: w,
+    store: Math.round(normalBase * dropFactors[i]),
+    cluster: Math.round(clusterBase * (0.95 + i * 0.01)),
+    chain: Math.round(chainBase * (0.97 + i * 0.006)),
+  }));
+};
+
 export const PEX_TASKS: PexTask[] = [
   {
     id: 'PEX-001',
@@ -219,14 +231,15 @@ export const PEX_TASKS: PexTask[] = [
     clusterAvgSales: 42,
     chainAvgSales: 38,
     performanceGap: -42,
-    salesTrend: makeSalesTrend(0, 42, 38),
+    salesTrend: makeDecliningTrend(40, 42, 38),
     recommendedAction: 'Move 48 units from BOH Aisle 4, Bay 2 to shelf facing immediately. Same-day SLA.',
-    opportunityExplanation: 'Shelf image detected 0 units on shelf while BOH system confirms 48 units available in backroom. Shelf gap is causing lost sales.',
+    opportunityExplanation: 'Shelf image detected 0 units on shelf while BOH system confirms 48 units available in backroom. Shelf gap is causing lost sales of ~$420 per week.',
     findings: emptyFindings(),
     auditTrail: [
-      { timestamp: '2026-05-25T09:14:00Z', action: 'Task auto-created by system from BOH-to-Shelf Sync alert', user: 'System' },
+      { timestamp: '2026-05-25T09:14:00Z', action: 'Task auto-created from BOH-to-Shelf Sync signal — BOH: 48 units, Shelf: 0', user: 'System' },
       { timestamp: '2026-05-25T09:14:30Z', action: 'Owner assigned: J. Martinez', user: 'System' },
-      { timestamp: '2026-05-25T12:00:00Z', action: 'Task marked Overdue — SLA breached', user: 'System' },
+      { timestamp: '2026-05-25T09:30:00Z', action: 'Alert notification sent to J. Martinez via app', user: 'System' },
+      { timestamp: '2026-05-25T12:00:00Z', action: 'Task marked Overdue — SLA of 3 hours breached', user: 'System' },
     ],
   },
   {
@@ -254,17 +267,22 @@ export const PEX_TASKS: PexTask[] = [
     clusterAvgSales: 22,
     chainAvgSales: 18,
     performanceGap: -22,
-    salesTrend: makeSalesTrend(0, 22, 18),
+    salesTrend: makeDecliningTrend(20, 22, 18),
     recommendedAction: 'Conduct physical shelf count. Verify product is accessible to customers. Clear any backroom blockage.',
     opportunityExplanation: 'System shows 60 units on-hand but zero sales for 22 consecutive days. Likely trapped in backroom or misplaced on shelf.',
     findings: {
       ...emptyFindings(),
-      notes: 'Checked aisle 3 - product not visible on shelf. Backroom has stock.',
+      stockReceived: true,
+      inBackroom: true,
+      onShelf: false,
+      notes: 'Checked aisle 3 — product not visible on shelf. Backroom confirmed 60 units. Possible blockage at storeroom door.',
     },
     auditTrail: [
-      { timestamp: '2026-05-25T06:30:00Z', action: 'Task auto-created by system from Phantom Stock alert', user: 'System' },
+      { timestamp: '2026-05-25T06:30:00Z', action: 'Task auto-created from Phantom Stock alert — 60 units on-hand, 0 sales for 22 days', user: 'System' },
       { timestamp: '2026-05-25T06:31:00Z', action: 'Owner assigned: M. Chen', user: 'System' },
-      { timestamp: '2026-05-25T14:22:00Z', action: 'User opened task', user: 'M. Chen' },
+      { timestamp: '2026-05-25T06:45:00Z', action: 'Alert notification sent to M. Chen via app', user: 'System' },
+      { timestamp: '2026-05-25T14:22:00Z', action: 'Task opened — findings in progress', user: 'M. Chen' },
+      { timestamp: '2026-05-25T14:35:00Z', action: 'Findings updated: Stock received=Yes, In backroom=Yes, On shelf=No', user: 'M. Chen' },
     ],
   },
   {

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ArrowBackOutlined from '@mui/icons-material/ArrowBackOutlined';
 import TrendingUpOutlined from '@mui/icons-material/TrendingUpOutlined';
@@ -26,6 +26,7 @@ import CheckCircleOutlined from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedOutlined from '@mui/icons-material/RadioButtonUnchecked';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import { Button, Badge } from 'impact-ui';
+import { ImFilterSelect } from '../../../components/common/ImFilterSelect';
 import {
   PEX_TASKS,
   PEX_SOURCE_LABELS,
@@ -95,6 +96,151 @@ function formatTs(ts: string) {
   return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
+// ── Yes / No compact select ────────────────────────────────────────────────
+const YES_NO_OPTIONS = [
+  { value: 'yes', label: 'Yes' },
+  { value: 'no',  label: 'No'  },
+];
+
+function PexYesNo({ value, onChange }: { value: boolean | null; onChange: (v: boolean) => void }) {
+  const strVal = value === true ? 'yes' : value === false ? 'no' : '';
+  return (
+    <div className={`pex-yn-wrap${value === true ? ' pex-yn--yes' : value === false ? ' pex-yn--no' : ''}`}>
+      <ImFilterSelect
+        placeholder="Select"
+        value={strVal || 'Select'}
+        options={[{ value: 'Select', label: '— Select' }, ...YES_NO_OPTIONS]}
+        minWidth={120}
+        isClearable={false}
+        onChange={v => {
+          if (v === 'yes') onChange(true);
+          else if (v === 'no') onChange(false);
+        }}
+      />
+    </div>
+  );
+}
+
+// ── SVG Sales Chart ───────────────────────────────────────────────────────
+interface PexSalesChartProps { salesTrend: Array<{ week: string; store: number; cluster: number; chain: number }>; }
+
+function PexSalesChart({ salesTrend }: PexSalesChartProps) {
+  const CHART_H      = 160;         // compact height — no wasted white space
+  const GROUP_W      = 80;          // comfortable group width
+  const BAR_W        = 20;          // solid bar width
+  const BAR_GAP      = 4;
+  const Y_AXIS_W     = 38;
+  const X_LABEL_H    = 26;
+  const TOP_PAD      = 18;
+  const totalW       = Y_AXIS_W + salesTrend.length * GROUP_W;
+  const svgH         = CHART_H + X_LABEL_H + TOP_PAD;
+
+  const maxVal = Math.max(...salesTrend.flatMap(w => [w.store, w.cluster, w.chain]), 1);
+  const yMax = Math.ceil((maxVal * 1.15) / 10) * 10;
+  const gridLines = 4;              // fewer gridlines = less visual noise
+
+  function toY(v: number) {
+    return TOP_PAD + CHART_H - (v / yMax) * CHART_H;
+  }
+
+  const COLORS = {
+    store:   '#6366f1',   // indigo
+    cluster: '#a78bfa',   // violet
+    chain:   '#d1d5db',   // gray-300
+  };
+
+  // rounded top only (simulate with clip path approach via rx on top half)
+  function barPath(x: number, y: number, w: number, h: number, r = 4): string {
+    if (h <= r * 2) r = h / 2;
+    return `M${x + r},${y} h${w - 2 * r} a${r},${r} 0 0 1 ${r},${r} v${h - r} h${-w} v${-(h - r)} a${r},${r} 0 0 1 ${r},${-r}Z`;
+  }
+
+  return (
+    <svg
+      width="100%"
+      viewBox={`0 0 ${totalW} ${svgH}`}
+      preserveAspectRatio="xMidYMid meet"
+      style={{ display: 'block', overflow: 'visible', maxHeight: 230 }}
+    >
+      {/* Subtle background stripes */}
+      {Array.from({ length: gridLines + 1 }).map((_, i) => {
+        const val = Math.round((yMax / gridLines) * i);
+        const y   = toY(val);
+        return (
+          <g key={i}>
+            <line
+              x1={Y_AXIS_W} y1={y} x2={totalW} y2={y}
+              stroke={i === 0 ? '#e2e8f0' : '#f1f5f9'}
+              strokeWidth={i === 0 ? 1.5 : 1}
+              strokeDasharray={i === 0 ? undefined : '3 3'}
+            />
+            <text
+              x={Y_AXIS_W - 8} y={y + 4}
+              textAnchor="end" fontSize={11} fill="#94a3b8"
+              fontFamily="inherit" fontWeight="500"
+            >{val}</text>
+          </g>
+        );
+      })}
+
+      {/* Bars per group */}
+      {salesTrend.map((w, gi) => {
+        const groupX = Y_AXIS_W + gi * GROUP_W;
+        const innerW = 3 * BAR_W + 2 * BAR_GAP;
+        const startX = groupX + (GROUP_W - innerW) / 2;
+        const bars = [
+          { val: w.store,   color: COLORS.store,   x: startX },
+          { val: w.cluster, color: COLORS.cluster, x: startX + BAR_W + BAR_GAP },
+          { val: w.chain,   color: COLORS.chain,   x: startX + (BAR_W + BAR_GAP) * 2 },
+        ];
+        const groupCx = groupX + GROUP_W / 2;
+        return (
+          <g key={w.week}>
+            {bars.map(b => {
+              const rawH = (b.val / yMax) * CHART_H;
+              const barH = b.val === 0 ? 3 : Math.max(6, rawH);
+              const barY = toY(b.val === 0 ? 0 : b.val);
+              const adjustedY = b.val === 0 ? TOP_PAD + CHART_H - 3 : barY;
+              return (
+                <g key={b.color}>
+                  <path
+                    d={barPath(b.x, adjustedY, BAR_W, barH, b.val === 0 ? 1 : 5)}
+                    fill={b.val === 0 ? '#e2e8f0' : b.color}
+                    opacity={b.val === 0 ? 0.6 : 0.9}
+                  />
+                  {b.val > 0 && (
+                    <text
+                      x={b.x + BAR_W / 2} y={adjustedY - 6}
+                      textAnchor="middle"
+                      fontSize={10.5}
+                      fill={b.color}
+                      fontWeight="700"
+                      fontFamily="inherit"
+                    >{b.val}</text>
+                  )}
+                </g>
+              );
+            })}
+            {/* Week label */}
+            <text
+              x={groupCx} y={CHART_H + TOP_PAD + 18}
+              textAnchor="middle" fontSize={11.5} fill="#64748b"
+              fontFamily="inherit" fontWeight="600"
+            >{w.week}</text>
+          </g>
+        );
+      })}
+
+      {/* Y-axis baseline */}
+      <line
+        x1={Y_AXIS_W} y1={TOP_PAD}
+        x2={Y_AXIS_W} y2={TOP_PAD + CHART_H}
+        stroke="#e2e8f0" strokeWidth={1.5}
+      />
+    </svg>
+  );
+}
+
 // ── Step definitions ──────────────────────────────────────────────────────
 const STEPS = [
   { label: 'Overview',          icon: <BarChartOutlined sx={{ fontSize: 16 }} /> },
@@ -109,8 +255,14 @@ export const ProductExecutionDetail: React.FC = () => {
 
   const baseTask = PEX_TASKS.find(t => t.id === taskId);
 
+  const [isLoading, setIsLoading] = useState(true);
   const [task, setTask] = useState<PexTask | null>(baseTask ?? null);
   const [currentStep, setCurrentStep] = useState(0);
+
+  useEffect(() => {
+    const t = setTimeout(() => setIsLoading(false), 600);
+    return () => clearTimeout(t);
+  }, []);
   const [findingsTab, setFindingsTab] = useState<'info' | 'issues'>('info');
   const [localFindings, setLocalFindings] = useState<PexFindings>(
     baseTask?.findings ?? {
@@ -135,12 +287,25 @@ export const ProductExecutionDetail: React.FC = () => {
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  if (isLoading) {
+    return (
+      <div className="pex-detail-page">
+        <div className="pex-loading">
+          <div className="pex-loading-spinner" />
+          <p>Loading Task Details...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!task) {
     return (
       <div className="pex-detail-page">
-        <button className="pex-back-btn" onClick={() => navigate('/inventory-management/product-execution')}>
-          <ArrowBackOutlined sx={{ fontSize: 16 }} /> Back to Product Execution
-        </button>
+        <div className="pex-breadcrumb">
+          <Button variant="text" color="primary" onClick={() => navigate('/inventory-management/product-execution')}>
+            <ArrowBackOutlined sx={{ fontSize: 16 }} />&nbsp;&nbsp;Back to Product Execution
+          </Button>
+        </div>
         <div className="pex-empty">
           <div className="pex-empty-icon"><InventoryOutlined sx={{ fontSize: 26 }} /></div>
           <p className="pex-empty-title">Task not found</p>
@@ -152,7 +317,6 @@ export const ProductExecutionDetail: React.FC = () => {
 
   const aiAnalysis   = getAIAnalysis(task.source);
   const hasAiTrigger = needsAI(task.source);
-  const maxBar       = Math.max(...task.salesTrend.map(w => Math.max(w.store, w.cluster, w.chain, 1)), 1);
   const safeTask     = task;
 
   // ── helpers ───────────────────────────────────────────────────────────
@@ -229,11 +393,16 @@ export const ProductExecutionDetail: React.FC = () => {
   return (
     <div className="pex-detail-page">
 
-      {/* ── Back link ──────────────────────────────────────────────────── */}
-      <button className="pex-back-btn" onClick={() => navigate('/inventory-management/product-execution')}>
-        <ArrowBackOutlined sx={{ fontSize: 16 }} />
-        Back to Product Execution
-      </button>
+      {/* ── Back nav ───────────────────────────────────────────────────── */}
+      <div className="pex-breadcrumb">
+        <Button
+          variant="text"
+          color="primary"
+          onClick={() => navigate('/inventory-management/product-execution')}
+        >
+          <ArrowBackOutlined sx={{ fontSize: 16 }} />&nbsp;&nbsp;Back to Product Execution
+        </Button>
+      </div>
 
       {/* ── Product Hero Header ─────────────────────────────────────────── */}
       <div className="pex-hero-header">
@@ -344,35 +513,82 @@ export const ProductExecutionDetail: React.FC = () => {
               </div>
             </div>
 
-            {/* 6-Week Sales Trend */}
-            <div className="pex-trend-block">
-              <div className="pex-trend-title">6-Week Sales Trend</div>
-              <div className="pex-sales-bars">
-                {task.salesTrend.map(w => (
-                  <div key={w.week} className="pex-sales-bar-col">
-                    <div className="pex-sales-bar-bars" style={{ height: 72 }}>
-                      <div className="pex-sales-bar pex-sales-bar--chain"   style={{ height: Math.max(4, (w.chain / maxBar) * 68) }} />
-                      <div className="pex-sales-bar pex-sales-bar--cluster" style={{ height: Math.max(4, (w.cluster / maxBar) * 68) }} />
-                      <div className="pex-sales-bar pex-sales-bar--store"   style={{ height: Math.max(4, (w.store / maxBar) * 68) }} />
-                    </div>
-                    <span className="pex-sales-bar-label">{w.week}</span>
-                  </div>
-                ))}
+            {/* 6-Week Sales Trend — premium SVG chart + comparison sidebar */}
+            <div className="pex-chart-layout">
+              <div className="pex-chart-main">
+                <div className="pex-trend-title">6-Week Sales Trend (Units/Week)</div>
+                <PexSalesChart salesTrend={task.salesTrend} />
+                <div className="pex-sales-legend">
+                  <span className="pex-sales-legend-item"><span className="pex-sales-legend-dot" style={{ background: '#4f46e5' }} /> This Store</span>
+                  <span className="pex-sales-legend-item"><span className="pex-sales-legend-dot" style={{ background: '#a78bfa' }} /> Cluster Avg</span>
+                  <span className="pex-sales-legend-item"><span className="pex-sales-legend-dot" style={{ background: '#cbd5e1' }} /> Chain Avg</span>
+                </div>
               </div>
-              <div className="pex-sales-legend">
-                <span className="pex-sales-legend-item"><span className="pex-sales-legend-dot" style={{ background: '#2563eb' }} /> This Store</span>
-                <span className="pex-sales-legend-item"><span className="pex-sales-legend-dot" style={{ background: '#94a3b8' }} /> Cluster Avg</span>
-                <span className="pex-sales-legend-item"><span className="pex-sales-legend-dot" style={{ background: '#e2e8f0' }} /> Chain Avg</span>
+              <div className="pex-chart-sidebar">
+                <div className="pex-avg-card-title">
+                  <BarChartOutlined sx={{ fontSize: 16 }} />
+                  <span>Average Sales</span>
+                  <span className="pex-avg-card-subtitle">last 6 weeks</span>
+                </div>
+
+                <div className="pex-avg-stat-list">
+                  {[
+                    {
+                      label: 'This Store',
+                      value: Math.round(task.salesTrend.reduce((s, w) => s + w.store, 0) / task.salesTrend.length),
+                      color: '#6366f1',
+                      icon: <StoreOutlined sx={{ fontSize: 16 }} />,
+                      bg: '#eef2ff',
+                    },
+                    {
+                      label: 'Cluster Avg',
+                      value: Math.round(task.salesTrend.reduce((s, w) => s + w.cluster, 0) / task.salesTrend.length),
+                      color: '#7c3aed',
+                      icon: <BarChartOutlined sx={{ fontSize: 16 }} />,
+                      bg: '#f5f3ff',
+                    },
+                    {
+                      label: 'Chain Avg',
+                      value: Math.round(task.salesTrend.reduce((s, w) => s + w.chain, 0) / task.salesTrend.length),
+                      color: '#64748b',
+                      icon: <GridViewOutlined sx={{ fontSize: 16 }} />,
+                      bg: '#f8fafc',
+                    },
+                  ].map(row => (
+                    <div key={row.label} className="pex-avg-stat-row">
+                      <div className="pex-avg-stat-icon" style={{ background: row.bg, color: row.color }}>
+                        {row.icon}
+                      </div>
+                      <span className="pex-avg-stat-label">{row.label}</span>
+                      <span className="pex-avg-stat-value" style={{ color: row.color }}>{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className={`pex-avg-gap-tile ${task.performanceGap >= 0 ? 'pex-avg-gap-tile--pos' : 'pex-avg-gap-tile--neg'}`}>
+                  <span className="pex-avg-gap-tile-label">Performance Gap vs Cluster</span>
+                  <span className="pex-avg-gap-tile-value">
+                    {task.performanceGap >= 0 ? '+' : ''}{task.performanceGap}
+                    <span className="pex-avg-gap-tile-unit"> units/wk</span>
+                  </span>
+                </div>
               </div>
             </div>
 
             {/* Context boxes */}
             <div className="pex-context-row">
               <div className="pex-rec-box">
-                <div className="pex-rec-box-label">Recommended Action</div>
+                <div className="pex-rec-box-header">
+                  <AutoFixHighOutlined sx={{ fontSize: 16 }} />
+                  <span className="pex-rec-box-label">Recommended Action</span>
+                </div>
                 <div className="pex-rec-box-text">{task.recommendedAction}</div>
               </div>
               <div className="pex-opp-box">
+                <div className="pex-opp-box-header">
+                  <AutoAwesomeOutlined sx={{ fontSize: 16 }} />
+                  <span className="pex-opp-box-label">AI System Insight</span>
+                </div>
                 <div className="pex-opp-box-text">{task.opportunityExplanation}</div>
               </div>
             </div>
@@ -417,45 +633,39 @@ export const ProductExecutionDetail: React.FC = () => {
               <div className="pex-findings-info">
                 <div className="pex-info-grid">
                   {([
-                    ['stockReceived',   'Stock received?'],
-                    ['inBackroom',       'Product available in backroom?'],
-                    ['onShelf',          'Product present on shelf?'],
-                    ['displaySetup',     'Display setup completed?'],
-                    ['displayHasIssues', 'Display has issues?'],
-                    ['labourShortage',   'Labour shortage?'],
-                  ] as [keyof PexFindings, string][]).map(([field, label]) => (
+                    ['stockReceived',    'Stock received?',               'Confirm stock has been received at store'],
+                    ['inBackroom',       'Product available in backroom?', 'Is there back-stock in the storeroom'],
+                    ['onShelf',          'Product present on shelf?',      'Can the product be found on the shelf'],
+                    ['displaySetup',     'Display setup completed?',       'Is the display fully assembled and stocked'],
+                    ['displayHasIssues', 'Display has issues?',            'Are there any structural or visual problems'],
+                    ['labourShortage',   'Labour shortage?',               'Is store short-staffed for replenishment'],
+                  ] as [keyof PexFindings, string, string][]).map(([field, label, hint]) => (
                     <div key={field} className="pex-checklist-row">
-                      <span className="pex-checklist-label">{label}</span>
-                      <div className="pex-checklist-btns">
-                        <button
-                          className={`pex-bool-btn${localFindings[field] === true ? ' pex-bool-btn--yes-active' : ''}`}
-                          onClick={() => setBool(field, true)}
-                        >Yes</button>
-                        <button
-                          className={`pex-bool-btn${localFindings[field] === false ? ' pex-bool-btn--no-active' : ''}`}
-                          onClick={() => setBool(field, false)}
-                        >No</button>
+                      <div className="pex-checklist-row-left">
+                        <span className="pex-checklist-label">{label}</span>
+                        <span className="pex-checklist-hint">{hint}</span>
                       </div>
+                      <PexYesNo value={localFindings[field] as boolean | null} onChange={v => setBool(field, v)} />
                     </div>
                   ))}
                 </div>
 
                 <div className="pex-text-fields">
                   <div className="pex-text-field-row">
-                    <span className="pex-text-field-label">Rack Number</span>
+                    <label className="pex-text-field-label">Rack Number</label>
                     <input className="pex-text-input" placeholder="e.g. R-12"
                       value={localFindings.rackNumber}
                       onChange={e => setLocalFindings(f => ({ ...f, rackNumber: e.target.value }))} />
                   </div>
                   <div className="pex-text-field-row">
-                    <span className="pex-text-field-label">Shelf Position</span>
+                    <label className="pex-text-field-label">Shelf Position</label>
                     <input className="pex-text-input" placeholder="e.g. Eye level, Bay 3"
                       value={localFindings.shelfPosition}
                       onChange={e => setLocalFindings(f => ({ ...f, shelfPosition: e.target.value }))} />
                   </div>
                   <div className="pex-text-field-row pex-text-field-row--full">
-                    <span className="pex-text-field-label">Notes</span>
-                    <textarea className="pex-textarea" placeholder="Add any relevant observations…"
+                    <label className="pex-text-field-label">Notes <span className="pex-text-field-optional">optional</span></label>
+                    <textarea className="pex-textarea" placeholder="Add any relevant observations — shelf condition, customer feedback, blockages…"
                       value={localFindings.notes}
                       onChange={e => setLocalFindings(f => ({ ...f, notes: e.target.value }))} />
                   </div>
@@ -464,16 +674,27 @@ export const ProductExecutionDetail: React.FC = () => {
             )}
 
             {findingsTab === 'issues' && (
-              <div className="pex-issues-grid">
-                {PEX_ISSUE_TYPES.map(issue => {
-                  const selected = localFindings.selectedIssues.includes(issue);
-                  return (
-                    <div key={issue} className={`pex-issue-chip${selected ? ' pex-issue-chip--selected' : ''}`} onClick={() => toggleIssue(issue)}>
-                      <div className="pex-issue-check">{selected && <CheckOutlined sx={{ fontSize: 11 }} />}</div>
-                      {issue}
-                    </div>
-                  );
-                })}
+              <div>
+                <p className="pex-issues-hint">Select all issues observed during your physical inspection.</p>
+                <div className="pex-issues-grid">
+                  {PEX_ISSUE_TYPES.map(issue => {
+                    const selected = localFindings.selectedIssues.includes(issue);
+                    return (
+                      <div key={issue} className={`pex-issue-card${selected ? ' pex-issue-card--selected' : ''}`} onClick={() => toggleIssue(issue)}>
+                        <div className={`pex-issue-checkbox${selected ? ' pex-issue-checkbox--checked' : ''}`}>
+                          {selected && <CheckOutlined sx={{ fontSize: 12 }} />}
+                        </div>
+                        <span className="pex-issue-label">{issue}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {localFindings.selectedIssues.length > 0 && (
+                  <div className="pex-issues-selected-bar">
+                    <span className="pex-issues-selected-count">{localFindings.selectedIssues.length} issue{localFindings.selectedIssues.length > 1 ? 's' : ''} selected</span>
+                    <button className="pex-issues-clear" onClick={() => setLocalFindings(f => ({ ...f, selectedIssues: [] }))}>Clear all</button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -484,7 +705,7 @@ export const ProductExecutionDetail: React.FC = () => {
               <CameraAltOutlined sx={{ fontSize: 17 }} />
               <h3 className="pex-section-title">Evidence — Upload Shelf / Rack Image</h3>
               {hasAiTrigger && (
-                <span className="pex-ai-badge" style={{ marginLeft: 'auto' }}>
+                <span className="pex-ai-badge pex-ai-badge--header" style={{ marginLeft: 'auto' }}>
                   <AutoFixHighOutlined sx={{ fontSize: 12 }} /> AI Analysis Enabled
                 </span>
               )}
@@ -510,9 +731,11 @@ export const ProductExecutionDetail: React.FC = () => {
               onDragLeave={() => setIsDragOver(false)}
               onDrop={e => { e.preventDefault(); setIsDragOver(false); handleImageUpload(e.dataTransfer.files); }}
             >
-              <div className="pex-upload-icon"><CloudUploadOutlined sx={{ fontSize: 24 }} /></div>
-              <div className="pex-upload-title">Drop images here or click to upload</div>
-              <div className="pex-upload-sub">Images will be attached to the linked Operations Queue task</div>
+              <div className="pex-upload-icon-wrap">
+                <div className="pex-upload-icon"><CloudUploadOutlined sx={{ fontSize: 28 }} /></div>
+              </div>
+              <div className="pex-upload-title">Drop images here or <span className="pex-upload-link">click to browse</span></div>
+              <div className="pex-upload-sub">Photos are attached to the linked Operations Queue task • {task.linkedTaskId}</div>
               <div className="pex-upload-formats">
                 {['JPEG', 'PNG', 'WEBP'].map(f => <span key={f} className="pex-fmt-badge">{f}</span>)}
               </div>
@@ -570,45 +793,79 @@ export const ProductExecutionDetail: React.FC = () => {
           <div className="pex-section">
             <div className="pex-section-header">
               <CheckCircleOutlineOutlined sx={{ fontSize: 17 }} />
-              <h3 className="pex-section-title">Task Status</h3>
+              <h3 className="pex-section-title">Review &amp; Resolution</h3>
               <div style={{ marginLeft: 'auto' }}>
                 <Badge label={PEX_STATUS_LABELS[task.status]} color={STATUS_COLOR[task.status]} size="small" variant="subtle" />
               </div>
             </div>
-            <div className="pex-status-context">
-              <p className="pex-status-context-text">
-                Review the findings and take an action below. All changes are recorded in the audit trail and synced to the linked Operations Queue task <strong>{task.linkedTaskId}</strong>.
-              </p>
+
+            {/* Status context banner */}
+            <div className="pex-status-banner">
+              <div className="pex-status-banner-left">
+                <div className="pex-status-banner-icon">
+                  <AssignmentTurnedInOutlined sx={{ fontSize: 18 }} />
+                </div>
+                <div>
+                  <div className="pex-status-banner-title">Task linked to Operations Queue</div>
+                  <div className="pex-status-banner-sub">
+                    All findings and status changes sync automatically to <span className="pex-status-banner-id">{task.linkedTaskId}</span>
+                  </div>
+                </div>
+              </div>
+              <Button variant="outlined" color="primary" onClick={() => navigate('/command-center/operations-queue')}>
+                <LaunchOutlined sx={{ fontSize: 14 }} />&nbsp;Open Queue Task
+              </Button>
             </div>
 
-            {/* Action buttons */}
-            <div className="pex-resolution-actions">
-              <button className="pex-action-primary" onClick={handleSaveFindings}>
-                <CheckOutlined sx={{ fontSize: 15 }} /> Save &amp; Submit Findings
+            {/* Action grid */}
+            <div className="pex-action-grid">
+              <button className="pex-action-card pex-action-card--primary" onClick={handleSaveFindings}>
+                <div className="pex-action-card-icon pex-action-card-icon--primary"><CheckOutlined sx={{ fontSize: 20 }} /></div>
+                <div className="pex-action-card-body">
+                  <div className="pex-action-card-title">Save &amp; Submit Findings</div>
+                  <div className="pex-action-card-desc">Persist all findings and sync to Operations Queue</div>
+                </div>
               </button>
+
               {task.status === 'open' && (
-                <button className="pex-action-secondary" onClick={handleMarkInProgress}>
-                  Mark In Progress
+                <button className="pex-action-card pex-action-card--blue" onClick={handleMarkInProgress}>
+                  <div className="pex-action-card-icon pex-action-card-icon--blue"><HistoryOutlined sx={{ fontSize: 20 }} /></div>
+                  <div className="pex-action-card-body">
+                    <div className="pex-action-card-title">Mark In Progress</div>
+                    <div className="pex-action-card-desc">Acknowledge and begin working on this task</div>
+                  </div>
                 </button>
               )}
+
               {(task.status === 'open' || task.status === 'in_progress') && (
-                <button className="pex-action-secondary pex-action-green" onClick={handleMarkResolved}>
-                  <CheckCircleOutlineOutlined sx={{ fontSize: 15 }} /> Mark Resolved
+                <button className="pex-action-card pex-action-card--green" onClick={handleMarkResolved}>
+                  <div className="pex-action-card-icon pex-action-card-icon--green"><CheckCircleOutlineOutlined sx={{ fontSize: 20 }} /></div>
+                  <div className="pex-action-card-body">
+                    <div className="pex-action-card-title">Mark Resolved</div>
+                    <div className="pex-action-card-desc">Issue has been corrected and shelves are compliant</div>
+                  </div>
                 </button>
               )}
+
               {task.status !== 'escalated' && task.status !== 'resolved' && task.status !== 'dismissed' && (
-                <button className="pex-action-secondary pex-action-orange" onClick={handleEscalate}>
-                  <FlagOutlined sx={{ fontSize: 15 }} /> Escalate to DM
+                <button className="pex-action-card pex-action-card--orange" onClick={handleEscalate}>
+                  <div className="pex-action-card-icon pex-action-card-icon--orange"><FlagOutlined sx={{ fontSize: 20 }} /></div>
+                  <div className="pex-action-card-body">
+                    <div className="pex-action-card-title">Escalate to District Manager</div>
+                    <div className="pex-action-card-desc">Requires DM attention or store-level resource</div>
+                  </div>
                 </button>
               )}
+
               {task.status !== 'resolved' && task.status !== 'dismissed' && (
-                <button className="pex-action-secondary pex-action-red" onClick={() => setShowDismissModal(true)}>
-                  <BlockOutlined sx={{ fontSize: 15 }} /> Dismiss with Reason
+                <button className="pex-action-card pex-action-card--red" onClick={() => setShowDismissModal(true)}>
+                  <div className="pex-action-card-icon pex-action-card-icon--red"><BlockOutlined sx={{ fontSize: 20 }} /></div>
+                  <div className="pex-action-card-body">
+                    <div className="pex-action-card-title">Dismiss with Reason</div>
+                    <div className="pex-action-card-desc">Close task — not actionable or false positive</div>
+                  </div>
                 </button>
               )}
-              <button className="pex-action-ghost" onClick={() => navigate('/command-center/operations-queue')}>
-                <LaunchOutlined sx={{ fontSize: 14 }} /> Open in Operations Queue
-              </button>
             </div>
           </div>
 
@@ -655,18 +912,25 @@ export const ProductExecutionDetail: React.FC = () => {
       {showSuccessModal && (
         <div className="pex-modal-overlay" onClick={() => setShowSuccessModal(false)}>
           <div className="pex-modal" onClick={e => e.stopPropagation()}>
-            <div className="pex-modal-icon"><CheckCircleOutlined sx={{ fontSize: 32 }} /></div>
-            <h3 className="pex-modal-title">Findings Saved</h3>
+            <div className="pex-modal-icon-wrap">
+              <CheckCircleOutlined sx={{ fontSize: 38, color: '#16a34a' }} />
+            </div>
+            <h3 className="pex-modal-title">Findings Submitted</h3>
             <p className="pex-modal-body">
-              Your findings have been saved and the linked task has been updated in Operations Queue.
+              Your findings have been saved and synced to Operations Queue task <strong>{task.linkedTaskId}</strong>. The audit trail has been updated.
             </p>
+            <div className="pex-modal-chips">
+              <span className="pex-modal-chip pex-modal-chip--green">✓ Findings saved</span>
+              <span className="pex-modal-chip pex-modal-chip--blue">✓ Queue task updated</span>
+              <span className="pex-modal-chip pex-modal-chip--purple">✓ Audit logged</span>
+            </div>
             <div className="pex-modal-actions">
-              <button className="pex-modal-cta-primary" onClick={() => { setShowSuccessModal(false); navigate('/command-center/operations-queue'); }}>
-                Go to Operations Queue
-              </button>
-              <button className="pex-modal-cta-secondary" onClick={() => setShowSuccessModal(false)}>
+              <Button variant="primary" onClick={() => { setShowSuccessModal(false); navigate('/command-center/operations-queue'); }}>
+                <LaunchOutlined sx={{ fontSize: 15 }} />&nbsp;Go to Operations Queue
+              </Button>
+              <Button variant="outlined" onClick={() => setShowSuccessModal(false)}>
                 Continue Review
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -676,8 +940,13 @@ export const ProductExecutionDetail: React.FC = () => {
       {showDismissModal && (
         <div className="pex-modal-overlay" onClick={() => setShowDismissModal(false)}>
           <div className="pex-dismiss-modal" onClick={e => e.stopPropagation()}>
-            <h3 className="pex-dismiss-title">Dismiss Task</h3>
-            <p className="pex-dismiss-sub">Select a reason to dismiss this task. This action is recorded in the audit trail.</p>
+            <div className="pex-dismiss-modal-header">
+              <div className="pex-dismiss-modal-icon"><BlockOutlined sx={{ fontSize: 18 }} /></div>
+              <div>
+                <h3 className="pex-dismiss-title">Dismiss Task</h3>
+                <p className="pex-dismiss-sub">Select a reason. This is recorded in the audit trail and cannot be undone.</p>
+              </div>
+            </div>
             <div className="pex-dismiss-reasons">
               {DISMISS_REASONS_PEX.map(reason => (
                 <div
@@ -687,20 +956,20 @@ export const ProductExecutionDetail: React.FC = () => {
                 >
                   <div className="pex-dismiss-reason-radio">
                     {dismissReason === reason
-                      ? <CheckCircleOutlined sx={{ fontSize: 15, color: '#2563eb' }} />
-                      : <RadioButtonUncheckedOutlined sx={{ fontSize: 15, color: '#cbd5e1' }} />}
+                      ? <CheckCircleOutlined sx={{ fontSize: 16, color: '#2563eb' }} />
+                      : <RadioButtonUncheckedOutlined sx={{ fontSize: 16, color: '#cbd5e1' }} />}
                   </div>
                   <span className="pex-dismiss-reason-text">{reason}</span>
                 </div>
               ))}
             </div>
             <div className="pex-dismiss-actions">
-              <button className="pex-dismiss-cancel" onClick={() => { setShowDismissModal(false); setDismissReason(''); }}>
+              <Button variant="outlined" onClick={() => { setShowDismissModal(false); setDismissReason(''); }}>
                 Cancel
-              </button>
-              <button className="pex-dismiss-confirm" disabled={!dismissReason} onClick={handleDismissConfirm}>
+              </Button>
+              <Button variant="primary" color="error" disabled={!dismissReason} onClick={handleDismissConfirm}>
                 Confirm Dismiss
-              </button>
+              </Button>
             </div>
           </div>
         </div>

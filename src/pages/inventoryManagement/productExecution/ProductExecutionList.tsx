@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AssignmentOutlined from '@mui/icons-material/AssignmentOutlined';
 import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
@@ -14,7 +14,7 @@ import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import StoreOutlined from '@mui/icons-material/StoreOutlined';
 import CalendarTodayOutlined from '@mui/icons-material/CalendarTodayOutlined';
 import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined';
-import { Button, Badge } from 'impact-ui';
+import { Button, Badge, Tabs } from 'impact-ui';
 import { ImFilterSelect } from '../../../components/common/ImFilterSelect';
 import {
   PEX_TASKS,
@@ -72,6 +72,8 @@ function avatarInitials(name: string) {
 export const ProductExecutionList: React.FC = () => {
   const navigate = useNavigate();
 
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
@@ -79,13 +81,30 @@ export const ProductExecutionList: React.FC = () => {
   const [deptFilter, setDeptFilter] = useState('');
   const [page, setPage] = useState(0);
 
+  useEffect(() => {
+    const t = setTimeout(() => setIsLoading(false), 600);
+    return () => clearTimeout(t);
+  }, []);
+
   const summary = useMemo(() => getPexSummary(PEX_TASKS), []);
   const departments = useMemo(() => Array.from(new Set(PEX_TASKS.map(t => t.department))), []);
 
   const filtersActive = !!(search.trim() || statusFilter || sourceFilter || priorityFilter || deptFilter);
 
+  const tabCounts = useMemo(() => ({
+    all:         PEX_TASKS.length,
+    open:        PEX_TASKS.filter(t => t.status === 'open').length,
+    in_progress: PEX_TASKS.filter(t => t.status === 'in_progress').length,
+    overdue:     PEX_TASKS.filter(t => t.status === 'overdue' || t.status === 'escalated').length,
+    resolved:    PEX_TASKS.filter(t => t.status === 'resolved' || t.status === 'dismissed').length,
+  }), []);
+
   const filtered = useMemo(() => {
     let result = [...PEX_TASKS];
+    if (activeTab === 'open')             result = result.filter(t => t.status === 'open');
+    else if (activeTab === 'in_progress') result = result.filter(t => t.status === 'in_progress');
+    else if (activeTab === 'overdue')     result = result.filter(t => t.status === 'overdue' || t.status === 'escalated');
+    else if (activeTab === 'resolved')    result = result.filter(t => t.status === 'resolved' || t.status === 'dismissed');
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(t =>
@@ -100,7 +119,7 @@ export const ProductExecutionList: React.FC = () => {
     if (priorityFilter) result = result.filter(t => t.priority === priorityFilter);
     if (deptFilter)     result = result.filter(t => t.department.toLowerCase() === deptFilter.toLowerCase());
     return result;
-  }, [search, statusFilter, sourceFilter, priorityFilter, deptFilter]);
+  }, [activeTab, search, statusFilter, sourceFilter, priorityFilter, deptFilter]);
 
   const totalPages = Math.ceil(filtered.length / ROWS_PER_PAGE);
   const paginated = filtered.slice(page * ROWS_PER_PAGE, (page + 1) * ROWS_PER_PAGE);
@@ -108,6 +127,11 @@ export const ProductExecutionList: React.FC = () => {
   function clearFilters() {
     setSearch(''); setStatusFilter(''); setSourceFilter('');
     setPriorityFilter(''); setDeptFilter(''); setPage(0);
+  }
+
+  function handleTabChange(_: unknown, val: string) {
+    setActiveTab(val); setPage(0);
+    setSearch(''); setStatusFilter(''); setSourceFilter(''); setPriorityFilter(''); setDeptFilter('');
   }
 
   function handleRowClick(task: PexTask) {
@@ -139,6 +163,17 @@ export const ProductExecutionList: React.FC = () => {
   }
 
   const updatedTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  if (isLoading) {
+    return (
+      <div className="pex-page">
+        <div className="pex-loading">
+          <div className="pex-loading-spinner" />
+          <p>Loading Product Execution...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pex-page">
@@ -204,6 +239,22 @@ export const ProductExecutionList: React.FC = () => {
           <span className="sc-inv-summary-value">{summary.resolvedThisWeek}</span>
           <span className="sc-inv-summary-sub">completed</span>
         </div>
+      </div>
+
+      {/* ── Status Tabs ── */}
+      <div className="pex-tabs-row">
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          tabNames={[
+            { value: 'all',         label: `All (${tabCounts.all})` },
+            { value: 'open',        label: `Open (${tabCounts.open})` },
+            { value: 'in_progress', label: `In Progress (${tabCounts.in_progress})` },
+            { value: 'overdue',     label: `Overdue / Escalated (${tabCounts.overdue})` },
+            { value: 'resolved',    label: `Resolved (${tabCounts.resolved})` },
+          ]}
+          tabPanels={[]}
+        />
       </div>
 
       {/* ── Premium Filter Bar ── */}
@@ -287,13 +338,6 @@ export const ProductExecutionList: React.FC = () => {
 
       {/* ── Table ── */}
       <div className="wow-table-wrap sc-inv-wow-table-wrap">
-        <div className="sc-inv-toolbar">
-          <span className="sc-inv-toolbar-title">
-            <AssignmentOutlined sx={{ fontSize: 14 }}/> Product Execution Tasks
-          </span>
-          <span className="sc-inv-toolbar-count">{filtered.length} task{filtered.length !== 1 ? 's' : ''}</span>
-        </div>
-
         <div className="sc-inv-table-scroll">
           <table className="wow-table sc-inv-table">
             <thead>

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, AuthContextType, ROLE_ACCESS } from '../types';
+import { User, AuthContextType } from '../types';
 import { DEFAULT_USERS, AUTH_STORAGE_KEY, USERS_STORAGE_KEY } from '../constants/auth';
 import { storage } from '../utils/storage';
 
@@ -29,14 +29,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       storage.set(USERS_STORAGE_KEY, defaultUserList);
     }
 
-    // Restore session
+    // Restore session — preserve any custom accessRoutes the user has saved
     try {
       const storedAuth = storage.get<{ user: User }>(AUTH_STORAGE_KEY);
       if (storedAuth && storedAuth.user && storedAuth.user.id && storedAuth.user.role && storedAuth.user.accessRoutes) {
-        const refreshedUser = { ...storedAuth.user, accessRoutes: ROLE_ACCESS[storedAuth.user.role] || storedAuth.user.accessRoutes };
+        // Use stored routes as-is (admin may have customised their own access)
         setIsAuthenticated(true);
-        setUser(refreshedUser);
-        storage.set(AUTH_STORAGE_KEY, { user: refreshedUser });
+        setUser(storedAuth.user);
       } else if (storedAuth) {
         storage.remove(AUTH_STORAGE_KEY);
       }
@@ -93,11 +92,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     storage.set(USERS_STORAGE_KEY, updated);
   };
 
-  // Update an existing user
+  // Update an existing user — also updates the active session if it's the current user
   const updateUser = (userId: string, updates: Partial<User>): void => {
     const updated = allUsers.map(u => u.id === userId ? { ...u, ...updates } : u);
     setAllUsers(updated);
     storage.set(USERS_STORAGE_KEY, updated);
+    // Keep the active session in sync so the sidebar reflects changes immediately
+    if (user && user.id === userId) {
+      const updatedSelf = { ...user, ...updates };
+      setUser(updatedSelf);
+      storage.set(AUTH_STORAGE_KEY, { user: updatedSelf });
+    }
   };
 
   // Remove a user

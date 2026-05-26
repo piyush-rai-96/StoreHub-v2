@@ -64,7 +64,7 @@ function App() {
             <Route path="/store-operations/district-intelligence" element={<DistrictIntelligence />} />
             <Route path="/store-operations/store-deep-dive" element={<StoreDeepDive />} />
             {/* Inventory Management */}
-            <Route path="/inventory-management" element={<Navigate to="/inventory-management/product-opportunities" replace />} />
+            <Route path="/inventory-management" element={<Navigate to="/inventory-management/product-execution" replace />} />
             <Route path="/inventory-management/product-opportunities" element={<ProductOpportunitiesPage />} />
             <Route path="/inventory-management/product-opportunities/:opportunityId/allocation-workflow" element={<AllocationWorkflowPage />} />
             <Route path="/inventory-management/approvals-and-execution" element={<ApprovalsAndExecutionPage />} />
