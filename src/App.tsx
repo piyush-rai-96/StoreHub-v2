@@ -21,6 +21,8 @@ import { UserAccessManagement } from './pages/UserAccessManagement';
 import { ProductOpportunitiesPage } from './pages/inventoryManagement/productOpportunities/ProductOpportunitiesPage';
 import { AllocationWorkflowPage } from './pages/inventoryManagement/productOpportunities/AllocationWorkflowPage';
 import { ApprovalsAndExecutionPage } from './pages/inventoryManagement/productOpportunities/ApprovalsAndExecutionPage';
+import { ProductExecutionList } from './pages/inventoryManagement/productExecution/ProductExecutionList';
+import { ProductExecutionDetail } from './pages/inventoryManagement/productExecution/ProductExecutionDetail';
 import { ROUTES } from './types';
 import './App.css';
 
@@ -66,6 +68,8 @@ function App() {
             <Route path="/inventory-management/product-opportunities" element={<ProductOpportunitiesPage />} />
             <Route path="/inventory-management/product-opportunities/:opportunityId/allocation-workflow" element={<AllocationWorkflowPage />} />
             <Route path="/inventory-management/approvals-and-execution" element={<ApprovalsAndExecutionPage />} />
+            <Route path="/inventory-management/product-execution" element={<ProductExecutionList />} />
+            <Route path="/inventory-management/product-execution/:taskId" element={<ProductExecutionDetail />} />
             {/* Command Center — AI Copilot panel is always mounted globally in MainLayout; route redirects to home */}
             <Route path="/command-center/ai-copilot" element={<Navigate to={ROUTES.STORE_OPS_HOME} replace />} />
             <Route path="/command-center/operations-queue" element={<TaskCenter />} />

@@ -20,6 +20,11 @@ import NorthEast from '@mui/icons-material/NorthEast';
 import SouthEast from '@mui/icons-material/SouthEast';
 import NotificationsOutlined from '@mui/icons-material/NotificationsOutlined';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
+import ShieldOutlined from '@mui/icons-material/ShieldOutlined';
+import ChevronLeftOutlined from '@mui/icons-material/ChevronLeftOutlined';
+import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined';
+import LinkOutlined from '@mui/icons-material/LinkOutlined';
+import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import FileDownloadOutlined from '@mui/icons-material/FileDownloadOutlined';
 import RefreshOutlined from '@mui/icons-material/RefreshOutlined';
 import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined';
@@ -35,8 +40,16 @@ import GroupOutlined from '@mui/icons-material/GroupOutlined';
 import CalendarTodayOutlined from '@mui/icons-material/CalendarTodayOutlined';
 import FilterListOutlined from '@mui/icons-material/FilterListOutlined';
 import GridOnOutlined from '@mui/icons-material/GridOnOutlined';
+import SyncOutlined from '@mui/icons-material/SyncOutlined';
 import ShowChartOutlined from '@mui/icons-material/ShowChartOutlined';
 import OpenInNewOutlined from '@mui/icons-material/OpenInNewOutlined';
+import PersonOutlined from '@mui/icons-material/PersonOutlined';
+import ScheduleOutlined from '@mui/icons-material/ScheduleOutlined';
+import AssignmentOutlined from '@mui/icons-material/AssignmentOutlined';
+import FlagOutlined from '@mui/icons-material/FlagOutlined';
+import BlockOutlined from '@mui/icons-material/BlockOutlined';
+import CheckOutlined from '@mui/icons-material/CheckOutlined';
+import LaunchOutlined from '@mui/icons-material/LaunchOutlined';
 import { Button, Badge, Chips, Card, Tabs, Tooltip, Tag } from 'impact-ui';
 import { ImFilterSelect } from '../components/common/ImFilterSelect';
 import { AIDailyBrief, AIDailyBriefData } from '../components/common/AIDailyBrief';
@@ -49,11 +62,15 @@ import './StoreOpsHome.css';
 import './DistrictIntelligence.css';
 
 // ── Alert Bucket Types ──────────────────────────────────
+type TaskStatusType = 'open' | 'in-progress' | 'overdue' | 'escalated' | 'resolved' | 'dismissed';
+
 interface AlertIssueRow {
   id: string;
   itemName: string;
   sku: string;
   department: string;
+  subDepartment: string;
+  itemClass: string;
   store: string;
   aisle?: string;
   bay?: string;
@@ -65,6 +82,16 @@ interface AlertIssueRow {
   recoveryEstimate?: number | null;
   zeroSalesDays?: number;
   confidenceScore?: number;
+  // Automated task fields
+  taskStatus: TaskStatusType;
+  taskOwner: string;
+  dueDate: string;
+  slaBreached: boolean;
+  isEscalated: boolean;
+  isAcknowledged: boolean;
+  recommendedAction: string;
+  signalBreakdown: string;
+  evidence: string;
 }
 
 type AlertBucketType = 'boh-sync' | 'phantom-stock' | 'pog-compliance';
@@ -96,8 +123,13 @@ interface AlertBucket {
   shortDesc: string;
   fullDesc: string;
   priority: AlertPriority;
+  category: string;
   metrics: AlertMetric[];
   issues: AlertIssueRow[];
+  autoTaskCount: number;
+  openTaskCount: number;
+  overdueCount: number;
+  lastUpdated: string;
 }
 
 // ── Types ──────────────────────────────────────────────
@@ -115,6 +147,7 @@ interface StoreMeta {
   risk: 'low' | 'moderate' | 'high';
   lastRefresh: string;
   tier: string;
+  manager: string;
 }
 
 interface KPITile {
@@ -494,34 +527,34 @@ const scCategorySkill: Record<string, { skill: string; logic: string }> = {
 
 // ── Mock Data ──────────────────────────────────────────
 const storesData: StoreMeta[] = [
-  { id: 's1', name: 'Downtown Plaza', number: '2034', cluster: 'Metro North', format: 'Flagship', dpi: 94, dpiDelta: 3.2, momentum: 'rising', rank: 1, totalStores: 8, risk: 'low', lastRefresh: '5 min ago', tier: 'Excellence' },
-  { id: 's2', name: 'Riverside Mall', number: '1876', cluster: 'Metro North', format: 'Full-Line', dpi: 91, dpiDelta: 2.1, momentum: 'rising', rank: 2, totalStores: 8, risk: 'low', lastRefresh: '8 min ago', tier: 'Excellence' },
-  { id: 's3', name: 'Central Station', number: '3421', cluster: 'Metro West', format: 'Full-Line', dpi: 85, dpiDelta: 0.5, momentum: 'stable', rank: 3, totalStores: 8, risk: 'low', lastRefresh: '12 min ago', tier: 'Excellence' },
-  { id: 's4', name: 'Westfield Center', number: '2198', cluster: 'Metro West', format: 'Compact', dpi: 82, dpiDelta: -1.2, momentum: 'stable', rank: 4, totalStores: 8, risk: 'moderate', lastRefresh: '10 min ago', tier: 'Performing' },
-  { id: 's5', name: 'Harbor View', number: '4532', cluster: 'South Bay', format: 'Full-Line', dpi: 78, dpiDelta: -3.5, momentum: 'declining', rank: 5, totalStores: 8, risk: 'moderate', lastRefresh: '15 min ago', tier: 'Performing' },
-  { id: 's6', name: 'Oak Street', number: '1234', cluster: 'East Region', format: 'Compact', dpi: 72, dpiDelta: -6.8, momentum: 'declining', rank: 6, totalStores: 8, risk: 'high', lastRefresh: '9 min ago', tier: 'Needs Attention' },
-  { id: 's7', name: 'Pine Grove', number: '5678', cluster: 'South Bay', format: 'Compact', dpi: 65, dpiDelta: -9.2, momentum: 'declining', rank: 7, totalStores: 8, risk: 'high', lastRefresh: '20 min ago', tier: 'Needs Attention' },
-  { id: 's8', name: 'Maple Heights', number: '9012', cluster: 'East Region', format: 'Compact', dpi: 58, dpiDelta: -12.4, momentum: 'declining', rank: 8, totalStores: 8, risk: 'high', lastRefresh: '14 min ago', tier: 'Needs Attention' },
+  { id: 's1', name: 'Nashville Flagship',    number: '2034', cluster: 'Metro North', format: 'Flagship',  dpi: 94, dpiDelta:  3.2, momentum: 'rising',   rank: 1, totalStores: 8, risk: 'low',      lastRefresh: '5 min ago',  tier: 'Excellence',      manager: 'Sarah Johnson' },
+  { id: 's2', name: 'Memphis Central',       number: '1876', cluster: 'Metro North', format: 'Full-Line', dpi: 91, dpiDelta:  2.1, momentum: 'rising',   rank: 2, totalStores: 8, risk: 'low',      lastRefresh: '8 min ago',  tier: 'Excellence',      manager: 'Marcus Reed' },
+  { id: 's3', name: 'Knoxville East',        number: '3421', cluster: 'Metro West',  format: 'Full-Line', dpi: 85, dpiDelta:  0.5, momentum: 'stable',   rank: 3, totalStores: 8, risk: 'low',      lastRefresh: '12 min ago', tier: 'Excellence',      manager: 'David Park' },
+  { id: 's4', name: 'Chattanooga Riverside', number: '2198', cluster: 'Metro West',  format: 'Compact',   dpi: 82, dpiDelta: -1.2, momentum: 'stable',   rank: 4, totalStores: 8, risk: 'moderate', lastRefresh: '10 min ago', tier: 'Performing',      manager: 'Rachel Torres' },
+  { id: 's5', name: 'Murfreesboro Plaza',    number: '4532', cluster: 'South Bay',   format: 'Full-Line', dpi: 78, dpiDelta: -3.5, momentum: 'declining', rank: 5, totalStores: 8, risk: 'moderate', lastRefresh: '15 min ago', tier: 'Performing',      manager: 'Kevin Patel' },
+  { id: 's6', name: 'Franklin Town Center',  number: '1234', cluster: 'East Region', format: 'Compact',   dpi: 72, dpiDelta: -6.8, momentum: 'declining', rank: 6, totalStores: 8, risk: 'high',     lastRefresh: '9 min ago',  tier: 'Needs Attention', manager: 'Lisa Chen' },
+  { id: 's7', name: 'Clarksville Crossing',  number: '5678', cluster: 'South Bay',   format: 'Compact',   dpi: 65, dpiDelta: -9.2, momentum: 'declining', rank: 7, totalStores: 8, risk: 'high',     lastRefresh: '20 min ago', tier: 'Needs Attention', manager: 'James Williams' },
+  { id: 's8', name: 'Johnson City Mall',     number: '9012', cluster: 'East Region', format: 'Compact',   dpi: 58, dpiDelta:-12.4, momentum: 'declining', rank: 8, totalStores: 8, risk: 'high',     lastRefresh: '14 min ago', tier: 'Needs Attention', manager: 'Priya Sharma' },
 ];
 
 const getAuditData = (store: StoreMeta): AuditWeek[] => {
   const base = store.dpi >= 80 ? 85 : 65;
   const variance = store.dpi >= 80 ? 8 : 15;
-  const gen = (offset: number, trendFactor: number, i: number) =>
-    Math.round(Math.min(100, Math.max(30, base + offset + Math.floor(Math.random() * variance) - variance / 2 + (i * trendFactor))));
+  const gen = (field: string, offset: number, trendFactor: number, i: number) =>
+    Math.round(Math.min(100, Math.max(30, base + offset + Math.floor(detRnd(`${store.id}-audit-${field}-${i}`) * variance) - variance / 2 + (i * trendFactor))));
   const tf = store.momentum === 'rising' ? 1.5 : store.momentum === 'declining' ? -1.5 : 0;
   const weekDates = ['Mar 2', 'Mar 9', 'Mar 16', 'Mar 23', 'Mar 30', 'Apr 6', 'Apr 13', 'Apr 20'];
   return Array.from({ length: 8 }, (_, i) => {
-    const s = gen(0, tf, i);
-    const p = gen(0, 0, i);
-    const sg = gen(-2, 0, i);
-    const c = gen(5, 0, i);
-    const a = gen(3, 0, i);
-    const st = gen(-2, 0, i);
-    const sr = gen(-3, 0, i);
-    const pr = gen(1, 0, i);
-    const br = gen(-4, 0, i);
-    const ca = gen(2, 0, i);
+    const s = gen('safety', 0, tf, i);
+    const p = gen('planogram', 0, 0, i);
+    const sg = gen('signage', -2, 0, i);
+    const c = gen('cleanliness', 5, 0, i);
+    const a = gen('availability', 3, 0, i);
+    const st = gen('staffing', -2, 0, i);
+    const sr = gen('stockRot', -3, 0, i);
+    const pr = gen('pricing', 1, 0, i);
+    const br = gen('backroom', -4, 0, i);
+    const ca = gen('custArea', 2, 0, i);
     return {
       weekLabel: weekDates[i],
       date: weekDates[i],
@@ -1112,6 +1145,33 @@ const POG_ITEMS = [
   { itemName: 'Sensodyne Toothpaste 100g', sku: '663412', dept: 'Oral Care', bay: 'Bay 3', mismatch: 'Wrong shelf level' },
 ];
 
+const BOH_OWNERS = ['J. Martinez', 'A. Thompson', 'L. Patel', 'R. Garcia', 'K. Williams'];
+const PHANTOM_OWNERS = ['M. Chen', 'D. Robinson', 'S. Kumar', 'T. Johnson'];
+const POG_OWNERS = ['N. Davis', 'B. Wilson', 'F. Moore', 'C. Harris'];
+
+export const DISMISS_REASONS = [
+  'False detection',
+  'Product already replenished',
+  'Inventory count incorrect',
+  'Store condition changed',
+  'Image quality issue',
+  'POG no longer active',
+  'Duplicate task',
+  'Not applicable to this store',
+  'Other',
+];
+
+function eacDueLabel(hoursFromNow: number): string {
+  const d = new Date();
+  d.setHours(d.getHours() + hoursFromNow);
+  const isToday = d.toDateString() === new Date().toDateString();
+  const isTomorrow = d.toDateString() === new Date(Date.now() + 86400000).toDateString();
+  const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  if (isToday) return `Today · ${timeStr}`;
+  if (isTomorrow) return `Tomorrow · ${timeStr}`;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ` · ${timeStr}`;
+}
+
 function getAlertBuckets(store: StoreMeta): AlertBucket[] {
   const r = (seed: string) => detRnd(`${store.id}-${seed}`);
   const bohCount = 8 + Math.round(r('boh-cnt') * 4);
@@ -1121,20 +1181,37 @@ function getAlertBuckets(store: StoreMeta): AlertBucket[] {
   const pogCount = 7 + Math.round(r('pog-cnt') * 4);
   const pogBays = 4 + Math.round(r('pog-bays') * 2);
 
-  const bohIssues: AlertIssueRow[] = BOH_ITEMS.slice(0, bohCount).map((it, i) => ({
-    id: `boh-${i}`,
-    itemName: it.itemName,
-    sku: it.sku,
-    department: it.dept,
-    store: store.name,
-    aisle: it.aisle,
-    bay: it.bay,
-    issue: 'Shelf gap detected',
-    bohQty: it.bohQty + Math.round(r(`boh-qty-${i}`) * 12),
-    shelfQty: 0,
-    weeklyOpportunity: it.opp + Math.round(r(`boh-opp-${i}`) * 80),
-    confidenceScore: Math.round((0.82 + r(`boh-conf-${i}`) * 0.15) * 100),
-  }));
+  const bohIssues: AlertIssueRow[] = BOH_ITEMS.slice(0, bohCount).map((it, i) => {
+    const qty = it.bohQty + Math.round(r(`boh-qty-${i}`) * 12);
+    const conf = Math.round((0.82 + r(`boh-conf-${i}`) * 0.15) * 100);
+    const isOverdue = r(`boh-status-${i}`) > 0.82;
+    const owner = BOH_OWNERS[Math.floor(r(`boh-owner-${i}`) * BOH_OWNERS.length)];
+    return {
+      id: `boh-${i}`,
+      itemName: it.itemName,
+      sku: it.sku,
+      department: it.dept,
+      subDepartment: it.dept,
+      itemClass: 'Standard',
+      store: store.name,
+      aisle: it.aisle,
+      bay: it.bay,
+      issue: 'Shelf gap detected — BOH stock available',
+      bohQty: qty,
+      shelfQty: 0,
+      weeklyOpportunity: it.opp + Math.round(r(`boh-opp-${i}`) * 80),
+      confidenceScore: conf,
+      taskStatus: isOverdue ? 'overdue' : 'open',
+      taskOwner: owner,
+      dueDate: isOverdue ? 'Today · 12:00 PM' : eacDueLabel(6),
+      slaBreached: isOverdue,
+      isEscalated: isOverdue && r(`boh-esc-${i}`) > 0.7,
+      isAcknowledged: false,
+      recommendedAction: `Move ${qty} units from ${it.aisle}, ${it.bay} BOH to shelf facing`,
+      signalBreakdown: `Shelf image: 0 units detected · BOH system: ${qty} units available · Gap first detected: 09:14 AM`,
+      evidence: `AI shelf image captured 09:14 AM · BOH system scan 07:30 AM · ${conf}% detection confidence`,
+    };
+  });
 
   const phantomIssues: AlertIssueRow[] = PHANTOM_ITEMS.slice(0, phantomCount).map((it, i) => {
     const onHand = it.units + Math.round(r(`ph-units-${i}`) * 20);
@@ -1143,18 +1220,32 @@ function getAlertBuckets(store: StoreMeta): AlertBucket[] {
       ? it.expectedWeeklyDemand + Math.round(r(`ph-demand-${i}`) * 4)
       : undefined;
     const asp = it.avgPrice ? it.avgPrice + r(`ph-asp-${i}`) * 0.4 : undefined;
+    const conf = Math.round((0.74 + r(`ph-conf-${i}`) * 0.18) * 100);
+    const isInProgress = r(`ph-status-${i}`) > 0.75;
+    const owner = PHANTOM_OWNERS[Math.floor(r(`ph-owner-${i}`) * PHANTOM_OWNERS.length)];
     return {
       id: `ph-${i}`,
       itemName: it.itemName,
       sku: it.sku,
       department: it.dept,
+      subDepartment: it.dept,
+      itemClass: 'Standard',
       store: store.name,
-      issue: `${zeroDays} zero-sales days`,
+      issue: `${zeroDays} consecutive zero-sales days`,
       bohQty: onHand,
       shelfQty: onHand,
       zeroSalesDays: zeroDays,
       recoveryEstimate: phantomSkuRecovery(onHand, weeklyDemand, asp),
-      confidenceScore: Math.round((0.74 + r(`ph-conf-${i}`) * 0.18) * 100),
+      confidenceScore: conf,
+      taskStatus: isInProgress ? 'in-progress' : 'open',
+      taskOwner: owner,
+      dueDate: eacDueLabel(28),
+      slaBreached: false,
+      isEscalated: false,
+      isAcknowledged: isInProgress,
+      recommendedAction: `Conduct physical shelf count for ${it.itemName} · Verify product accessible at shelf · Clear backroom blockage if found`,
+      signalBreakdown: `POS sales: 0 units for ${zeroDays} days · System on-hand: ${onHand} units${weeklyDemand ? ` · Expected demand: ~${weeklyDemand} units/wk` : ''}`,
+      evidence: `POS transaction log: no sales recorded since ${zeroDays} days ago · Inventory system: ${onHand} units on-hand · ${conf}% detection confidence`,
     };
   });
 
@@ -1169,26 +1260,47 @@ function getAlertBuckets(store: StoreMeta): AlertBucket[] {
     ? phantomRecoveryParts.reduce((sum, v) => sum + v, 0)
     : null;
 
-  const pogIssues: AlertIssueRow[] = POG_ITEMS.slice(0, pogCount).map((it, i) => ({
-    id: `pog-${i}`,
-    itemName: it.itemName,
-    sku: it.sku,
-    department: it.dept,
-    store: store.name,
-    bay: it.bay,
-    issue: it.mismatch,
-    bohQty: 0,
-    shelfQty: 0,
-    confidenceScore: Math.round((0.78 + r(`pog-conf-${i}`) * 0.17) * 100),
-  }));
+  const pogIssues: AlertIssueRow[] = POG_ITEMS.slice(0, pogCount).map((it, i) => {
+    const conf = Math.round((0.78 + r(`pog-conf-${i}`) * 0.17) * 100);
+    const isOverdue = r(`pog-status-${i}`) > 0.85;
+    const owner = POG_OWNERS[Math.floor(r(`pog-owner-${i}`) * POG_OWNERS.length)];
+    return {
+      id: `pog-${i}`,
+      itemName: it.itemName,
+      sku: it.sku,
+      department: it.dept,
+      subDepartment: it.dept,
+      itemClass: 'Standard',
+      store: store.name,
+      bay: it.bay,
+      issue: it.mismatch,
+      bohQty: 0,
+      shelfQty: 0,
+      confidenceScore: conf,
+      taskStatus: isOverdue ? 'overdue' : 'open',
+      taskOwner: owner,
+      dueDate: isOverdue ? eacDueLabel(-4) : eacDueLabel(56),
+      slaBreached: isOverdue,
+      isEscalated: false,
+      isAcknowledged: false,
+      recommendedAction: `Correct shelf placement for ${it.itemName} · Reset to active planogram · Verify facing count in ${it.bay}`,
+      signalBreakdown: `Shelf audit vs planogram: ${it.mismatch} · ${conf}% AI detection confidence · Active POG version checked`,
+      evidence: `AI shelf image captured 08:45 AM · Active planogram v3.2 · ${it.bay} audit result`,
+    };
+  });
+
+  const bohOverdue = bohIssues.filter(i => i.taskStatus === 'overdue').length;
+  const phantomOverdue = phantomIssues.filter(i => i.taskStatus === 'overdue').length;
+  const pogOverdue = pogIssues.filter(i => i.taskStatus === 'overdue').length;
 
   return [
     {
       id: 'boh-sync',
       name: 'BOH-to-Shelf Sync',
-      shortDesc: 'Shelf gaps where back-of-house inventory is available.',
-      fullDesc: 'Shelf gaps detected where back-of-house inventory is available. Review and create replenishment tasks to move available stock from BOH to shelf.',
+      shortDesc: 'Shelf gaps detected where back-of-house inventory is available. System auto-created Shelf Replenishment tasks.',
+      fullDesc: 'Shelf gaps detected where back-of-house inventory is confirmed available. The system has automatically created Shelf Replenishment tasks at the SKU level routed to floor associates.',
       priority: 'High',
+      category: 'Replenishment',
       metrics: [
         { label: 'Shelf Gaps', value: String(bohCount) },
         { label: 'Affected SKUs', value: `${bohCount} SKUs` },
@@ -1196,13 +1308,18 @@ function getAlertBuckets(store: StoreMeta): AlertBucket[] {
         { label: 'Weekly Opportunity', value: `$${(bohOpp / 1000).toFixed(1)}K` },
       ],
       issues: bohIssues,
+      autoTaskCount: bohCount,
+      openTaskCount: bohCount - bohOverdue,
+      overdueCount: bohOverdue,
+      lastUpdated: 'Today · 09:14 AM',
     },
     {
       id: 'phantom-stock',
       name: 'Phantom Stock',
-      shortDesc: 'High inventory with zero recent sales — stock may be trapped in backroom.',
-      fullDesc: 'High inventory records with zero recent sales, indicating stock may be trapped in the backroom or not reaching the shelf. Review and verify physical shelf placement.',
+      shortDesc: 'System inventory exists but recent sales are zero or unusually low. System auto-created Inventory Check tasks.',
+      fullDesc: 'High inventory records with zero recent sales, indicating stock may be trapped in the backroom or not reaching the shelf. System has auto-created Inventory Check / Cycle Count tasks.',
       priority: 'Medium',
+      category: 'Inventory Risk',
       metrics: [
         { label: 'Affected SKUs', value: String(phantomCount) },
         { label: 'Units on Hand', value: `${phantomUnits} units` },
@@ -1214,22 +1331,59 @@ function getAlertBuckets(store: StoreMeta): AlertBucket[] {
         },
       ],
       issues: phantomIssues,
+      autoTaskCount: phantomCount,
+      openTaskCount: phantomCount - phantomOverdue,
+      overdueCount: phantomOverdue,
+      lastUpdated: 'Today · 06:30 AM',
     },
     {
       id: 'pog-compliance',
       name: 'POG Compliance Gap',
-      shortDesc: 'Shelf image does not match expected planogram placement.',
-      fullDesc: 'AI shelf audit detected mismatches between actual shelf layout and the approved planogram. Review affected SKUs and bays and create correction tasks.',
+      shortDesc: 'Shelf image or audit results do not match the active planogram. System auto-created POG Correction tasks.',
+      fullDesc: 'AI shelf audit detected mismatches between actual shelf layout and the approved planogram. System has auto-created POG Correction tasks routed to department leads.',
       priority: 'Medium',
+      category: 'Compliance',
       metrics: [
         { label: 'Mismatches', value: String(pogCount) },
         { label: 'Affected SKUs', value: `${pogCount} SKUs` },
         { label: 'Affected Bays', value: `${pogBays} bays` },
       ],
       issues: pogIssues,
+      autoTaskCount: pogCount,
+      openTaskCount: pogCount - pogOverdue,
+      overdueCount: pogOverdue,
+      lastUpdated: 'Today · 08:45 AM',
     },
   ];
 }
+
+// ── Phantom Stock Heatmap — Types & Mock Data ─────────
+type PhantomRisk = 'High' | 'Medium' | 'Low' | 'Minimal';
+type PhantomStatus = 'Open' | 'In Progress' | 'Resolved' | 'Dismissed';
+
+interface PhantomSkuRow { productName: string; sku: string; bohQty: number; shelfQty: number; lastSaleDate: string; zeroSalesDays: number; inventoryValue: number; riskLevel: 'High' | 'Medium' | 'Low'; }
+
+interface PhantomRow {
+  id: string; department: string; subDepartment: string; itemClass: string;
+  phantomSkus: number; inventoryUnits: number; bohUnits: number; shelfQty: number;
+  lastSaleDate: string; zeroSalesDays: number; inventoryValue: number;
+  riskLevel: PhantomRisk; linkedTasks: number; status: PhantomStatus;
+  whyFlagged: string; recommendedAction: string; skuBreakdown: PhantomSkuRow[];
+}
+
+const PHANTOM_ROWS: PhantomRow[] = [
+  { id:'ps-001', department:'Beverages', subDepartment:'Carbonated Drinks', itemClass:'Cola', phantomSkus:3, inventoryUnits:144, bohUnits:144, shelfQty:0, lastSaleDate:'Apr 28, 2026', zeroSalesDays:27, inventoryValue:1620, riskLevel:'High', linkedTasks:2, status:'Open', whyFlagged:'System shows 144 units on-hand across 3 SKUs, but zero sales for 27 consecutive days. Shelf image audit confirms shelf gap — product is not reaching customers.', recommendedAction:'Immediately move all units from BOH to shelf. Check for backroom blockage. Initiate Inventory Check / Cycle Count task.', skuBreakdown:[{ productName:'Coca-Cola Zero 12pk', sku:'SKU-884221', bohQty:48, shelfQty:0, lastSaleDate:'Apr 28, 2026', zeroSalesDays:27, inventoryValue:576, riskLevel:'High' },{ productName:'Pepsi Max 6pk', sku:'SKU-884310', bohQty:60, shelfQty:0, lastSaleDate:'Apr 29, 2026', zeroSalesDays:26, inventoryValue:660, riskLevel:'High' },{ productName:'Diet Coke 2L', sku:'SKU-884450', bohQty:36, shelfQty:0, lastSaleDate:'Apr 30, 2026', zeroSalesDays:25, inventoryValue:384, riskLevel:'Medium' }] },
+  { id:'ps-002', department:'Beverages', subDepartment:'Energy Drinks', itemClass:'Energy', phantomSkus:2, inventoryUnits:96, bohUnits:96, shelfQty:0, lastSaleDate:'May 2, 2026', zeroSalesDays:23, inventoryValue:1440, riskLevel:'High', linkedTasks:1, status:'In Progress', whyFlagged:'96 units of 2 energy drink SKUs confirmed in BOH with zero shelf presence. Sales velocity expected at 12–15 units/week based on cluster average.', recommendedAction:'Replenish shelf from BOH (Bay 4, Aisle 5). Assign cycle count task to stock associate.', skuBreakdown:[{ productName:'Red Bull 250ml 4pk', sku:'SKU-990341', bohQty:60, shelfQty:0, lastSaleDate:'May 2, 2026', zeroSalesDays:23, inventoryValue:900, riskLevel:'High' },{ productName:'Monster Energy 500ml', sku:'SKU-990422', bohQty:36, shelfQty:0, lastSaleDate:'May 3, 2026', zeroSalesDays:22, inventoryValue:540, riskLevel:'High' }] },
+  { id:'ps-003', department:'Personal Care', subDepartment:'Body Wash', itemClass:'Body Care', phantomSkus:2, inventoryUnits:120, bohUnits:80, shelfQty:40, lastSaleDate:'May 3, 2026', zeroSalesDays:22, inventoryValue:1080, riskLevel:'High', linkedTasks:1, status:'Open', whyFlagged:'System reports 120 units across 2 SKUs. Shelf has 40 units but zero sales for 22 days despite typical velocity of 8 units/week. Possible planogram mismatch hiding product from customers.', recommendedAction:'Verify shelf position matches active POG. Check if price tags are visible. Confirm product is accessible to shoppers.', skuBreakdown:[{ productName:'Dove Body Wash 400ml', sku:'SKU-556732', bohQty:48, shelfQty:24, lastSaleDate:'May 3, 2026', zeroSalesDays:22, inventoryValue:576, riskLevel:'High' },{ productName:'Nivea Shower Gel 250ml', sku:'SKU-556811', bohQty:32, shelfQty:16, lastSaleDate:'May 5, 2026', zeroSalesDays:20, inventoryValue:504, riskLevel:'Medium' }] },
+  { id:'ps-004', department:'Condiments', subDepartment:'Sauces', itemClass:'Ketchup', phantomSkus:1, inventoryUnits:60, bohUnits:60, shelfQty:0, lastSaleDate:'May 3, 2026', zeroSalesDays:22, inventoryValue:660, riskLevel:'High', linkedTasks:1, status:'Open', whyFlagged:'60 units confirmed in BOH with zero shelf presence. Product trapped in backroom since last delivery.', recommendedAction:'Move 60 units from BOH Aisle 3, Bay 2 to shelf. Verify planogram position.', skuBreakdown:[{ productName:'Heinz Ketchup 1L', sku:'SKU-334512', bohQty:60, shelfQty:0, lastSaleDate:'May 3, 2026', zeroSalesDays:22, inventoryValue:660, riskLevel:'High' }] },
+  { id:'ps-005', department:"Women's", subDepartment:'Dresses', itemClass:'Casual Dresses', phantomSkus:2, inventoryUnits:48, bohUnits:32, shelfQty:16, lastSaleDate:'May 7, 2026', zeroSalesDays:18, inventoryValue:2880, riskLevel:'Medium', linkedTasks:1, status:'Open', whyFlagged:'48 units across 2 casual dress SKUs with 18 days of zero sales. Possible size-run imbalance — system may be miscounting available-to-sell units.', recommendedAction:'Conduct physical size-run audit. Verify system inventory matches shelf. Check for incorrect size tagging.', skuBreakdown:[{ productName:'Floral Midi Dress — Navy', sku:'SKU-WOM-DRS-014', bohQty:18, shelfQty:10, lastSaleDate:'May 7, 2026', zeroSalesDays:18, inventoryValue:1620, riskLevel:'Medium' },{ productName:'Linen Wrap Dress — White', sku:'SKU-WOM-DRS-021', bohQty:14, shelfQty:6, lastSaleDate:'May 8, 2026', zeroSalesDays:17, inventoryValue:1260, riskLevel:'Medium' }] },
+  { id:'ps-006', department:"Men's", subDepartment:'Bottoms', itemClass:'Denim', phantomSkus:2, inventoryUnits:55, bohUnits:30, shelfQty:25, lastSaleDate:'May 9, 2026', zeroSalesDays:16, inventoryValue:2475, riskLevel:'Medium', linkedTasks:1, status:'In Progress', whyFlagged:"Denim inventory showing 16 days of zero sales despite 55 units on-hand. Cluster average for this class is 8 units/week. Possible display or placement issue.", recommendedAction:'Review shelf display and ensure correct size runs are visible. Check fitting room returns are being re-shelved promptly.', skuBreakdown:[{ productName:'Slim Fit Denim — Dark Wash', sku:'SKU-MEN-DNM-003', bohQty:18, shelfQty:14, lastSaleDate:'May 9, 2026', zeroSalesDays:16, inventoryValue:1440, riskLevel:'Medium' },{ productName:'Straight Leg Jeans — Black', sku:'SKU-MEN-DNM-011', bohQty:12, shelfQty:11, lastSaleDate:'May 10, 2026', zeroSalesDays:15, inventoryValue:1035, riskLevel:'Medium' }] },
+  { id:'ps-007', department:"Women's", subDepartment:'Tops', itemClass:'Basics', phantomSkus:1, inventoryUnits:36, bohUnits:12, shelfQty:24, lastSaleDate:'May 12, 2026', zeroSalesDays:13, inventoryValue:720, riskLevel:'Low', linkedTasks:0, status:'Open', whyFlagged:'36 units on-hand with 13 zero-sales days. Slightly below normal velocity but within acceptable range. May be seasonal slowdown.', recommendedAction:'Monitor for next 7 days. If sales remain zero, initiate cycle count to verify accuracy.', skuBreakdown:[{ productName:"Women's V-Neck Basic Tee — White", sku:'SKU-WOM-TOP-014', bohQty:12, shelfQty:24, lastSaleDate:'May 12, 2026', zeroSalesDays:13, inventoryValue:720, riskLevel:'Low' }] },
+  { id:'ps-008', department:'Beverages', subDepartment:'Juices', itemClass:'Juice', phantomSkus:1, inventoryUnits:24, bohUnits:12, shelfQty:12, lastSaleDate:'May 14, 2026', zeroSalesDays:11, inventoryValue:240, riskLevel:'Low', linkedTasks:0, status:'Open', whyFlagged:'24 units with 11 days zero sales. Monitor — may be slow-moving seasonal item.', recommendedAction:'Monitor. Initiate cycle count if zero sales continue past 14 days.', skuBreakdown:[{ productName:'Tropicana OJ 1L', sku:'SKU-JCE-001', bohQty:12, shelfQty:12, lastSaleDate:'May 14, 2026', zeroSalesDays:11, inventoryValue:240, riskLevel:'Low' }] },
+  { id:'ps-009', department:'Footwear', subDepartment:"Men's Footwear", itemClass:'Formal', phantomSkus:1, inventoryUnits:18, bohUnits:10, shelfQty:8, lastSaleDate:'May 11, 2026', zeroSalesDays:14, inventoryValue:1980, riskLevel:'Medium', linkedTasks:1, status:'Open', whyFlagged:'Formal footwear SKU showing 14 days zero sales with 18 units on-hand. Higher-value inventory at risk. Sales typically slow in this class but velocity of zero is abnormal.', recommendedAction:'Verify product is on display and correctly positioned. Check if size range available matches customer demand profile.', skuBreakdown:[{ productName:'Oxford Leather Shoes — Black', sku:'SKU-FTW-FRM-002', bohQty:10, shelfQty:8, lastSaleDate:'May 11, 2026', zeroSalesDays:14, inventoryValue:1980, riskLevel:'Medium' }] },
+  { id:'ps-010', department:'Personal Care', subDepartment:'Skin Care', itemClass:'Moisturiser', phantomSkus:1, inventoryUnits:30, bohUnits:18, shelfQty:12, lastSaleDate:'May 15, 2026', zeroSalesDays:10, inventoryValue:750, riskLevel:'Low', linkedTasks:0, status:'Open', whyFlagged:'30 units, 10 days zero sales. Below threshold for automatic task creation but flagged for monitoring.', recommendedAction:'Monitor. No action needed unless zero-sales period extends past 14 days.', skuBreakdown:[{ productName:'Nivea Daily Moisturiser 200ml', sku:'SKU-SKN-003', bohQty:18, shelfQty:12, lastSaleDate:'May 15, 2026', zeroSalesDays:10, inventoryValue:750, riskLevel:'Low' }] },
+];
+
 
 // ── Component ──────────────────────────────────────────
 export const StoreCenter: React.FC = () => {
@@ -1272,7 +1426,17 @@ export const StoreCenter: React.FC = () => {
     trend: 'improving' | 'declining' | 'stable';
   } | null>(null);
   const { addTasks } = useExecutionTasks();
-  const [activeTab, setActiveTab] = useState<'voc' | 'inventory' | 'benchmarking'>('inventory');
+  const [activeTab, setActiveTab] = useState<'voc' | 'inventory' | 'benchmarking' | 'phantom'>('inventory');
+  // ── Phantom Stock State ──
+  const [psSearch, setPsSearch] = useState('');
+  const [psDeptFilter, setPsDeptFilter] = useState('');
+  const [psSubDeptFilter, setPsSubDeptFilter] = useState('');
+  const [psClassFilter, setPsClassFilter] = useState('');
+  const [psRiskFilter, setPsRiskFilter] = useState('');
+  const [psStatusFilter, setPsStatusFilter] = useState('');
+  const [psPage, setPsPage] = useState(0);
+  const [psDrawerRow, setPsDrawerRow] = useState<PhantomRow | null>(null);
+  const PS_PAGE_SIZE = 6;
   const [inventoryView, setInventoryView] = useState<'at-risk' | 'all'>('at-risk');
   const [invPage, setInvPage] = useState(0);
   const [invSearch, setInvSearch] = useState('');
@@ -1283,13 +1447,17 @@ export const StoreCenter: React.FC = () => {
   const [vocExpanded, setVocExpanded] = useState(false);
   // Benchmarking section: view toggle
   const [benchView, setBenchView] = useState<'cards' | 'table'>('cards');
-  // Alert Bucket state
+  // Execution Action Center state
   const [alertDrawer, setAlertDrawer] = useState<AlertBucket | null>(null);
-  const [selectedIssues, setSelectedIssues] = useState<Set<string>>(new Set());
-  const [reviewedIssues, setReviewedIssues] = useState<Set<string>>(new Set());
-  const [taskConfirmIssue, setTaskConfirmIssue] = useState<AlertIssueRow | null>(null);
-  const [createdTaskIds, setCreatedTaskIds] = useState<Set<string>>(new Set());
-  const [isLoading, setIsLoading] = useState(false);
+  const [acknowledgedIds, setAcknowledgedIds] = useState<Set<string>>(new Set());
+  const [resolvedIds, setResolvedIds] = useState<Set<string>>(new Set());
+  type StoreEacGroup = { id: string; type: 'boh'|'phantom'|'pog'; title: string; taskType: string; severity: 'High'|'Medium'; severityClass: 'high'|'medium'; desc: string; skuCount: number; riskValue: string; taskTotal: number; taskOpen: number; taskProg: number; taskSub: number; taskOver: number; lastDetected: string; evidence: { label: string; value: string }[]; skus: { name: string; sku: string; dept: string; detail: string; status: 'critical'|'progress'|'submitted'; tasks: number }[] };
+  const [storeEacDrawer, setStoreEacDrawer] = useState<StoreEacGroup | null>(null);
+  const [escalatedIds, setEscalatedIds] = useState<Set<string>>(new Set());
+  const [dismissedMap, setDismissedMap] = useState<Map<string, string>>(new Map());
+  const [showDismissModal, setShowDismissModal] = useState(false);
+  const [dismissTargetId, setDismissTargetId] = useState<string | null>(null);
+  const [dismissReason, setDismissReason] = useState('');
   const [isPageLoading, setIsPageLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   // OCV state
@@ -1444,16 +1612,9 @@ export const StoreCenter: React.FC = () => {
     if (storeParam) {
       const match = storesData.find(s => s.number === storeParam);
       if (match) {
-        setIsLoading(true);
         setSelectedStoreId(match.id);
         window.scrollTo(0, 0);
         scrollRef.current?.scrollTo(0, 0);
-        const timer = setTimeout(() => {
-          setIsLoading(false);
-          window.scrollTo(0, 0);
-          scrollRef.current?.scrollTo(0, 0);
-        }, 2000);
-        return () => clearTimeout(timer);
       }
     }
   }, [searchParams]);
@@ -1493,7 +1654,26 @@ export const StoreCenter: React.FC = () => {
     setInvBrand('All');
     setInvPage(0);
   }, []);
-  const alertBuckets = getAlertBuckets(store);
+
+  const psFiltersActive =
+    psSearch.trim() !== '' ||
+    psDeptFilter !== '' ||
+    psSubDeptFilter !== '' ||
+    psClassFilter !== '' ||
+    psRiskFilter !== '' ||
+    psStatusFilter !== '';
+  const clearPsFilters = useCallback(() => {
+    setPsSearch('');
+    setPsDeptFilter('');
+    setPsSubDeptFilter('');
+    setPsClassFilter('');
+    setPsRiskFilter('');
+    setPsStatusFilter('');
+    setPsPage(0);
+  }, []);
+
+  // alertBuckets kept for legacy drawer wiring (hidden block below)
+  const alertBuckets = getAlertBuckets(store); void alertBuckets;
 
   // Filter broadcasts to only those where this store has a non-completed status
   const storeBroadcasts = broadcastActions.filter(bc => {
@@ -1557,73 +1737,56 @@ export const StoreCenter: React.FC = () => {
     );
   }
 
-  // ── Alert helpers ──
-  const createTaskFromIssue = (bucket: AlertBucket, issue: AlertIssueRow) => {
-    const today = new Date();
-    const due = new Date(today); due.setDate(due.getDate() + 1);
-    const dueDateStr = due.toISOString().split('T')[0];
-    const isBoh = bucket.id === 'boh-sync';
-    const title = isBoh
-      ? `Replenish shelf from BOH: ${issue.itemName}`
-      : bucket.id === 'phantom-stock'
-      ? `Investigate phantom stock: ${issue.itemName}`
-      : `Fix POG placement: ${issue.itemName}`;
-    const description = isBoh
-      ? `AI shelf audit detected a shelf gap for ${issue.itemName} (SKU: ${issue.sku}). BOH inventory shows ${issue.bohQty} units available. Check backroom inventory and move available stock to the shelf${issue.aisle ? ` at ${issue.aisle}${issue.bay ? `, ${issue.bay}` : ''}` : ''}.`
-      : bucket.id === 'phantom-stock'
-      ? `System detected high inventory (${issue.bohQty} units on hand) with zero recent sales for ${issue.itemName} (SKU: ${issue.sku}). Verify physical shelf placement and ensure stock is accessible to customers.`
-      : `AI shelf audit detected a planogram mismatch for ${issue.itemName} (SKU: ${issue.sku}). Issue: ${issue.issue}. Correct shelf placement to match approved planogram.`;
-    addTasks([{
-      id: `alert-${bucket.id}-${issue.id}-${Date.now()}`,
-      type: isBoh ? 'Move' : bucket.id === 'phantom-stock' ? 'Reset Shelf' : 'Adjust Facing',
-      title,
-      description,
-      skuName: issue.itemName,
-      skuId: issue.sku,
-      priority: bucket.priority as 'High' | 'Medium' | 'Low',
-      reason: issue.issue,
-      impact: bucket.id === 'phantom-stock'
-        ? (issue.recoveryEstimate != null
-          ? `$${issue.recoveryEstimate}/wk potential sales recovery (est.)`
-          : 'Phantom stock — recovery estimate unavailable')
-        : issue.weeklyOpportunity
-        ? `$${issue.weeklyOpportunity}/week sales opportunity`
-        : 'Planogram compliance',
-      status: 'Pending',
-      assignedTo: null,
-      dueDate: dueDateStr,
-      storeName: store.name,
-      storeGroup: store.cluster,
-      pogName: `${issue.department} Shelf`,
-      category: issue.department,
-      createdAt: new Date().toISOString(),
-      localizationId: `${store.id}-alert`,
-      source: 'BOH Alert',
-      confidenceScore: issue.confidenceScore,
-    }]);
-    setCreatedTaskIds(prev => new Set(prev).add(issue.id));
-    setReviewedIssues(prev => new Set(prev).add(issue.id));
+  // ── Execution Action Center helpers ──
+  const openDismissModal = (issueId: string) => {
+    setDismissTargetId(issueId);
+    setDismissReason('');
+    setShowDismissModal(true);
   };
 
-  const createAllTasks = (bucket: AlertBucket) => {
-    bucket.issues
-      .filter(i => !createdTaskIds.has(i.id))
-      .forEach(i => createTaskFromIssue(bucket, i));
-    setAlertDrawer(null);
+  const confirmDismiss = () => {
+    if (!dismissTargetId || !dismissReason) return;
+    setDismissedMap(prev => new Map(prev).set(dismissTargetId, dismissReason));
+    setShowDismissModal(false);
+    setDismissTargetId(null);
+    setDismissReason('');
+  };
+
+  const openAllInOpsQueue = (bucket: AlertBucket) => {
+    bucket.issues.forEach(issue => {
+      const isBoh = bucket.id === 'boh-sync';
+      addTasks([{
+        id: `eac-${bucket.id}-${issue.id}`,
+        type: isBoh ? 'Move' : bucket.id === 'phantom-stock' ? 'Reset Shelf' : 'Adjust Facing',
+        title: isBoh
+          ? `Replenish shelf from BOH: ${issue.itemName}`
+          : bucket.id === 'phantom-stock'
+          ? `Inventory Check — Phantom Stock: ${issue.itemName}`
+          : `POG Correction: ${issue.itemName}`,
+        description: issue.signalBreakdown,
+        skuName: issue.itemName,
+        skuId: issue.sku,
+        priority: bucket.priority as 'High' | 'Medium' | 'Low',
+        reason: issue.issue,
+        impact: issue.weeklyOpportunity ? `$${issue.weeklyOpportunity}/week opportunity` : issue.evidence,
+        status: 'Pending',
+        assignedTo: null,
+        dueDate: new Date().toISOString().split('T')[0],
+        storeName: store.name,
+        storeGroup: store.cluster,
+        pogName: `${issue.department} Shelf`,
+        category: issue.department,
+        createdAt: new Date().toISOString(),
+        localizationId: `${store.id}-eac-${bucket.id}`,
+        source: 'BOH Alert',
+        confidenceScore: issue.confidenceScore,
+      }]);
+    });
+    navigate('/store-operations/task-center');
   };
 
   return (
     <div className="sc-container">
-      {/* Loading Overlay */}
-      {isLoading && (
-        <div className="sc-loading-overlay">
-          <div className="sc-loading-card">
-            <div className="sc-loading-spinner" />
-            <h3>Loading Store Profile</h3>
-            <p>Fetching data for <strong>{store.name}</strong> #{store.number}</p>
-          </div>
-        </div>
-      )}
 
       {/* ── Header (matches District Intelligence look & feel) ─── */}
       <div className="district-intel-header sc-di-header">
@@ -2460,102 +2623,423 @@ export const StoreCenter: React.FC = () => {
           </div>
         </div>
 
-        {/* ── Alert Buckets (matches Overview alerts exactly) ── */}
-        <div className="sc-deepdive-section sc-alert-section insights-section-v3">
-          <div className="section-header-v3">
-            <div className="section-title-v3">
-              <WarningAmberOutlined sx={{ fontSize: 16 }} className="header-icon-risk"/>
-              <h2>Alerts</h2>
+        {/* ── Store Execution Issues ── */}
+        {(() => {
+          const storeEacGroups: StoreEacGroup[] = [
+            {
+              id: 'boh-to-shelf', type: 'boh', title: 'BOH-to-Shelf Sync', taskType: 'Shelf Replenishment',
+              severity: 'High', severityClass: 'high',
+              desc: `Shelf gaps detected with available backroom inventory in ${store.name}. Products are confirmed in BOH but missing from shelf.`,
+              skuCount: 7, riskValue: '$4.2K', taskTotal: 7, taskOpen: 3, taskProg: 3, taskSub: 1, taskOver: 1,
+              lastDetected: '4 min ago',
+              evidence: [
+                { label: 'Departments affected', value: 'Personal Care, Baby, Household' },
+                { label: 'BOH available units', value: '184 units confirmed in backroom' },
+                { label: 'Signal source', value: 'Inventory scan + shelf sensor' },
+                { label: 'SLA', value: 'Same-day (High priority)' },
+              ],
+              skus: [
+                { name: 'Dove Body Wash 500ml', sku: 'SKU-7841', dept: 'Personal Care', detail: 'BOH: 32 units · Shelf: 0 · Last scan 1h ago', status: 'critical', tasks: 1 },
+                { name: 'Pampers Size 3 Pack', sku: 'SKU-8812', dept: 'Baby', detail: 'BOH: 18 units · Shelf: 0 · Replenishment in progress', status: 'progress', tasks: 1 },
+                { name: 'Finish Dishwasher Tabs', sku: 'SKU-6654', dept: 'Household', detail: 'BOH: 24 units · Shelf: 0 · 3 open tasks', status: 'critical', tasks: 1 },
+                { name: 'Head & Shoulders 400ml', sku: 'SKU-9921', dept: 'Personal Care', detail: 'BOH: 28 units · Shelf: 0 · Submitted for review', status: 'submitted', tasks: 1 },
+              ],
+            },
+            {
+              id: 'phantom-stock', type: 'phantom', title: 'Phantom Stock', taskType: 'Inventory Check / Cycle Count',
+              severity: 'Medium', severityClass: 'medium',
+              desc: `14 SKUs in ${store.name} have system inventory but zero sales for 14+ days. Possible count discrepancy.`,
+              skuCount: 14, riskValue: '$8.6K', taskTotal: 6, taskOpen: 3, taskProg: 2, taskSub: 1, taskOver: 0,
+              lastDetected: '12 min ago',
+              evidence: [
+                { label: 'Zero-sales threshold', value: '14+ days with system stock > 0' },
+                { label: 'Highest risk department', value: 'Household (5 SKUs, $3.2K)' },
+                { label: 'Signal source', value: 'POS + inventory system cross-check' },
+                { label: 'SLA', value: '24–48h (Medium priority)' },
+              ],
+              skus: [
+                { name: 'Mr. Clean Multipurpose 1L', sku: 'SKU-4421', dept: 'Household', detail: '18 units BOH · 0 sales in 21 days · $1.1K at risk', status: 'progress', tasks: 1 },
+                { name: 'Pantene Shampoo 600ml', sku: 'SKU-5599', dept: 'Personal Care', detail: '12 units BOH · 0 sales in 17 days · $820 at risk', status: 'critical', tasks: 1 },
+                { name: 'Baby Wipes 80-pack', sku: 'SKU-3387', dept: 'Baby', detail: '22 units BOH · 0 sales in 16 days · $1.4K at risk', status: 'critical', tasks: 1 },
+                { name: 'Colgate Toothpaste 175g', sku: 'SKU-1124', dept: 'Personal Care', detail: '9 units BOH · 0 sales in 14 days · $540 at risk', status: 'submitted', tasks: 1 },
+              ],
+            },
+            {
+              id: 'pog-compliance', type: 'pog', title: 'POG Compliance Gap', taskType: 'POG Correction',
+              severity: 'High', severityClass: 'high',
+              desc: `Camera audit detected planogram deviations in ${store.name}. Shelf layout does not match active POG.`,
+              skuCount: 3, riskValue: '$2.8K', taskTotal: 4, taskOpen: 2, taskProg: 1, taskSub: 1, taskOver: 1,
+              lastDetected: '8 min ago',
+              evidence: [
+                { label: 'Audit source', value: 'Camera shelf scan + POG comparison' },
+                { label: 'Deviations detected', value: '3 fixtures with misplacements' },
+                { label: 'Active POG', value: 'Spring Reset 2026 v3.1' },
+                { label: 'SLA', value: '24–72h (High priority)' },
+              ],
+              skus: [
+                { name: 'Beverage Aisle 3A', sku: 'Fixture 3A', dept: 'Beverages', detail: '3 POG deviations detected · Wrong product placement', status: 'critical', tasks: 2 },
+                { name: 'Snacks End Cap 7B', sku: 'Fixture 7B', dept: 'Snacks', detail: 'Correction in progress · Missing facing count', status: 'progress', tasks: 1 },
+                { name: 'Dairy Section 2C', sku: 'Fixture 2C', dept: 'Dairy', detail: 'Submitted for review', status: 'submitted', tasks: 1 },
+              ],
+            },
+          ];
+          const totalTasks = storeEacGroups.reduce((s,g)=>s+g.taskTotal,0);
+          const totalOpen  = storeEacGroups.reduce((s,g)=>s+g.taskOpen,0);
+          const totalProg  = storeEacGroups.reduce((s,g)=>s+g.taskProg,0);
+          const totalSub   = storeEacGroups.reduce((s,g)=>s+g.taskSub,0);
+          const totalOver  = storeEacGroups.reduce((s,g)=>s+g.taskOver,0);
+          return (
+        <div className="eac2-section eac2-section--store">
+          <div className="eac2-header">
+            <div className="eac2-header-top">
+              <div className="eac2-title-block">
+                <div className="eac2-icon-wrap">
+                  <BoltOutlined sx={{ fontSize: 18 }}/>
+                </div>
+                <div className="eac2-title-text">
+                  <h2 className="eac2-title">Alerts</h2>
+                  <p className="eac2-subtitle">System-generated issues and linked tasks for {store.name}</p>
+                </div>
+              </div>
+              <div className="eac2-header-badges">
+                <div className="eac2-sys-badge">
+                  <span className="eac2-sys-badge-dot"/>
+                  System Monitored
+                </div>
+                <span className="eac2-refresh-time">Updated 4 min ago</span>
+              </div>
             </div>
-            <div className="insights-meta">
-              <span className="meta-positive">{alertBuckets.length} Alerts</span>
+            <div className="eac2-summary-strip">
+              {[
+                { val: totalTasks, lbl:'Auto Tasks', cls:'' },
+                { val: totalOpen,  lbl:'Open',       cls:'eac2-summary-tile-val--open' },
+                { val: totalProg,  lbl:'In Progress',cls:'eac2-summary-tile-val--prog' },
+                { val: totalSub,   lbl:'Submitted',  cls:'eac2-summary-tile-val--sub' },
+                { val: totalOver,  lbl:'Overdue',    cls:'eac2-summary-tile-val--over' },
+              ].map(t => (
+                <div key={t.lbl} className="eac2-summary-tile">
+                  <span className={`eac2-summary-tile-val ${t.cls}`}>{t.val}</span>
+                  <span className="eac2-summary-tile-lbl">{t.lbl}</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="insights-content-v3">
-            {alertBuckets.map(bucket => {
-              const isHigh = bucket.priority === 'High';
-              const isMedium = bucket.priority === 'Medium';
-              const signalClass = isHigh ? 'critical' : isMedium ? 'warning' : '';
-              const typeLabel =
-                bucket.id === 'boh-sync' ? 'Replenishment'
-                : bucket.id === 'phantom-stock' ? 'Inventory Risk'
-                : 'Compliance';
-              const impactIcon =
-                bucket.id === 'boh-sync' ? <InventoryOutlined sx={{ fontSize: 14 }}/>
-                : bucket.id === 'phantom-stock' ? <ErrorOutlined sx={{ fontSize: 14 }}/>
-                : <GridOnOutlined sx={{ fontSize: 14 }}/>;
-              const impactText = [
-                `${bucket.issues.length} issue${bucket.issues.length === 1 ? '' : 's'}`,
-                ...bucket.metrics.slice(0, 2).map(m => `${m.value} ${m.label.toLowerCase()}`),
-              ].join(' · ');
+          {/* ── EAC card grid — stacked rows ── */}
+          <div className="eac2-cards-grid">
+            {storeEacGroups.map(g => {
+              const pctOpen = Math.round((g.taskOpen / g.taskTotal) * 100);
+              const pctProg = Math.round((g.taskProg / g.taskTotal) * 100);
+              const pctSub  = Math.round((g.taskSub  / g.taskTotal) * 100);
+              const pctOver = Math.round((g.taskOver / g.taskTotal) * 100);
               return (
-                <Card
-                  key={bucket.id}
-                  size="extraSmall"
-                  sx={{ maxWidth: '100%', minHeight: 0, padding: 0, overflow: 'hidden', marginBottom: 'var(--space-lg)' }}
-                  onClick={() => { setAlertDrawer(bucket); setSelectedIssues(new Set()); }}
-                >
-                  <div className="hero-card-content" style={{ cursor: 'pointer' }}>
-                    <div className="hero-card-header">
-                      <div className={`hero-signal${signalClass ? ` ${signalClass}` : ''}`}>
-                        <WarningAmberOutlined sx={{ fontSize: 14 }}/>
-                        <span>{bucket.priority.toUpperCase()}</span>
+                <div key={g.id} className={`eac2-card eac2-card--${g.type}`} onClick={() => setStoreEacDrawer(g)}>
+
+                  {/* MAIN: icon + title + desc + metrics + CTAs */}
+                  <div className="eac2-card-main">
+                    <div className="eac2-card-heading">
+                      <div className="eac2-card-icon">
+                        {g.type === 'boh'     && <SyncOutlined sx={{ fontSize: 20 }}/>}
+                        {g.type === 'phantom' && <InventoryOutlined sx={{ fontSize: 20 }}/>}
+                        {g.type === 'pog'     && <GridOnOutlined sx={{ fontSize: 20 }}/>}
                       </div>
-                      <div className="hero-overdue">
-                        <span>{typeLabel}</span>
+                      <div className="eac2-card-heading-text">
+                        <h3 className="eac2-card-type">{g.title}</h3>
+                        <p className="eac2-card-desc">{g.desc}</p>
+                      </div>
+                      <div className="eac2-card-badges-col">
+                        <span className={`eac2-severity-badge eac2-severity-badge--${g.severityClass}`}>
+                          <WarningAmberOutlined sx={{ fontSize: 10 }}/> {g.severity}
+                        </span>
+                        <span className="eac2-sysgen-pill">
+                          <BoltOutlined sx={{ fontSize: 9 }}/> Auto-Tasked
+                        </span>
                       </div>
                     </div>
 
-                    <h2 className="hero-headline">{bucket.name}</h2>
-                    <p className="hero-context">{bucket.shortDesc}</p>
-
-                    <div className="hero-impact">
-                      {impactIcon}
-                      <span>{impactText}</span>
+                    <div className="eac2-impact-row">
+                      <span className="eac2-metric">
+                        <InventoryOutlined sx={{ fontSize: 13 }}/> <strong>{g.skuCount}</strong> SKUs
+                      </span>
+                      <span className="eac2-metric eac2-metric--risk">
+                        <ErrorOutlined sx={{ fontSize: 13 }}/> <strong>{g.riskValue}</strong> at risk
+                      </span>
                     </div>
 
-                    <div className="hero-top-store">
-                      <StoreOutlined sx={{ fontSize: 12 }}/>
-                      <span>{store.name} — {bucket.issues.length} item{bucket.issues.length === 1 ? '' : 's'} requiring review</span>
-                    </div>
-
-                    <div className="hero-actions">
+                    <div className="eac2-card-footer">
                       <Button
                         variant="contained"
                         color="primary"
-                        className="hero-action-primary"
-                        endIcon={<KeyboardArrowRight sx={{ fontSize: 16 }}/>}
-                        onClick={e => { e.stopPropagation(); setAlertDrawer(bucket); setSelectedIssues(new Set()); }}
+                        endIcon={<KeyboardArrowRight sx={{ fontSize: 14 }}/>}
+                        onClick={e => { e.stopPropagation(); setStoreEacDrawer(g); }}
                       >
-                        Review Issues
+                        View Evidence
                       </Button>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        onClick={e => {
+                          e.stopPropagation();
+                          navigate('/command-center/operations-queue', {
+                            state: {
+                              prefillFromAlert: {
+                                alertId: g.id,
+                                title: `${g.title} — ${store.name}`,
+                                description: `${g.taskType}: ${g.desc}`,
+                                severity: g.severity === 'High' ? 'critical' : 'warning',
+                                source: 'Automated Execution Alert',
+                                stores: [{ name: store.name, manager: store.manager, detail: g.desc }],
+                              },
+                            },
+                          });
+                        }}
+                      >
+                        Open Tasks
+                      </Button>
+                      <span className="eac2-last-detected">{g.lastDetected}</span>
                     </div>
                   </div>
-                </Card>
+
+                  {/* RIGHT: task panel — 2×2 stat grid */}
+                  <div className="eac2-card-task-panel">
+                    <div className="eac2-task-panel-label">Auto-Created Tasks</div>
+                    <div className="eac2-task-panel-total">{g.taskTotal}</div>
+                    <div className="eac2-task-panel-type">{g.taskType}</div>
+                    <div className="eac2-progress-track">
+                      <div className="eac2-progress-seg eac2-progress-seg--over" style={{ width: `${pctOver}%` }}/>
+                      <div className="eac2-progress-seg eac2-progress-seg--open" style={{ width: `${pctOpen}%` }}/>
+                      <div className="eac2-progress-seg eac2-progress-seg--prog" style={{ width: `${pctProg}%` }}/>
+                      <div className="eac2-progress-seg eac2-progress-seg--sub"  style={{ width: `${pctSub}%` }}/>
+                    </div>
+                    <div className="eac2-tasks-breakdown">
+                      <div className="eac2-breakdown-item">
+                        <span className="eac2-breakdown-count" style={{ color: '#3b82f6' }}>{g.taskOpen}</span>
+                        <span className="eac2-breakdown-label">Open</span>
+                      </div>
+                      <div className="eac2-breakdown-item">
+                        <span className="eac2-breakdown-count" style={{ color: '#f59e0b' }}>{g.taskProg}</span>
+                        <span className="eac2-breakdown-label">In Progress</span>
+                      </div>
+                      <div className="eac2-breakdown-item">
+                        <span className="eac2-breakdown-count" style={{ color: '#8b5cf6' }}>{g.taskSub}</span>
+                        <span className="eac2-breakdown-label">Submitted</span>
+                      </div>
+                      {g.taskOver > 0 && (
+                        <div className="eac2-breakdown-item">
+                          <span className="eac2-breakdown-count" style={{ color: '#ef4444' }}>{g.taskOver}</span>
+                          <span className="eac2-breakdown-label">Overdue</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                </div>
               );
             })}
           </div>
         </div>
+          );
+        })()}
 
-        {/* ── Alert Review Drawer ─────────────────────────── */}
-        {alertDrawer && (
-          <div className="sc-alert-overlay" onClick={() => setAlertDrawer(null)}>
-            <div className="sc-alert-drawer" onClick={e => e.stopPropagation()}>
+        {/* ── Store EAC Drawer ── */}
+        {storeEacDrawer && (
+          <>
+            <div className="eac2-drawer-overlay" onClick={() => setStoreEacDrawer(null)}/>
+            <div className="eac2-drawer">
+              {/* ── Hero header ── */}
+              <div className="eac2-drawer-header">
+                <div className="eac2-drawer-hero-top">
+                  <div className="eac2-drawer-hero-id">
+                    <div className={`eac2-drawer-header-icon eac2-drawer-header-icon--${storeEacDrawer.type}`}>
+                      {storeEacDrawer.type === 'boh'     && <SyncOutlined sx={{ fontSize: 16 }}/>}
+                      {storeEacDrawer.type === 'phantom' && <InventoryOutlined sx={{ fontSize: 16 }}/>}
+                      {storeEacDrawer.type === 'pog'     && <GridOnOutlined sx={{ fontSize: 16 }}/>}
+                    </div>
+                    <span className="eac2-drawer-type">{storeEacDrawer.taskType}</span>
+                  </div>
+                  <button className="eac2-drawer-close" onClick={() => setStoreEacDrawer(null)}>
+                    <CloseOutlined sx={{ fontSize: 18 }}/>
+                  </button>
+                </div>
+                <h2 className="eac2-drawer-title">{storeEacDrawer.title}</h2>
+                <div className="eac2-drawer-hero-pills">
+                  <span className={`eac2-drawer-pill eac2-drawer-pill--${storeEacDrawer.severityClass}`}>{storeEacDrawer.severity} Severity</span>
+                  <span className="eac2-drawer-pill eac2-drawer-pill--auto">⚡ Auto-Monitored</span>
+                  <span className="eac2-drawer-pill eac2-drawer-pill--stores">{store.name}</span>
+                </div>
+              </div>
+
+              {/* ── Body ── */}
+              <div className="eac2-drawer-body">
+                {/* Issue Summary block */}
+                <div className="eac2-drawer-block">
+                  <div className="eac2-drawer-block-label">
+                    <WarningAmberOutlined sx={{ fontSize: 11 }}/> Issue Summary
+                  </div>
+                  <div className={`eac2-drawer-risk-banner eac2-drawer-risk-banner--${storeEacDrawer.severityClass}`}>
+                    <WarningAmberOutlined sx={{ fontSize: 15 }} className="eac2-drawer-risk-banner-icon"/>
+                    <div>
+                      <p className="eac2-drawer-risk-title">{storeEacDrawer.skuCount} SKUs · {storeEacDrawer.riskValue} inventory at risk</p>
+                      <p className="eac2-drawer-risk-desc">{storeEacDrawer.desc}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Signal Evidence block */}
+                <div className="eac2-drawer-block">
+                  <div className="eac2-drawer-block-label">
+                    <InfoOutlined sx={{ fontSize: 11 }}/> Signal Evidence
+                  </div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:'6px' }}>
+                    {storeEacDrawer.evidence.map((e,i) => (
+                      <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'8px 12px', background:'#f8fafc', borderRadius:'8px', border:'1px solid #e2e8f0' }}>
+                        <span style={{ fontSize:'11.5px', color:'#64748b', fontWeight:600 }}>{e.label}</span>
+                        <span style={{ fontSize:'11.5px', color:'#0f172a', fontWeight:600, textAlign:'right' }}>{e.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Task Status block */}
+                <div className="eac2-drawer-block">
+                  <div className="eac2-drawer-block-label">
+                    <TaskAltOutlined sx={{ fontSize: 11 }}/> Auto-Created Task Status · {storeEacDrawer.taskTotal} total
+                  </div>
+                  <div className="eac2-drawer-stats">
+                    {[
+                      { val: storeEacDrawer.taskOpen, lbl: 'Open' },
+                      { val: storeEacDrawer.taskProg, lbl: 'In Progress' },
+                      { val: storeEacDrawer.taskSub,  lbl: 'Submitted' },
+                      { val: storeEacDrawer.taskOver, lbl: 'Overdue' },
+                    ].map(s => (
+                      <div key={s.lbl} className="eac2-drawer-stat-tile">
+                        <span className="eac2-drawer-stat-val">{s.val}</span>
+                        <span className="eac2-drawer-stat-lbl">{s.lbl}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Impacted SKUs / Fixtures block */}
+                <div className="eac2-drawer-block">
+                  <div className="eac2-drawer-block-label">
+                    <InventoryOutlined sx={{ fontSize: 11 }}/> {storeEacDrawer.type === 'pog' ? 'Impacted Fixtures' : 'Impacted SKUs'} ({storeEacDrawer.skus.length})
+                  </div>
+                  <div className="eac2-entity-list">
+                    {storeEacDrawer.skus.map((s, i) => (
+                      <div key={i} className={`eac2-entity-card eac2-entity-card--${s.status}`}>
+                        <div className="eac2-entity-header">
+                          <span className="eac2-entity-name">{s.name}</span>
+                          <span className={`eac2-entity-status-badge eac2-entity-status-badge--${s.status}`}>
+                            {s.status === 'critical' ? 'Open' : s.status === 'progress' ? 'In Progress' : 'Submitted'}
+                          </span>
+                        </div>
+                        <div className="eac2-entity-detail">{s.sku} · {s.dept} · {s.detail}</div>
+                        <div className="eac2-entity-manager">
+                          <PersonOutlined sx={{ fontSize: 12 }}/> Assigned to <strong>{store.manager}</strong>
+                        </div>
+                        <div className="eac2-entity-task-row">
+                          <span className="eac2-entity-task-info">
+                            <TaskAltOutlined sx={{ fontSize: 12 }}/> {s.tasks} task{s.tasks>1?'s':''}
+                          </span>
+                          <Button
+                            variant="outlined"
+                            color="primary"
+                            size="small"
+                            endIcon={<KeyboardArrowRight sx={{ fontSize: 12 }}/>}
+                            onClick={() => {
+                              setStoreEacDrawer(null);
+                              navigate('/command-center/operations-queue', {
+                                state: {
+                                  prefillFromAlert: {
+                                    alertId: `${storeEacDrawer.id}-${s.sku}`,
+                                    title: `${storeEacDrawer.title} — ${s.name}`,
+                                    description: `${s.dept}: ${s.detail}`,
+                                    severity: storeEacDrawer.severity === 'High' ? 'critical' : 'warning',
+                                    source: 'Automated Execution Alert',
+                                    stores: [{ name: store.name, manager: store.manager, detail: s.detail }],
+                                  },
+                                },
+                              });
+                            }}
+                          >
+                            Open Task
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Footer ── */}
+              <div className="eac2-drawer-footer">
+                <Button
+                  className="eac2-drawer-cta eac2-drawer-cta--primary"
+                  variant="contained"
+                  color="primary"
+                  startIcon={<BoltOutlined sx={{ fontSize: 14 }}/>}
+                  onClick={() => {
+                    setStoreEacDrawer(null);
+                    navigate('/command-center/operations-queue', {
+                      state: {
+                        prefillFromAlert: {
+                          alertId: storeEacDrawer.id,
+                          title: `${storeEacDrawer.title} — ${store.name}`,
+                          description: `${storeEacDrawer.taskType}: ${storeEacDrawer.desc}`,
+                          severity: storeEacDrawer.severity === 'High' ? 'critical' : 'warning',
+                          source: 'Automated Execution Alert',
+                          stores: [{ name: store.name, manager: store.manager, detail: storeEacDrawer.desc }],
+                        },
+                      },
+                    });
+                  }}
+                >
+                  Open Queue
+                </Button>
+                <Button
+                  className="eac2-drawer-cta eac2-drawer-cta--secondary"
+                  variant="outlined"
+                  onClick={() => setStoreEacDrawer(null)}
+                >
+                  Close
+                </Button>
+              </div>
+              <div className="eac2-drawer-timestamp">
+                <AccessTimeOutlined sx={{ fontSize: 12 }}/> Last detected {storeEacDrawer.lastDetected} · Auto-assigned to {store.manager}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ── LEGACY BLOCK REMOVED ── */}
+        {alertDrawer != null && null}
+        {/* legacy drawer removed — dismiss modal below still uses alertDrawer state */}
+        {false && <div className="sc-alert-overlay-LEGACY" onClick={() => setAlertDrawer(null)}>
+            <div className="sc-alert-drawer eac-task-drawer" onClick={e => e.stopPropagation()}>
               {/* Header */}
               <div className="sc-alert-drawer-header">
                 <div className="sc-alert-drawer-title-block">
                   <div className="sc-alert-drawer-eyebrow">
                     <Badge
-                      label={`${alertDrawer.priority} Priority`}
-                      color={alertDrawer.priority === 'High' ? 'error' : alertDrawer.priority === 'Medium' ? 'warning' : 'info'}
+                      label={`${alertDrawer!.priority} Priority`}
+                      color={alertDrawer!.priority === 'High' ? 'error' : 'warning'}
                       variant="subtle"
                       size="small"
                     />
-                    <span className="sc-alert-drawer-type">Alert</span>
+                    <Badge
+                      label={alertDrawer!.category}
+                      color="info"
+                      variant="subtle"
+                      size="small"
+                    />
+                    <span className="eac-source-badge">
+                      <BoltOutlined sx={{ fontSize: 10 }}/>
+                      Automated Execution Alert
+                    </span>
                   </div>
-                  <h2 className="sc-alert-drawer-name">{alertDrawer.name}</h2>
-                  <p className="sc-alert-drawer-sub">{alertDrawer.fullDesc}</p>
+                  <h2 className="sc-alert-drawer-name">{alertDrawer!.name}</h2>
+                  <p className="sc-alert-drawer-sub">{alertDrawer!.fullDesc}</p>
                 </div>
                 <button className="sc-alert-drawer-close" onClick={() => setAlertDrawer(null)}>
                   <CloseOutlined sx={{ fontSize: 20 }}/>
@@ -2564,7 +3048,7 @@ export const StoreCenter: React.FC = () => {
 
               {/* Summary stats */}
               <div className="sc-alert-drawer-summary">
-                {alertDrawer.metrics.map(m => (
+                {alertDrawer!.metrics.map(m => (
                   <div key={m.label} className="sc-alert-summary-stat">
                     <span className="sc-alert-summary-val">{m.value}</span>
                     <span className="sc-alert-summary-lbl">{m.label}</span>
@@ -2572,171 +3056,204 @@ export const StoreCenter: React.FC = () => {
                 ))}
               </div>
 
-              {/* Bulk actions */}
+              {/* Task count bar */}
               <div className="sc-alert-drawer-actions">
                 <div className="sc-alert-drawer-count-block">
-                  <span className="sc-alert-drawer-count">{alertDrawer.issues.length} issues</span>
-                  {(() => {
-                    const createdHere = [...createdTaskIds].filter(id => alertDrawer.issues.find(i => i.id === id)).length;
-                    const reviewedHere = [...reviewedIssues].filter(id => alertDrawer.issues.find(i => i.id === id)).length;
-                    return (
-                      <span className="sc-alert-drawer-count-sub">
-                        {createdHere > 0 ? `${createdHere} task${createdHere > 1 ? 's' : ''} created` : reviewedHere > 0 ? `${reviewedHere} marked reviewed` : 'No actions yet'}
-                      </span>
-                    );
-                  })()}
+                  <span className="sc-alert-drawer-count">{alertDrawer!.autoTaskCount} auto-created tasks</span>
+                  <span className="sc-alert-drawer-count-sub">
+                    {alertDrawer!.openTaskCount} open · {alertDrawer!.overdueCount} overdue · Last detected {alertDrawer!.lastUpdated}
+                  </span>
                 </div>
                 <div className="sc-alert-drawer-action-btns">
                   <Button variant="outlined" color="primary" size="small"
-                    onClick={() => {
-                      const actionableIds = new Set(alertDrawer.issues.filter(i => !createdTaskIds.has(i.id)).map(i => i.id));
-                      setSelectedIssues(selectedIssues.size === actionableIds.size ? new Set() : actionableIds);
-                    }}>
-                    {selectedIssues.size > 0 ? 'Deselect All' : 'Select All'}
+                    startIcon={<LaunchOutlined sx={{ fontSize: 14 }}/>}
+                    onClick={() => openAllInOpsQueue(alertDrawer!)}>
+                    Open All in Ops Queue
                   </Button>
-                  {selectedIssues.size > 0 && (
-                    <Button variant="contained" color="primary" size="small"
-                      onClick={() => {
-                        alertDrawer.issues.filter(i => selectedIssues.has(i.id)).forEach(i => createTaskFromIssue(alertDrawer, i));
-                        setSelectedIssues(new Set());
-                      }}>
-                      Create {selectedIssues.size} Task{selectedIssues.size > 1 ? 's' : ''}
-                    </Button>
-                  )}
                 </div>
               </div>
 
-              {/* SKU Issue rows */}
+              {/* Task list */}
               <div className="sc-alert-drawer-issues">
-                {alertDrawer.issues.map(issue => {
-                  const isSelected = selectedIssues.has(issue.id);
-                  const isCreated = createdTaskIds.has(issue.id);
-                  const isReviewed = reviewedIssues.has(issue.id);
-                  const isBoh = alertDrawer.id === 'boh-sync';
+                {alertDrawer!.issues.map(issue => {
+                  const isAck = acknowledgedIds.has(issue.id);
+                  const isResolved = resolvedIds.has(issue.id);
+                  const isEsc = escalatedIds.has(issue.id);
+                  const isDismissed = dismissedMap.has(issue.id);
+                  const effectiveStatus = isDismissed ? 'dismissed' : isResolved ? 'resolved' : isEsc ? 'escalated' : isAck ? 'in-progress' : issue.taskStatus;
+                  const isBoh = alertDrawer!.id === 'boh-sync';
+                  const isPhantom = alertDrawer!.id === 'phantom-stock';
                   return (
-                    <div
-                      key={issue.id}
-                      className={`sc-issue-card${isSelected ? ' sc-issue-card--selected' : ''}${isCreated ? ' sc-issue-card--done' : ''}${isReviewed && !isCreated ? ' sc-issue-card--reviewed' : ''}`}
-                    >
-                      {/* ── Row 1: checkbox + product info + status badge ── */}
-                      <div className="sc-issue-card-top">
-                        <div
-                          className="sc-issue-card-check"
-                          onClick={() => {
-                            if (isCreated) return;
-                            setSelectedIssues(prev => {
-                              const next = new Set(prev);
-                              if (next.has(issue.id)) next.delete(issue.id); else next.add(issue.id);
-                              return next;
-                            });
-                          }}
-                        >
-                          {isCreated
-                            ? <CheckCircleOutlined sx={{ fontSize: 18 }} className="sc-issue-icon--done"/>
-                            : isSelected
-                            ? <CheckCircleOutlined sx={{ fontSize: 18 }} className="sc-issue-icon--sel"/>
-                            : <span className="sc-issue-checkbox"/>}
+                    <div key={issue.id} className={`eac-task-card eac-task-card--${effectiveStatus}`}>
+                      {/* Row 1: product info + status */}
+                      <div className="eac-task-card-top">
+                        <div className="eac-task-product-img">
+                          <InventoryOutlined sx={{ fontSize: 20, color: 'var(--ia-color-text-tertiary)' }}/>
                         </div>
-
-                        <div className="sc-issue-card-product">
-                          <span className="sc-issue-card-name">{issue.itemName}</span>
-                          <span className="sc-issue-card-sku">SKU: {issue.sku} · {issue.department}</span>
+                        <div className="eac-task-product-info">
+                          <span className="eac-task-sku-name">{issue.itemName}</span>
+                          <span className="eac-task-sku-id">SKU {issue.sku}</span>
+                          <span className="eac-task-dept">{issue.department}{issue.subDepartment !== issue.department ? ` · ${issue.subDepartment}` : ''} · {issue.itemClass}</span>
                         </div>
-
-                        <div className="sc-issue-card-badges">
-                          {isCreated && <Badge label="Task Created" color="success" variant="subtle" size="small"/>}
-                          {isReviewed && !isCreated && <Badge label="Reviewed" color="success" variant="subtle" size="small"/>}
-                          {issue.confidenceScore && !isCreated && !isReviewed && (
-                            <Badge label={`AI ${issue.confidenceScore}%`} color="info" variant="subtle" size="small"/>
+                        <div className="eac-task-status-col">
+                          <span className={`eac-task-status eac-task-status--${effectiveStatus}`}>
+                            {effectiveStatus === 'open' ? 'Open' : effectiveStatus === 'in-progress' ? 'In Progress' : effectiveStatus === 'overdue' ? 'Overdue' : effectiveStatus === 'escalated' ? 'Escalated' : effectiveStatus === 'resolved' ? 'Resolved' : 'Dismissed'}
+                          </span>
+                          {issue.confidenceScore && (
+                            <span className="eac-task-confidence">AI {issue.confidenceScore}%</span>
                           )}
                         </div>
                       </div>
 
-                      {/* ── Row 2: alert tag + location tag ── */}
-                      <div className="sc-issue-card-tags">
-                        <span className="sc-issue-tag sc-issue-tag--warn">
-                          <WarningAmberOutlined sx={{ fontSize: 11 }}/>
-                          {issue.issue}
+                      {/* Reason + Signal + Evidence */}
+                      <div className="eac-task-detail-rows">
+                        <div className="eac-task-detail-row">
+                          <span className="eac-task-detail-lbl">Reason Detected</span>
+                          <span className="eac-task-detail-val">
+                            <WarningAmberOutlined sx={{ fontSize: 12 }} className="eac-detail-icon-warn"/>
+                            {issue.issue}
+                          </span>
+                        </div>
+                        <div className="eac-task-detail-row">
+                          <span className="eac-task-detail-lbl">Signal Breakdown</span>
+                          <span className="eac-task-detail-val">{issue.signalBreakdown}</span>
+                        </div>
+                        <div className="eac-task-detail-row">
+                          <span className="eac-task-detail-lbl">Evidence</span>
+                          <span className="eac-task-detail-val eac-evidence-val">
+                            <DescriptionOutlined sx={{ fontSize: 11 }}/>
+                            {issue.evidence}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Stat strip */}
+                      <div className="eac-task-stat-strip">
+                        {isBoh && <>
+                          <div className="eac-task-stat">
+                            <span className="eac-task-stat-lbl">BOH Available</span>
+                            <span className="eac-task-stat-val eac-task-stat-val--pos">{issue.bohQty} units</span>
+                          </div>
+                          <div className="eac-task-stat">
+                            <span className="eac-task-stat-lbl">Shelf Detected</span>
+                            <span className="eac-task-stat-val eac-task-stat-val--neg">{issue.shelfQty} units</span>
+                          </div>
+                          {issue.weeklyOpportunity != null && (
+                            <div className="eac-task-stat">
+                              <span className="eac-task-stat-lbl">Weekly Opportunity</span>
+                              <span className="eac-task-stat-val eac-task-stat-val--opp">${issue.weeklyOpportunity}/wk</span>
+                            </div>
+                          )}
+                        </>}
+                        {isPhantom && <>
+                          <div className="eac-task-stat">
+                            <span className="eac-task-stat-lbl">Units on Hand</span>
+                            <span className="eac-task-stat-val">{issue.bohQty} units</span>
+                          </div>
+                          {issue.zeroSalesDays != null && (
+                            <div className="eac-task-stat">
+                              <span className="eac-task-stat-lbl">Zero-Sales Days</span>
+                              <span className="eac-task-stat-val eac-task-stat-val--neg">{issue.zeroSalesDays} days</span>
+                            </div>
+                          )}
+                          {issue.recoveryEstimate != null && (
+                            <div className="eac-task-stat" title={PHANTOM_RECOVERY_TOOLTIP}>
+                              <span className="eac-task-stat-lbl">Recovery Est.</span>
+                              <span className="eac-task-stat-val eac-task-stat-val--opp">${Math.round(issue.recoveryEstimate)}/wk</span>
+                            </div>
+                          )}
+                        </>}
+                        {!isBoh && !isPhantom && issue.confidenceScore != null && (
+                          <div className="eac-task-stat">
+                            <span className="eac-task-stat-lbl">AI Confidence</span>
+                            <span className="eac-task-stat-val">{issue.confidenceScore}%</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Owner + SLA */}
+                      <div className="eac-task-meta-row">
+                        <span className="eac-task-meta-item">
+                          <PersonOutlined sx={{ fontSize: 12 }}/>
+                          {issue.taskOwner}
                         </span>
-                        {(issue.aisle || issue.bay) && (
-                          <span className="sc-issue-tag sc-issue-tag--loc">
-                            {[issue.aisle, issue.bay].filter(Boolean).join(' · ')}
+                        <span className="eac-task-meta-item eac-task-meta-item--sla">
+                          <ScheduleOutlined sx={{ fontSize: 12 }}/>
+                          Due: {issue.dueDate}
+                        </span>
+                        {(issue.slaBreached || effectiveStatus === 'overdue') && (
+                          <span className="eac-sla-breach-tag">
+                            <TimerOutlined sx={{ fontSize: 10 }}/>
+                            SLA Breached
+                          </span>
+                        )}
+                        {(issue.isEscalated || effectiveStatus === 'escalated') && (
+                          <span className="eac-escalated-tag">
+                            <FlagOutlined sx={{ fontSize: 10 }}/>
+                            Escalated to DM
                           </span>
                         )}
                       </div>
 
-                      {/* ── Row 3: stat strip + actions right-aligned ── */}
-                      <div className="sc-issue-card-bottom">
-                        <div className="sc-issue-card-stats">
-                          {isBoh && (
-                            <>
-                              <div className="sc-issue-stat">
-                                <span className="sc-issue-stat-lbl">BOH Available</span>
-                                <span className="sc-issue-stat-val sc-issue-stat-val--pos">{issue.bohQty} units</span>
-                              </div>
-                              <div className="sc-issue-stat">
-                                <span className="sc-issue-stat-lbl">Shelf Detected</span>
-                                <span className="sc-issue-stat-val sc-issue-stat-val--neg">{issue.shelfQty} units</span>
-                              </div>
-                              {issue.weeklyOpportunity != null && (
-                                <div className="sc-issue-stat">
-                                  <span className="sc-issue-stat-lbl">Weekly Opportunity</span>
-                                  <span className="sc-issue-stat-val sc-issue-stat-val--opp">${issue.weeklyOpportunity}/wk</span>
-                                </div>
-                              )}
-                            </>
-                          )}
-                          {alertDrawer.id === 'phantom-stock' && (
-                            <>
-                              <div className="sc-issue-stat">
-                                <span className="sc-issue-stat-lbl">Units on Hand</span>
-                                <span className="sc-issue-stat-val">{issue.bohQty} units</span>
-                              </div>
-                              {issue.zeroSalesDays != null && (
-                                <div className="sc-issue-stat">
-                                  <span className="sc-issue-stat-lbl">Zero-Sales Days</span>
-                                  <span className="sc-issue-stat-val sc-issue-stat-val--neg">{issue.zeroSalesDays} days</span>
-                                </div>
-                              )}
-                              <div className="sc-issue-stat" title={PHANTOM_RECOVERY_TOOLTIP}>
-                                <span className="sc-issue-stat-lbl sc-issue-stat-lbl--tip">Sales Recovery Est.</span>
-                                <span className={`sc-issue-stat-val${issue.recoveryEstimate != null ? ' sc-issue-stat-val--opp' : ' sc-issue-stat-val--muted'}`}>
-                                  {issue.recoveryEstimate != null ? `$${Math.round(issue.recoveryEstimate)}/wk` : 'N/A'}
-                                </span>
-                              </div>
-                            </>
-                          )}
-                          {alertDrawer.id === 'pog-compliance' && issue.confidenceScore != null && (
-                            <div className="sc-issue-stat">
-                              <span className="sc-issue-stat-lbl">AI Confidence</span>
-                              <span className="sc-issue-stat-val">{issue.confidenceScore}%</span>
-                            </div>
-                          )}
+                      {/* Recommended action */}
+                      {!isDismissed && !isResolved && (
+                        <div className="eac-task-rec-action">
+                          <AutoAwesomeOutlined sx={{ fontSize: 12 }}/>
+                          <span>{issue.recommendedAction}</span>
                         </div>
+                      )}
 
-                        <div className="sc-issue-card-actions">
-                          {!isCreated && (
-                            <Button
-                              variant="outlined"
-                              color="primary"
-                              size="small"
-                              onClick={e => { e.stopPropagation(); setTaskConfirmIssue(issue); }}
-                            >
-                              Create Task
-                            </Button>
-                          )}
-                          {!isCreated && !isReviewed && (
-                            <Button
-                              variant="text"
-                              color="primary"
-                              size="small"
-                              onClick={() => setReviewedIssues(prev => new Set(prev).add(issue.id))}
-                            >
-                              Mark Reviewed
-                            </Button>
-                          )}
+                      {/* Dismissed reason */}
+                      {isDismissed && (
+                        <div className="eac-dismissed-reason">
+                          <BlockOutlined sx={{ fontSize: 12 }}/>
+                          <span>Dismissed: {dismissedMap.get(issue.id)}</span>
                         </div>
-                      </div>
+                      )}
+
+                      {/* Action buttons */}
+                      {!isResolved && !isDismissed && (
+                        <div className="eac-task-actions">
+                          {!isAck && !isEsc && (
+                            <Button variant="outlined" color="primary" size="small"
+                              startIcon={<CheckOutlined sx={{ fontSize: 13 }}/>}
+                              onClick={() => setAcknowledgedIds(prev => new Set(prev).add(issue.id))}>
+                              Acknowledge
+                            </Button>
+                          )}
+                          <Button variant="outlined" color="primary" size="small"
+                            startIcon={<CheckCircleOutlined sx={{ fontSize: 13 }}/>}
+                            onClick={() => setResolvedIds(prev => new Set(prev).add(issue.id))}>
+                            Mark Resolved
+                          </Button>
+                          {!isEsc && (
+                            <Button variant="outlined" size="small"
+                              startIcon={<FlagOutlined sx={{ fontSize: 13 }}/>}
+                              onClick={() => setEscalatedIds(prev => new Set(prev).add(issue.id))}>
+                              Escalate
+                            </Button>
+                          )}
+                          <Button variant="text" size="small" color="primary"
+                            startIcon={<BlockOutlined sx={{ fontSize: 13 }}/>}
+                            onClick={() => openDismissModal(issue.id)}>
+                            Dismiss
+                          </Button>
+                          <Button variant="text" size="small" color="primary"
+                            startIcon={<LaunchOutlined sx={{ fontSize: 13 }}/>}
+                            onClick={() => navigate('/store-operations/task-center')}>
+                            Open in Ops Queue
+                          </Button>
+                        </div>
+                      )}
+                      {(isResolved || isDismissed) && (
+                        <div className="eac-task-actions">
+                          <Button variant="text" size="small" color="primary"
+                            startIcon={<LaunchOutlined sx={{ fontSize: 13 }}/>}
+                            onClick={() => navigate('/store-operations/task-center')}>
+                            View in Ops Queue
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -2746,75 +3263,50 @@ export const StoreCenter: React.FC = () => {
               <div className="sc-alert-drawer-footer">
                 <Button variant="outlined" color="primary" size="medium" onClick={() => setAlertDrawer(null)}>Close</Button>
                 <Button variant="contained" color="primary" size="medium"
-                  startIcon={<PlaylistAddCheckOutlined sx={{ fontSize: 16 }}/>}
-                  onClick={() => createAllTasks(alertDrawer)}>
-                  Create All Tasks
+                  startIcon={<LaunchOutlined sx={{ fontSize: 16 }}/>}
+                  onClick={() => openAllInOpsQueue(alertDrawer!)}>
+                  Open All in Ops Queue
                 </Button>
               </div>
             </div>
-          </div>
-        )}
+          </div>}
 
-        {/* ── Task Confirm Mini-Modal ─────────────────────── */}
-        {taskConfirmIssue && alertDrawer && (
-          <div className="sc-task-confirm-overlay" onClick={() => setTaskConfirmIssue(null)}>
-            <div className="sc-task-confirm-modal" onClick={e => e.stopPropagation()}>
+        {/* ── Dismiss Reason Modal ─────────────────────────── */}
+        {showDismissModal && dismissTargetId && (
+          <div className="sc-task-confirm-overlay" onClick={() => setShowDismissModal(false)}>
+            <div className="sc-task-confirm-modal eac-dismiss-modal" onClick={e => e.stopPropagation()}>
               <div className="sc-task-confirm-header">
-                <h4>Create Replenishment Task</h4>
-                <button className="sc-alert-drawer-close" onClick={() => setTaskConfirmIssue(null)}>
+                <h4>Dismiss Task</h4>
+                <button className="sc-alert-drawer-close" onClick={() => setShowDismissModal(false)}>
                   <CloseOutlined sx={{ fontSize: 18 }}/>
                 </button>
               </div>
               <div className="sc-task-confirm-body">
-                <div className="sc-task-confirm-field">
-                  <span className="sc-task-confirm-label">Task Title</span>
-                  <span className="sc-task-confirm-value">
-                    {alertDrawer.id === 'boh-sync'
-                      ? `Replenish shelf from BOH: ${taskConfirmIssue.itemName}`
-                      : alertDrawer.id === 'phantom-stock'
-                      ? `Investigate phantom stock: ${taskConfirmIssue.itemName}`
-                      : `Fix POG placement: ${taskConfirmIssue.itemName}`}
-                  </span>
-                </div>
-                <div className="sc-task-confirm-field">
-                  <span className="sc-task-confirm-label">SKU</span>
-                  <span className="sc-task-confirm-value">{taskConfirmIssue.sku} · {taskConfirmIssue.department}</span>
-                </div>
-                <div className="sc-task-confirm-field">
-                  <span className="sc-task-confirm-label">Store</span>
-                  <span className="sc-task-confirm-value">{store.name}</span>
-                </div>
-                {taskConfirmIssue.aisle && (
-                  <div className="sc-task-confirm-field">
-                    <span className="sc-task-confirm-label">Location</span>
-                    <span className="sc-task-confirm-value">{[taskConfirmIssue.aisle, taskConfirmIssue.bay].filter(Boolean).join(' · ')}</span>
-                  </div>
-                )}
-                {alertDrawer.id === 'boh-sync' && (
-                  <div className="sc-task-confirm-field">
-                    <span className="sc-task-confirm-label">BOH Available</span>
-                    <span className="sc-task-confirm-value sc-ais-value--pos">{taskConfirmIssue.bohQty} units</span>
-                  </div>
-                )}
-                <div className="sc-task-confirm-field">
-                  <span className="sc-task-confirm-label">Priority</span>
-                  <span className={`sc-alert-priority-badge ${alertDrawer.priority === 'High' ? 'sc-alert-priority--high' : 'sc-alert-priority--medium'}`}>{alertDrawer.priority}</span>
-                </div>
-                <div className="sc-task-confirm-field">
-                  <span className="sc-task-confirm-label">Recommended Action</span>
-                  <span className="sc-task-confirm-value">
-                    {alertDrawer.id === 'boh-sync' ? 'Move available stock from BOH to shelf'
-                      : alertDrawer.id === 'phantom-stock' ? 'Verify physical shelf placement and ensure stock is accessible'
-                      : 'Correct shelf placement to match approved planogram'}
-                  </span>
+                <p className="eac-dismiss-prompt">Select a reason for dismissing this task. This will also update the linked alert issue status.</p>
+                <div className="eac-dismiss-reasons">
+                  {DISMISS_REASONS.map(reason => (
+                    <button
+                      key={reason}
+                      className={`eac-dismiss-reason${dismissReason === reason ? ' selected' : ''}`}
+                      onClick={() => setDismissReason(reason)}
+                    >
+                      {dismissReason === reason && <CheckOutlined sx={{ fontSize: 13 }}/>}
+                      {reason}
+                    </button>
+                  ))}
                 </div>
               </div>
               <div className="sc-task-confirm-footer">
-                <Button variant="outlined" color="primary" size="medium" onClick={() => setTaskConfirmIssue(null)}>Cancel</Button>
-                <Button variant="contained" color="primary" size="medium"
-                  startIcon={<TaskAltOutlined sx={{ fontSize: 16 }}/>}
-                  onClick={() => { createTaskFromIssue(alertDrawer, taskConfirmIssue); setTaskConfirmIssue(null); }}>
-                  Confirm &amp; Create Task
+                <Button variant="outlined" color="primary" size="medium" onClick={() => setShowDismissModal(false)}>Cancel</Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="medium"
+                  disabled={!dismissReason}
+                  startIcon={<BlockOutlined sx={{ fontSize: 16 }}/>}
+                  onClick={confirmDismiss}
+                >
+                  Confirm Dismissal
                 </Button>
               </div>
             </div>
@@ -2833,12 +3325,13 @@ export const StoreCenter: React.FC = () => {
           <Tabs
             tabNames={[
               { value: 'inventory', label: 'Inventory & Inbound', icon: <InventoryOutlined sx={{ fontSize: 14 }}/> },
+              { value: 'phantom', label: 'Phantom Stock', icon: <ShieldOutlined sx={{ fontSize: 14 }}/> },
               { value: 'voc', label: 'VoC Analysis', icon: <FavoriteOutlined sx={{ fontSize: 14 }}/> },
               { value: 'benchmarking', label: 'Comp Benchmarking', icon: <BarChartOutlined sx={{ fontSize: 14 }}/> },
             ]}
             tabPanels={[]}
             value={activeTab}
-            onChange={(_, val) => setActiveTab(val as 'inventory' | 'voc' | 'benchmarking')}
+            onChange={(_, val) => setActiveTab(val as 'inventory' | 'phantom' | 'voc' | 'benchmarking')}
           />
 
           <div className="sc-deepdive-content">
@@ -3387,6 +3880,422 @@ export const StoreCenter: React.FC = () => {
               );
             })()}
 
+            {/* ── Phantom Stock Heatmap Tab ── */}
+            {activeTab === 'phantom' && (() => {
+              const psFiltered = PHANTOM_ROWS.filter(r => {
+                if (psSearch.trim()) {
+                  const q = psSearch.toLowerCase();
+                  if (!r.department.toLowerCase().includes(q) && !r.itemClass.toLowerCase().includes(q) && !r.subDepartment.toLowerCase().includes(q)) return false;
+                }
+                if (psDeptFilter && r.department !== psDeptFilter) return false;
+                if (psSubDeptFilter && r.subDepartment !== psSubDeptFilter) return false;
+                if (psClassFilter && r.itemClass !== psClassFilter) return false;
+                if (psRiskFilter && r.riskLevel !== psRiskFilter) return false;
+                if (psStatusFilter && r.status !== psStatusFilter) return false;
+                return true;
+              });
+
+              const totalPhantomSkus = PHANTOM_ROWS.reduce((s, r) => s + r.phantomSkus, 0);
+              const totalInvRisk = PHANTOM_ROWS.reduce((s, r) => s + r.inventoryValue, 0);
+              const highestRiskDept = (() => {
+                const counts: Record<string, number> = {};
+                PHANTOM_ROWS.filter(r => r.riskLevel === 'High').forEach(r => { counts[r.department] = (counts[r.department] || 0) + r.phantomSkus; });
+                return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'Beverages';
+              })();
+              const openCycleTasks = PHANTOM_ROWS.filter(r => r.linkedTasks > 0 && r.status !== 'Resolved').reduce((s, r) => s + r.linkedTasks, 0);
+
+              const psTotalPages = Math.ceil(psFiltered.length / PS_PAGE_SIZE);
+              const psPaginated = psFiltered.slice(psPage * PS_PAGE_SIZE, (psPage + 1) * PS_PAGE_SIZE);
+
+              const psRiskColor = (risk: PhantomRisk | null) => {
+                if (!risk) return { bg: '#f8fafc', text: '#cbd5e1', border: '#f1f5f9' };
+                if (risk === 'High')    return { bg: '#fef2f2', text: '#dc2626', border: '#fecaca' };
+                if (risk === 'Medium')  return { bg: '#fff7ed', text: '#c2410c', border: '#fed7aa' };
+                if (risk === 'Low')     return { bg: '#fefce8', text: '#a16207', border: '#fde68a' };
+                return { bg: '#f0fdf4', text: '#16a34a', border: '#bbf7d0' };
+              };
+
+              const psDepts   = Array.from(new Set(PHANTOM_ROWS.map(r => r.department)));
+              const psSubDepts = Array.from(new Set(PHANTOM_ROWS.map(r => r.subDepartment)));
+              const psClasses  = Array.from(new Set(PHANTOM_ROWS.map(r => r.itemClass)));
+
+              return (
+                <div className="sc-inventory-tab">
+                  {/* Summary tiles — same style as Inventory & Inbound */}
+                  <div className="sc-inv-summary">
+                    <div className="sc-inv-summary-tile sc-inv-summary--total">
+                      <span className="sc-inv-summary-label">Phantom Stock SKUs</span>
+                      <span className="sc-inv-summary-value">{totalPhantomSkus}</span>
+                      <span className="sc-inv-summary-sub">zero or abnormal sales</span>
+                    </div>
+                    <div className="sc-inv-summary-tile sc-inv-summary--critical">
+                      <span className="sc-inv-summary-label">Inventory at Risk</span>
+                      <span className="sc-inv-summary-value">${(totalInvRisk / 1000).toFixed(1)}K</span>
+                      <span className="sc-inv-summary-sub">estimated value at risk</span>
+                    </div>
+                    <div className="sc-inv-summary-tile sc-inv-summary--warn">
+                      <span className="sc-inv-summary-label">Highest Risk Dept</span>
+                      <span className="sc-inv-summary-value">{highestRiskDept}</span>
+                      <span className="sc-inv-summary-sub">most phantom SKUs</span>
+                    </div>
+                    <div className="sc-inv-summary-tile sc-inv-summary--info">
+                      <span className="sc-inv-summary-label">Open Cycle Count Tasks</span>
+                      <span className="sc-inv-summary-value">{openCycleTasks}</span>
+                      <span className="sc-inv-summary-sub">auto-created in queue</span>
+                    </div>
+                  </div>
+
+                  {/* AI Insight banner */}
+                  <div className="sc-inv-insight">
+                    <div className="sc-inv-insight-icon"><AutoAwesomeOutlined sx={{ fontSize: 14 }}/></div>
+                    <div className="sc-inv-insight-body">
+                      <p className="sc-inv-insight-line">{totalPhantomSkus} SKUs flagged with zero or abnormal sales. Beverages and Personal Care show the highest concentration.</p>
+                      <p className="sc-inv-insight-rec"><strong>Recommended:</strong> Initiate Cycle Count tasks for High-risk SKUs. Verify BOH-to-shelf movement in Beverages aisle.</p>
+                    </div>
+                  </div>
+
+                  {/* Filter bar — same pattern as Inventory & Inbound */}
+                  <div className="sc-inv-premium-filter-bar">
+                    <div className="sc-inv-search">
+                      <SearchOutlined sx={{ fontSize: 15 }}/>
+                      <input
+                        type="text"
+                        placeholder="Search department, class…"
+                        value={psSearch}
+                        onChange={e => { setPsSearch(e.target.value); setPsPage(0); }}
+                      />
+                      {psSearch && (
+                        <button className="sc-inv-search-clear" onClick={() => { setPsSearch(''); setPsPage(0); }} aria-label="Clear search">
+                          <CloseOutlined sx={{ fontSize: 13 }}/>
+                        </button>
+                      )}
+                    </div>
+                    <div className="sc-inv-filter-divider" aria-hidden="true"/>
+                    <div className="sc-inv-filter-fields">
+                      <ImFilterSelect
+                        placeholder="All Departments"
+                        value={psDeptFilter || 'All'}
+                        options={[{ value: 'All', label: 'All Departments' }, ...psDepts.map(d => ({ value: d, label: d }))]}
+                        isClearable={psDeptFilter !== ''}
+                        minWidth={168}
+                        onChange={v => { setPsDeptFilter(v === 'All' ? '' : (v || '')); setPsPage(0); }}
+                      />
+                      <ImFilterSelect
+                        placeholder="All Sub-Depts"
+                        value={psSubDeptFilter || 'All'}
+                        options={[{ value: 'All', label: 'All Sub-Depts' }, ...psSubDepts.map(d => ({ value: d, label: d }))]}
+                        isClearable={psSubDeptFilter !== ''}
+                        minWidth={168}
+                        onChange={v => { setPsSubDeptFilter(v === 'All' ? '' : (v || '')); setPsPage(0); }}
+                      />
+                      <ImFilterSelect
+                        placeholder="All Classes"
+                        value={psClassFilter || 'All'}
+                        options={[{ value: 'All', label: 'All Classes' }, ...psClasses.map(c => ({ value: c, label: c }))]}
+                        isClearable={psClassFilter !== ''}
+                        minWidth={148}
+                        onChange={v => { setPsClassFilter(v === 'All' ? '' : (v || '')); setPsPage(0); }}
+                      />
+                      <ImFilterSelect
+                        placeholder="All Risk Levels"
+                        value={psRiskFilter || 'All'}
+                        options={[
+                          { value: 'All', label: 'All Risk Levels' },
+                          { value: 'High', label: 'High' },
+                          { value: 'Medium', label: 'Medium' },
+                          { value: 'Low', label: 'Low' },
+                          { value: 'Minimal', label: 'Minimal' },
+                        ]}
+                        isClearable={psRiskFilter !== ''}
+                        minWidth={148}
+                        onChange={v => { setPsRiskFilter(v === 'All' ? '' : (v || '')); setPsPage(0); }}
+                      />
+                    </div>
+                    {psFiltersActive && (
+                      <Chips label="Clear filters" onClick={clearPsFilters}/>
+                    )}
+                    <Tooltip title="Download filtered phantom stock list as CSV">
+                      <span className="sc-inv-export-wrap">
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          size="medium"
+                          className="sc-inv-export-btn"
+                          startIcon={<FileDownloadOutlined sx={{ fontSize: 18 }}/>}
+                          onClick={() => {}}
+                          disabled={psFiltered.length === 0}
+                        >
+                          Export
+                        </Button>
+                      </span>
+                    </Tooltip>
+                  </div>
+
+                  {/* Toolbar */}
+                  <div className="sc-inv-toolbar">
+                    <div className="sc-inv-toolbar-title">
+                      <ShieldOutlined sx={{ fontSize: 14 }}/>
+                      <span>Phantom Stock Detail — Department / Class Level</span>
+                      <span className="sc-inv-count-badge">{psFiltered.length}</span>
+                    </div>
+                  </div>
+
+                  {psFiltered.length === 0 ? (
+                    <div className="sc-inv-empty">
+                      <ShieldOutlined sx={{ fontSize: 20 }}/>
+                      <p>{psFiltersActive ? 'No records match your filters. Try adjusting search or filters.' : 'No phantom stock detected.'}</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="wow-table-wrap sc-inv-wow-table-wrap">
+                        <table className="wow-table sc-inv-table">
+                          <thead>
+                            <tr>
+                              <th>Department</th>
+                              <th>Sub-Dept / Class</th>
+                              <th>Phantom SKUs</th>
+                              <th>Inv. Units</th>
+                              <th>BOH Units</th>
+                              <th>Shelf Qty</th>
+                              <th>Last Sale</th>
+                              <th>Zero-Sales Days</th>
+                              <th>Inv. Value</th>
+                              <th>Risk Level</th>
+                              <th>Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {psPaginated.map(row => {
+                              const riskColor: 'error' | 'warning' | 'info' | 'success' =
+                                row.riskLevel === 'High' ? 'error' :
+                                row.riskLevel === 'Medium' ? 'warning' :
+                                row.riskLevel === 'Low' ? 'info' : 'success';
+                              const statusColor: 'success' | 'warning' | 'error' | 'info' =
+                                row.status === 'Resolved' ? 'success' :
+                                row.status === 'In Progress' ? 'warning' :
+                                row.status === 'Open' ? 'error' : 'info';
+                              return (
+                                <tr key={row.id} className="sc-inv-row sc-inv-row--at-risk" style={{ cursor: 'pointer' }} onClick={() => setPsDrawerRow(row)}>
+                                  <td className="sc-inv-name">{row.department}</td>
+                                  <td>
+                                    <div className="ps-dept-cell">
+                                      <span className="ps-dept-sub">{row.subDepartment}</span>
+                                      <span className="ps-dept-class">{row.itemClass}</span>
+                                    </div>
+                                  </td>
+                                  <td className="sc-inv-sku">{row.phantomSkus}</td>
+                                  <td>{row.inventoryUnits}</td>
+                                  <td>{row.bohUnits}</td>
+                                  <td>{row.shelfQty}</td>
+                                  <td><span className="ps-date">{row.lastSaleDate}</span></td>
+                                  <td>
+                                    <span className={`ps-days-badge${row.zeroSalesDays >= 20 ? ' ps-days-badge--high' : row.zeroSalesDays >= 14 ? ' ps-days-badge--med' : ''}`}>
+                                      {row.zeroSalesDays}d
+                                    </span>
+                                  </td>
+                                  <td><span className="ps-value">${row.inventoryValue.toLocaleString()}</span></td>
+                                  <td>
+                                    <Badge label={row.riskLevel} color={riskColor} size="small" variant="subtle"
+                                      isIcon icon={row.riskLevel === 'High' ? <ErrorOutlined sx={{ fontSize: 12 }}/> : row.riskLevel === 'Medium' ? <WarningAmberOutlined sx={{ fontSize: 12 }}/> : <AccessTimeOutlined sx={{ fontSize: 12 }}/>}
+                                    />
+                                  </td>
+                                  <td>
+                                    <Badge label={row.status} color={statusColor} size="small" variant="subtle"/>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                      {psTotalPages > 1 && (
+                        <div className="ps-pagination">
+                          <span className="ps-pag-info">Showing {psPage * PS_PAGE_SIZE + 1}–{Math.min((psPage + 1) * PS_PAGE_SIZE, psFiltered.length)} of {psFiltered.length}</span>
+                          <button className="ps-pag-btn" disabled={psPage === 0} onClick={() => setPsPage(p => p - 1)}><ChevronLeftOutlined sx={{ fontSize: 16 }} /></button>
+                          <button className="ps-pag-btn" disabled={psPage >= psTotalPages - 1} onClick={() => setPsPage(p => p + 1)}><ChevronRightOutlined sx={{ fontSize: 16 }} /></button>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Right-Side Detail Drawer — matches Alerts panel style */}
+                  {psDrawerRow && (
+                    <>
+                      <div className="detail-panel-overlay" onClick={() => setPsDrawerRow(null)}/>
+                      <div className="detail-panel">
+                        {/* Hero Header */}
+                        <div className="dp-hero-header">
+                          <div className="dp-hero-top">
+                            <div className="dp-hero-icon" style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}>
+                              <InventoryOutlined sx={{ fontSize: 16 }}/>
+                            </div>
+                            <span className="dp-hero-type">PHANTOM STOCK · {psDrawerRow.department}</span>
+                            <button className="dp-hero-close" onClick={() => setPsDrawerRow(null)}>
+                              <CloseOutlined sx={{ fontSize: 17 }}/>
+                            </button>
+                          </div>
+                          <h2 className="dp-hero-title">{psDrawerRow.subDepartment} — {psDrawerRow.itemClass}</h2>
+                          <div className="dp-hero-pills">
+                            <span className={`dp-hero-pill dp-hero-pill--${psDrawerRow.riskLevel === 'High' ? 'critical' : psDrawerRow.riskLevel === 'Medium' ? 'warning' : 'info'}`}>
+                              {psDrawerRow.riskLevel === 'High' ? <ErrorOutlined sx={{ fontSize: 10 }}/> : <WarningAmberOutlined sx={{ fontSize: 10 }}/>}
+                              {psDrawerRow.riskLevel} Risk
+                            </span>
+                            <span className="dp-hero-pill dp-hero-pill--neutral">{psDrawerRow.status}</span>
+                            <span className="dp-hero-pill dp-hero-pill--auto">⚡ Auto-Monitored</span>
+                            {psDrawerRow.linkedTasks > 0 && (
+                              <span className="dp-hero-pill dp-hero-pill--tasks">
+                                <LinkOutlined sx={{ fontSize: 10 }}/> {psDrawerRow.linkedTasks} Linked Task{psDrawerRow.linkedTasks > 1 ? 's' : ''}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Body */}
+                        <div className="detail-panel-body">
+                          {/* Why Flagged */}
+                          <div className="dp-section">
+                            <div className="dp-section-title">
+                              <InfoOutlined sx={{ fontSize: 12 }}/> Why Flagged
+                            </div>
+                            <div className="dp-title-block">
+                              <p className="dp-description">{psDrawerRow.whyFlagged}</p>
+                            </div>
+                          </div>
+
+                          {/* Inventory & Sales Evidence */}
+                          <div className="dp-section">
+                            <div className="dp-section-title">
+                              <InventoryOutlined sx={{ fontSize: 12 }}/> Inventory &amp; Sales Evidence
+                            </div>
+                            <div className="ps-ev-grid">
+                              <div className="ps-ev-tile">
+                                <span className="ps-ev-label">Inv. Units</span>
+                                <span className="ps-ev-value">{psDrawerRow.inventoryUnits}</span>
+                              </div>
+                              <div className="ps-ev-tile">
+                                <span className="ps-ev-label">BOH Units</span>
+                                <span className="ps-ev-value">{psDrawerRow.bohUnits}</span>
+                              </div>
+                              <div className="ps-ev-tile">
+                                <span className="ps-ev-label">Shelf Qty</span>
+                                <span className="ps-ev-value">{psDrawerRow.shelfQty}</span>
+                              </div>
+                              <div className="ps-ev-tile">
+                                <span className="ps-ev-label">Zero-Sales Days</span>
+                                <span className="ps-ev-value ps-ev-value--alert">{psDrawerRow.zeroSalesDays}d</span>
+                              </div>
+                              <div className="ps-ev-tile">
+                                <span className="ps-ev-label">Last Sale Date</span>
+                                <span className="ps-ev-value">{psDrawerRow.lastSaleDate}</span>
+                              </div>
+                              <div className="ps-ev-tile">
+                                <span className="ps-ev-label">Inv. Value</span>
+                                <span className="ps-ev-value">${psDrawerRow.inventoryValue.toLocaleString()}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* SKU Breakdown */}
+                          <div className="dp-section">
+                            <div className="dp-section-title">
+                              <GridOnOutlined sx={{ fontSize: 12 }}/> SKU-Level Breakdown
+                            </div>
+                            <div className="ps-sku-list-new">
+                              {psDrawerRow.skuBreakdown.map((sku, i) => {
+                                const rc = psRiskColor(sku.riskLevel);
+                                return (
+                                  <div key={i} className="ps-sku-item">
+                                    <div className="ps-sku-item-top">
+                                      <div>
+                                        <div className="ps-sku-item-name">{sku.productName}</div>
+                                        <div className="ps-sku-item-code">{sku.sku}</div>
+                                      </div>
+                                      <span className="ps-sku-item-risk" style={{ background: rc.bg, color: rc.text, border: `1px solid ${rc.border}` }}>
+                                        {sku.riskLevel}
+                                      </span>
+                                    </div>
+                                    <div className="ps-sku-item-stats">
+                                      <span><span className="ps-sku-stat-lbl">BOH</span> {sku.bohQty}</span>
+                                      <span><span className="ps-sku-stat-lbl">Shelf</span> {sku.shelfQty}</span>
+                                      <span><span className="ps-sku-stat-lbl">0-Sale</span> {sku.zeroSalesDays}d</span>
+                                      <span><span className="ps-sku-stat-lbl">Value</span> ${sku.inventoryValue.toLocaleString()}</span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Linked Tasks */}
+                          {psDrawerRow.linkedTasks > 0 && (
+                            <div className="dp-section">
+                              <div className="dp-section-title">
+                                <AssignmentOutlined sx={{ fontSize: 12 }}/> Linked Operations Queue Tasks
+                              </div>
+                              <div className="eac2-entity-card eac2-entity-card--progress" style={{ marginTop: 4 }}>
+                                <div className="eac2-entity-header">
+                                  <span className="eac2-entity-name">OQ-PS-{psDrawerRow.id.replace('ps-', '')}</span>
+                                  <span className="eac2-entity-status-badge eac2-entity-status-badge--progress">Auto-Created</span>
+                                </div>
+                                <div className="eac2-entity-detail">Inventory Check / Cycle Count · {store.name}</div>
+                                <div className="eac2-entity-manager">
+                                  <PersonOutlined sx={{ fontSize: 12 }}/> Assigned to <strong>{store.manager}</strong>
+                                </div>
+                                <div className="eac2-entity-task-row">
+                                  <span className="eac2-entity-task-info">
+                                    <AccessTimeOutlined sx={{ fontSize: 12 }}/> Source: Phantom Stock Alert · SLA: 24–48h · Priority: {psDrawerRow.riskLevel === 'High' ? 'High' : 'Medium'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Recommended Action */}
+                          <div className="dp-section">
+                            <div className="dp-section-title">
+                              <AutoAwesomeOutlined sx={{ fontSize: 12 }}/> Recommended Action
+                            </div>
+                            <div className="dp-title-block">
+                              <p className="dp-description">{psDrawerRow.recommendedAction}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="dp-actions">
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<OpenInNewOutlined sx={{ fontSize: 14 }}/>}
+                            onClick={() => {
+                              setPsDrawerRow(null);
+                              navigate('/command-center/operations-queue', {
+                                state: {
+                                  prefillFromAlert: {
+                                    alertId: `phantom-${psDrawerRow.id}`,
+                                    title: `Phantom Stock — ${psDrawerRow.department} / ${psDrawerRow.itemClass}`,
+                                    description: psDrawerRow.whyFlagged,
+                                    severity: psDrawerRow.riskLevel === 'High' ? 'critical' : 'warning',
+                                    source: 'Automated Execution Alert',
+                                    stores: [{ name: store.name, manager: store.manager, detail: psDrawerRow.recommendedAction }],
+                                  },
+                                },
+                              });
+                            }}
+                          >
+                            Open in Operations Queue
+                          </Button>
+                          <Button variant="outlined" onClick={() => setPsDrawerRow(null)}>
+                            Close
+                          </Button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
+
             {/* Benchmarking Tab — relative performance intelligence */}
             {activeTab === 'benchmarking' && (() => {
               const benchmarks = getBenchmarks();
@@ -3795,24 +4704,30 @@ export const StoreCenter: React.FC = () => {
       {/* ── SM Broadcast Detail Panel (right slide-in, mirrors DM Home) ── */}
       {smBroadcastPanel && (() => {
         const { source, broadcast: b, fullMessage, scope, keyDates, actionItems, attachments } = smBroadcastPanel;
-        const priorityClass = b.priority.toLowerCase();
         const senderInitials = b.sender.split(/[ ·]+/).filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase();
         const senderRole = source === 'HQ' ? 'HQ' : 'District Manager';
         return (
           <>
             <div className="detail-panel-overlay" onClick={() => setSmBroadcastPanel(null)} />
             <div className="detail-panel">
-              <div className="detail-panel-header">
-                <button className="detail-panel-close" onClick={() => setSmBroadcastPanel(null)}>
-                  <CloseOutlined sx={{ fontSize: 18 }}/>
-                </button>
+              <div className="dp-hero-header">
+                <div className="dp-hero-top">
+                  <div className="dp-hero-icon" style={{ background: '#fce7f3', color: '#9d174d' }}>
+                    <CampaignOutlined sx={{ fontSize: 16 }}/>
+                  </div>
+                  <span className="dp-hero-type">{b.category?.toUpperCase()}</span>
+                  <button className="dp-hero-close" onClick={() => setSmBroadcastPanel(null)}>
+                    <CloseOutlined sx={{ fontSize: 17 }}/>
+                  </button>
+                </div>
+                <h2 className="dp-hero-title">{b.title}</h2>
+                <div className="dp-hero-pills">
+                  <span className="dp-hero-pill" style={b.priority === 'HIGH' ? { background: '#fee2e2', color: '#b91c1c' } : b.priority === 'MEDIUM' ? { background: '#fef3c7', color: '#92400e' } : { background: '#dbeafe', color: '#1d4ed8' }}>
+                    {b.priority} Priority
+                  </span>
+                </div>
               </div>
               <div className="detail-panel-body">
-                <div className="dp-severity-row">
-                  <span className={`dp-priority-badge ${priorityClass}`}>{b.priority}</span>
-                  <span className="dp-category-badge">{b.category}</span>
-                </div>
-                <h2 className="dp-title">{b.title}</h2>
                 <div className="dp-broadcast-message">
                   {fullMessage.split('\n\n').map((para, i) => (
                     <p key={i}>{para}</p>
@@ -4002,27 +4917,29 @@ export const StoreCenter: React.FC = () => {
           <>
             <div className="detail-panel-overlay" onClick={() => setActiveKPIPanel(null)} />
             <div className="detail-panel">
-              <div className="detail-panel-header">
-                <button className="detail-panel-close" onClick={() => setActiveKPIPanel(null)}>
-                  <CloseOutlined sx={{ fontSize: 18 }}/>
-                </button>
+              <div className="dp-hero-header">
+                <div className="dp-hero-top">
+                  <div className="dp-hero-icon" style={{ background: '#dbeafe', color: '#1d4ed8' }}>
+                    <BarChartOutlined sx={{ fontSize: 16 }}/>
+                  </div>
+                  <span className="dp-hero-type">{activeKPIPanel.category?.toUpperCase()} · 52-WEEK TREND</span>
+                  <button className="dp-hero-close" onClick={() => setActiveKPIPanel(null)}>
+                    <CloseOutlined sx={{ fontSize: 17 }}/>
+                  </button>
+                </div>
+                <h2 className="dp-hero-title">{activeKPIPanel.label}</h2>
+                <div className="dp-hero-pills">
+                  <span className="dp-hero-pill" style={activeKPIPanel.status === 'negative' ? { background: '#fee2e2', color: '#b91c1c' } : activeKPIPanel.status === 'warning' ? { background: '#fef3c7', color: '#92400e' } : { background: '#dcfce7', color: '#166534' }}>
+                    Current: {activeKPIPanel.primaryValue}{activeKPIPanel.primaryUnit ? ` ${activeKPIPanel.primaryUnit}` : ''}
+                  </span>
+                  {activeKPIPanel.microInsight && (
+                    <span className="dp-hero-pill" style={{ background: '#f1f5f9', color: '#475569' }}>
+                      {activeKPIPanel.microInsight}
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="detail-panel-body">
-                <div className="dp-severity-row">
-                  <span className={`dp-severity-badge ${activeKPIPanel.status === 'negative' ? 'critical' : activeKPIPanel.status === 'warning' ? 'warning' : 'risk'}`}>
-                    {activeKPIPanel.category.toUpperCase()}
-                  </span>
-                  <span className="dp-source">
-                    <BarChartOutlined sx={{ fontSize: 11 }}/>
-                    52-Week Trend
-                  </span>
-                </div>
-
-                <h2 className="dp-title">{activeKPIPanel.label}</h2>
-                <p className="dp-description">
-                  Current: <strong>{activeKPIPanel.primaryValue}</strong>{activeKPIPanel.primaryUnit ? ` ${activeKPIPanel.primaryUnit}` : ''}
-                  {activeKPIPanel.microInsight && <> · {activeKPIPanel.microInsight}</>}
-                </p>
 
                 {/* Period vs YoY */}
                 <div className="dp-section">
@@ -4188,29 +5105,30 @@ export const StoreCenter: React.FC = () => {
           <>
             <div className="detail-panel-overlay" onClick={() => setAuditCellDetail(null)} />
             <div className="detail-panel">
-              <div className="detail-panel-header">
-                <button className="detail-panel-close" onClick={() => setAuditCellDetail(null)}>
-                  <CloseOutlined sx={{ fontSize: 18 }}/>
-                </button>
-              </div>
-              <div className="detail-panel-body">
-                <div className="dp-severity-row">
-                  <span
-                    className="dp-severity-badge"
-                    style={{ background: getComplianceColor(d.score), color: getComplianceTextColor(d.score) }}
-                  >
-                    {d.score}% COMPLIANCE
+              <div className="dp-hero-header">
+                <div className="dp-hero-top">
+                  <div className="dp-hero-icon" style={{ background: '#cffafe', color: '#0e7490' }}>
+                    <AssignmentTurnedInOutlined sx={{ fontSize: 16 }}/>
+                  </div>
+                  <span className="dp-hero-type">8-WEEK AUDIT LENS</span>
+                  <button className="dp-hero-close" onClick={() => setAuditCellDetail(null)}>
+                    <CloseOutlined sx={{ fontSize: 17 }}/>
+                  </button>
+                </div>
+                <h2 className="dp-hero-title">{d.category} Audit</h2>
+                <div className="dp-hero-pills">
+                  <span className="dp-hero-pill" style={{ background: getComplianceColor(d.score), color: getComplianceTextColor(d.score) }}>
+                    {d.score}% Compliance
                   </span>
-                  <span className="dp-source">
-                    <AssignmentTurnedInOutlined sx={{ fontSize: 11 }}/>
-                    8-Week Audit Lens
+                  <span className="dp-hero-pill" style={{ background: '#f1f5f9', color: '#475569' }}>
+                    #{store.number} · {store.name}
                   </span>
                 </div>
-
-                <h2 className="dp-title">{d.category} Audit</h2>
-                <p className="dp-description">
-                  #{store.number} — {store.name} · Week of {d.weekDate} ({d.weekLabel}) · Auditor: {priors[0].auditor}
-                </p>
+              </div>
+              <div className="detail-panel-body">
+                <div className="dp-title-block">
+                  <p className="dp-description">Week of {d.weekDate} ({d.weekLabel}) · Auditor: {priors[0].auditor}</p>
+                </div>
 
                 <div className="dp-impact-summary">
                   {d.trend === 'improving' && <TrendingUpOutlined sx={{ fontSize: 14 }}/>}

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export type TaskStatus = 'Pending' | 'In Progress' | 'Completed';
-export type TaskType = 'Add' | 'Remove' | 'Move' | 'Adjust Facing' | 'Reset Shelf' | 'Update Label' | 'Install Fixture';
+export type TaskType = 'Add' | 'Remove' | 'Move' | 'Adjust Facing' | 'Reset Shelf' | 'Update Label' | 'Install Fixture' | 'POG Correction' | 'Inventory Check' | 'Shelf Replenishment';
 export type Priority = 'High' | 'Medium' | 'Low';
 
 export interface ExecutionTask {
@@ -28,7 +28,8 @@ export interface ExecutionTask {
   category: string;
   createdAt: string;
   localizationId: string;
-  source?: 'AI POG Audit' | 'Localization Engine' | 'Broadcast' | 'Manual' | 'Field Signal' | 'BOH Alert';
+  source?: 'AI POG Audit' | 'Localization Engine' | 'Broadcast' | 'Manual' | 'Field Signal' | 'BOH Alert' | 'Automated Execution Alert';
+  alertType?: 'BOH-to-Shelf Sync' | 'Phantom Stock' | 'POG Compliance Gap';
   sourceLink?: string;
   fieldSignalId?: string;
   slaHours?: number;

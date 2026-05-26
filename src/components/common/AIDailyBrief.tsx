@@ -7,6 +7,9 @@ import TrendingUpOutlined from '@mui/icons-material/TrendingUpOutlined';
 import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined';
 import StarBorderOutlined from '@mui/icons-material/StarBorderOutlined';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
+import HeadphonesOutlined from '@mui/icons-material/HeadphonesOutlined';
+import { AudioPlayer } from './AudioPlayer';
+import './AudioPlayer.css';
 
 export type BriefSectionIcon = 'triage' | 'performance' | 'ops' | 'customer' | 'recommendations';
 
@@ -74,6 +77,15 @@ const BriefSummary: React.FC<{ brief: AIDailyBriefData; userName?: string }> = (
   </div>
 );
 
+// Flatten brief into a readable plain-text string for TTS
+function briefToText(brief: AIDailyBriefData, userName?: string): string {
+  const greeting = `Good ${new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, ${userName || 'Manager'}. ${brief.greeting}`;
+  const sections = brief.sections
+    .map(s => `${s.title}. ${s.bullets.map(b => b.replace(/<[^>]+>/g, '')).join('. ')}`)
+    .join('. ');
+  return `${greeting}. ${sections}. ${brief.closing}`;
+}
+
 export const AIDailyBrief: React.FC<AIDailyBriefProps> = ({
   brief,
   userName,
@@ -83,6 +95,9 @@ export const AIDailyBrief: React.FC<AIDailyBriefProps> = ({
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
   const [showModal, setShowModal] = useState(false);
+  const [showPlayer, setShowPlayer] = useState(false);
+
+  const briefText = briefToText(brief, userName);
 
   return (
     <>
@@ -99,22 +114,51 @@ export const AIDailyBrief: React.FC<AIDailyBriefProps> = ({
               </div>
             </div>
           </div>
-          {metaSuffix && (
-            <div className="di-brief-meta">
-              <span>{metaSuffix}</span>
-            </div>
-          )}
+          <div className="di-brief-header-right">
+            {metaSuffix && (
+              <div className="di-brief-meta">
+                <span>{metaSuffix}</span>
+              </div>
+            )}
+            <button
+              className={`aup-listen-btn${showPlayer ? ' aup-listen-btn--active' : ''}`}
+              onClick={(e) => { e.stopPropagation(); setShowPlayer(v => !v); if (isCollapsed) setIsCollapsed(false); }}
+              title="Listen to brief"
+            >
+              <span className="aup-listen-btn-icon">
+                {showPlayer
+                  ? <span className="aup-soundwave aup-soundwave--sm"><span/><span/><span/><span/></span>
+                  : <HeadphonesOutlined sx={{ fontSize: 14 }} />
+                }
+              </span>
+              {showPlayer ? 'Playing…' : 'Listen'}
+            </button>
+          </div>
         </div>
+
+        {showPlayer && (
+          <div className="di-brief-audio-bar">
+            <AudioPlayer
+              text={briefText}
+              title="AI Daily Brief"
+              variant="bar"
+              onClose={() => setShowPlayer(false)}
+            />
+          </div>
+        )}
+
         <div className="di-brief-body-wrapper">
           <div className={`di-brief-body ${isCollapsed ? 'collapsed' : ''}`}>
             <BriefSummary brief={brief} userName={userName} />
           </div>
           {!isCollapsed && <div className="di-brief-scroll-fade" />}
           {!isCollapsed && (
-            <button className="di-brief-read-more" onClick={() => setShowModal(true)}>
-              <span>Read Full Brief</span>
-              <KeyboardArrowRight sx={{ fontSize: 14 }} />
-            </button>
+            <div className="di-brief-cta-row">
+              <button className="di-brief-read-more" onClick={() => setShowModal(true)}>
+                <span>Read Full Brief</span>
+                <KeyboardArrowRight sx={{ fontSize: 14 }} />
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -127,10 +171,35 @@ export const AIDailyBrief: React.FC<AIDailyBriefProps> = ({
                 <AutoAwesomeOutlined sx={{ fontSize: 18 }} />
                 <h2>AI Daily Brief</h2>
               </div>
-              <button className="di-brief-modal-close" onClick={() => setShowModal(false)}>
-                <CloseOutlined sx={{ fontSize: 20 }} />
-              </button>
+              <div className="di-brief-modal-header-actions">
+                <button
+                  className={`aup-listen-btn${showPlayer ? ' aup-listen-btn--active' : ''}`}
+                  onClick={() => setShowPlayer(v => !v)}
+                  title="Listen to brief"
+                >
+                  <span className="aup-listen-btn-icon">
+                    {showPlayer
+                      ? <span className="aup-soundwave aup-soundwave--sm"><span/><span/><span/><span/></span>
+                      : <HeadphonesOutlined sx={{ fontSize: 14 }} />
+                    }
+                  </span>
+                  {showPlayer ? 'Playing…' : 'Listen'}
+                </button>
+                <button className="di-brief-modal-close" onClick={() => setShowModal(false)}>
+                  <CloseOutlined sx={{ fontSize: 20 }} />
+                </button>
+              </div>
             </div>
+            {showPlayer && (
+              <div className="di-brief-modal-audio">
+                <AudioPlayer
+                  text={briefText}
+                  title="AI Daily Brief"
+                  variant="card"
+                  onClose={() => setShowPlayer(false)}
+                />
+              </div>
+            )}
             <div className="di-brief-modal-content">
               <BriefSummary brief={brief} userName={userName} />
             </div>

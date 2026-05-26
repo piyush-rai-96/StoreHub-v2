@@ -74,6 +74,7 @@ const ALL_MODULES: SidebarRoute[] = [
     icon: <Inventory2Outlined sx={{ fontSize: 20 }} />,
     children: [
       { value: 'product-opportunities', label: 'Product Opportunities', icon: <TrendingUpOutlined sx={{ fontSize: 18 }} />, link: '/inventory-management/product-opportunities' },
+      { value: 'product-execution', label: 'Product Execution', icon: <AssignmentOutlined sx={{ fontSize: 18 }} />, link: '/inventory-management/product-execution' },
       { value: 'approvals-execution', label: 'Approvals & Execution', icon: <GavelOutlined sx={{ fontSize: 18 }} />, link: '/inventory-management/approvals-and-execution' },
     ],
   },

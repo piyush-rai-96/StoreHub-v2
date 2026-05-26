@@ -28,6 +28,9 @@ import RemoveOutlined from '@mui/icons-material/RemoveOutlined';
 import OpenWithOutlined from '@mui/icons-material/OpenWithOutlined';
 import TuneOutlined from '@mui/icons-material/TuneOutlined';
 import LabelOutlined from '@mui/icons-material/LabelOutlined';
+import BoltOutlined from '@mui/icons-material/BoltOutlined';
+import InfoOutlined from '@mui/icons-material/InfoOutlined';
+import GridOnOutlined from '@mui/icons-material/GridOnOutlined';
 import { useNavigate } from 'react-router-dom';
 import { Button, Badge, Card, Tabs } from 'impact-ui';
 import { useExecutionTasks, ExecutionTask, TaskStatus, Priority } from '../context/ExecutionTasksContext';
@@ -497,6 +500,8 @@ export const TaskCenter: React.FC = () => {
 
   // Custom dropdown state for Create Task modal
   const [openDropdown, setOpenDropdown] = useState<null | 'priority' | 'type' | 'assignee'>(null);
+  // Custom dropdown state for Detail panel
+  const [detailDropdown, setDetailDropdown] = useState<null | 'status' | 'owner'>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
@@ -574,7 +579,7 @@ export const TaskCenter: React.FC = () => {
           category: payload.alertId === 'alert-inventory' ? 'Inventory' : 'Operations',
           createdAt,
           localizationId: `alert-${payload.alertId || 'gen'}-${idx}`,
-          source: 'Manual',
+          source: 'Automated Execution Alert',
           slaHours: priority === 'High' ? 24 : 48,
           severityRationale: s.detail,
         };
@@ -720,6 +725,7 @@ export const TaskCenter: React.FC = () => {
     if (source === 'Localization Engine') return <AutoAwesomeOutlined sx={{ fontSize: 10 }} />;
     if (source === 'Broadcast') return <WarningAmberOutlined sx={{ fontSize: 10 }} />;
     if (source === 'Field Signal') return <SensorsOutlined sx={{ fontSize: 10 }} />;
+    if (source === 'Automated Execution Alert') return <BoltOutlined sx={{ fontSize: 10 }} />;
     return null;
   };
 
@@ -727,6 +733,7 @@ export const TaskCenter: React.FC = () => {
     if (source === 'AI POG Audit' || source === 'Localization Engine') return 'tc-source--ai';
     if (source === 'Broadcast') return 'tc-source--broadcast';
     if (source === 'Field Signal') return 'tc-source--signal';
+    if (source === 'Automated Execution Alert') return 'tc-source--automated';
     return 'tc-source--manual';
   };
 
@@ -896,8 +903,8 @@ export const TaskCenter: React.FC = () => {
         <div className="tc-prefill-overlay">
           <Card size="extraSmall" sx={{ maxWidth: '100%', minHeight: 0, padding: '28px 32px' }}>
             <div className="tc-prefill-spinner" />
-            <div className="tc-prefill-title">Creating tasks in Operations Queue…</div>
-            <div className="tc-prefill-sub">Generating one task per impacted store and assigning to the respective Store Manager.</div>
+            <div className="tc-prefill-title">Linking auto-created tasks…</div>
+            <div className="tc-prefill-sub">Fetching auto-created tasks for each impacted store and loading your Operations Queue.</div>
           </Card>
         </div>
       )}
@@ -906,7 +913,7 @@ export const TaskCenter: React.FC = () => {
         <div className="tc-prefill-banner">
           <div className="tc-prefill-banner-icon"><TaskAltOutlined sx={{ fontSize: 16 }} /></div>
           <div className="tc-prefill-banner-body">
-            <div className="tc-prefill-banner-title">{prefillBanner.count} tasks created from "{prefillBanner.title}"</div>
+            <div className="tc-prefill-banner-title">{prefillBanner.count} auto-created tasks linked for "{prefillBanner.title}"</div>
             <div className="tc-prefill-banner-sub">Auto-assigned to {prefillBanner.managers.join(', ')}</div>
           </div>
           <Button
@@ -1375,6 +1382,41 @@ export const TaskCenter: React.FC = () => {
                   </div>
                 )}
 
+                {/* POG Compliance info block — shown when task is POG-related */}
+                {(selectedTask.type === 'POG Correction' || selectedTask.title?.toLowerCase().includes('pog') || selectedTask.description?.toLowerCase().includes('planogram')) && (
+                  <div className="tc-detail-block">
+                    <div className="tc-detail-block-label">
+                      <GridOnOutlined sx={{ fontSize: 12 }}/> POG Compliance Context
+                      <InfoOutlined sx={{ fontSize: 11, marginLeft: 4, color: '#7c3aed', opacity: 0.7 }}/>
+                    </div>
+                    <div className="tc-detail-pog-info">
+                      <div className="tc-pog-info-row">
+                        <div className="tc-pog-info-icon">
+                          <GridOnOutlined sx={{ fontSize: 14 }}/>
+                        </div>
+                        <div className="tc-pog-info-body">
+                          <p className="tc-pog-info-title">What is a POG Compliance Gap?</p>
+                          <p className="tc-pog-info-desc">The shelf layout captured in the shelf audit does not match the active planogram. Products are in wrong positions, missing facings, or placed on incorrect fixtures.</p>
+                        </div>
+                      </div>
+                      <div className="tc-pog-checklist">
+                        {[
+                          'Verify active planogram is current and applies to this store',
+                          'Check product placement matches planogram fixture assignments',
+                          'Confirm facing count meets minimum required',
+                          'Ensure price tags and signage are correctly placed',
+                          'Photograph corrected shelf as evidence of completion',
+                        ].map((item, i) => (
+                          <div key={i} className="tc-pog-check-item">
+                            <InfoOutlined sx={{ fontSize: 12 }}/>
+                            {item}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Field Signal back-link (premium provenance block) */}
                 {selectedTask.source === 'Field Signal' && selectedTask.fieldSignalId && (
                   <div className="tc-detail-block">
@@ -1404,37 +1446,68 @@ export const TaskCenter: React.FC = () => {
                   <div className="tc-detail-grid">
                     <div className="tc-detail-cell">
                       <span className="tc-detail-cell-label">Status</span>
-                      <select
-                        className="tc-detail-input-select"
-                        value={selectedTask.status}
-                        onChange={e => {
-                          updateTaskStatus(selectedTask.id, e.target.value as TaskStatus);
-                          setSelectedTask({ ...selectedTask, status: e.target.value as TaskStatus });
-                        }}
+                      <PortalDropdown
+                        id="detail-status-dd"
+                        open={detailDropdown === 'status'}
+                        onToggle={() => setDetailDropdown(d => d === 'status' ? null : 'status')}
+                        onClose={() => setDetailDropdown(null)}
+                        trigger={
+                          <span className="tc-dd-label">
+                            {selectedTask.status}
+                            <KeyboardArrowDown sx={{ fontSize: 14 }} className={`tc-dd-chevron${detailDropdown === 'status' ? ' tc-dd-chevron--open' : ''}`}/>
+                          </span>
+                        }
                       >
-                        <option value="Pending">Pending</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Completed">Completed</option>
-                      </select>
+                        {(['Pending', 'In Progress', 'Completed'] as TaskStatus[]).map(s => (
+                          <div
+                            key={s}
+                            className={`tc-dd-item${selectedTask.status === s ? ' tc-dd-item--active' : ''}`}
+                            onClick={() => {
+                              updateTaskStatus(selectedTask.id, s);
+                              setSelectedTask({ ...selectedTask, status: s });
+                              setDetailDropdown(null);
+                            }}
+                          >
+                            {selectedTask.status === s && <Check sx={{ fontSize: 13 }}/>} {s}
+                          </div>
+                        ))}
+                      </PortalDropdown>
                     </div>
                     <div className="tc-detail-cell">
                       <span className="tc-detail-cell-label">Owner</span>
-                      <select
-                        className="tc-detail-input-select"
-                        value={selectedTask.assignedTo || ''}
-                        onChange={e => {
-                          const member = teamMembers.find(m => m.id === e.target.value);
-                          if (member) {
-                            assignTask(selectedTask.id, member.id, member.name);
-                            setSelectedTask({ ...selectedTask, assignedTo: member.id, assignedToName: member.name });
-                          }
-                        }}
+                      <PortalDropdown
+                        id="detail-owner-dd"
+                        open={detailDropdown === 'owner'}
+                        onToggle={() => setDetailDropdown(d => d === 'owner' ? null : 'owner')}
+                        onClose={() => setDetailDropdown(null)}
+                        trigger={
+                          <span className="tc-dd-label">
+                            {selectedTask.assignedToName || 'Unassigned'}
+                            <KeyboardArrowDown sx={{ fontSize: 14 }} className={`tc-dd-chevron${detailDropdown === 'owner' ? ' tc-dd-chevron--open' : ''}`}/>
+                          </span>
+                        }
+                        maxHeight={220}
                       >
-                        <option value="">Unassigned</option>
+                        <div
+                          className={`tc-dd-item${!selectedTask.assignedTo ? ' tc-dd-item--active' : ''}`}
+                          onClick={() => setDetailDropdown(null)}
+                        >
+                          Unassigned
+                        </div>
                         {teamMembers.map(m => (
-                          <option key={m.id} value={m.id}>{m.name} — {m.role}</option>
+                          <div
+                            key={m.id}
+                            className={`tc-dd-item${selectedTask.assignedTo === m.id ? ' tc-dd-item--active' : ''}`}
+                            onClick={() => {
+                              assignTask(selectedTask.id, m.id, m.name);
+                              setSelectedTask({ ...selectedTask, assignedTo: m.id, assignedToName: m.name });
+                              setDetailDropdown(null);
+                            }}
+                          >
+                            {selectedTask.assignedTo === m.id && <Check sx={{ fontSize: 13 }}/>} {m.name} — {m.role}
+                          </div>
                         ))}
-                      </select>
+                      </PortalDropdown>
                     </div>
                     <div className="tc-detail-cell">
                       <span className="tc-detail-cell-label">Due Date</span>
@@ -1488,7 +1561,7 @@ export const TaskCenter: React.FC = () => {
                 {selectedTask.slaHours && sla && (
                   <div className="tc-detail-block">
                     <div className="tc-detail-block-label"><AccessTimeOutlined sx={{ fontSize: 12 }} /> SLA Tracking</div>
-                    <Card size="extraSmall" sx={{ maxWidth: '100%', minHeight: 0, padding: '12px 14px' }}>
+                    <div className="tc-detail-sla-card">
                       <div className="tc-detail-sla-card-row">
                         <span className="tc-detail-sla-card-label">Target window</span>
                         <span className="tc-detail-sla-card-value">{selectedTask.slaHours} hours from creation</span>
@@ -1497,7 +1570,7 @@ export const TaskCenter: React.FC = () => {
                         <span className="tc-detail-sla-card-label">Status</span>
                         <span className={`tc-detail-sla-pill ${sla.className}`}>{sla.label}</span>
                       </div>
-                    </Card>
+                    </div>
                   </div>
                 )}
 
@@ -1523,24 +1596,24 @@ export const TaskCenter: React.FC = () => {
                     <div className="tc-detail-block-label"><ImageOutlined sx={{ fontSize: 12 }} /> Audit Evidence</div>
                     <div className="tc-detail-proof-grid">
                       {selectedTask.beforeImage && (
-                        <Card size="extraSmall" sx={{ maxWidth: '100%', minHeight: 0, padding: 0, overflow: 'hidden' }}>
+                        <div className="tc-detail-proof-item">
                           <div className="tc-detail-proof-label">Before</div>
                           <div className="tc-detail-proof-placeholder">
                             <ImageOutlined sx={{ fontSize: 22 }} />
                             <span>Shelf photo captured</span>
                             <span className="tc-detail-proof-file">{selectedTask.beforeImage.split('/').pop()}</span>
                           </div>
-                        </Card>
+                        </div>
                       )}
                       {selectedTask.afterImage && (
-                        <Card size="extraSmall" sx={{ maxWidth: '100%', minHeight: 0, padding: 0, overflow: 'hidden' }}>
+                        <div className="tc-detail-proof-item">
                           <div className="tc-detail-proof-label after">After</div>
                           <div className="tc-detail-proof-placeholder">
                             <ImageOutlined sx={{ fontSize: 22 }} />
                             <span>Expected layout</span>
                             <span className="tc-detail-proof-file">{selectedTask.afterImage.split('/').pop()}</span>
                           </div>
-                        </Card>
+                        </div>
                       )}
                     </div>
                   </div>

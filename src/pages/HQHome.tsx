@@ -27,9 +27,16 @@ import LanguageOutlined from '@mui/icons-material/LanguageOutlined';
 import DarkModeOutlined from '@mui/icons-material/DarkModeOutlined';
 import ShowChartOutlined from '@mui/icons-material/ShowChartOutlined';
 import AssignmentTurnedInOutlined from '@mui/icons-material/AssignmentTurnedInOutlined';
+import HeadphonesOutlined from '@mui/icons-material/HeadphonesOutlined';
+import SyncOutlined from '@mui/icons-material/SyncOutlined';
+import GridOnOutlined from '@mui/icons-material/GridOnOutlined';
+import InventoryOutlined from '@mui/icons-material/InventoryOutlined';
+import PersonOutlined from '@mui/icons-material/PersonOutlined';
 import { Button, Card } from 'impact-ui';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { AudioPlayer } from '../components/common/AudioPlayer';
+import '../components/common/AudioPlayer.css';
 import { openAskAlan } from '../utils/openAskAlan';
 // Reuse DM Home styles to mirror the same layout/components on HQ Home
 import './StoreOpsHome.css';
@@ -145,6 +152,58 @@ const getGreeting = (): { text: string; icon: React.ReactNode } => {
   return { text: 'Good evening', icon: <DarkModeOutlined sx={{ fontSize: 20 }}/> };
 };
 
+// ─── HQ EAC mock data ────────────────────────────────────────────────────────
+const HQ_EAC_GROUPS = [
+  {
+    id: 'boh-to-shelf', type: 'boh' as const,
+    title: 'BOH-to-Shelf Sync',
+    taskType: 'Shelf Replenishment',
+    severity: 'High' as const, severityClass: 'high' as const,
+    desc: 'Shelf gaps detected with available backroom inventory across multiple districts. Items in BOH not reaching shelves.',
+    regionCount: 3, districtCount: 14, storeCount: 38, skuCount: 186, riskValue: '$94.2K',
+    taskTotal: 72, taskOpen: 31, taskProg: 28, taskSub: 13, taskOver: 8,
+    taskCompletion: 58,
+    lastDetected: '6 min ago',
+    entities: [
+      { name: 'Southeast Region', detail: '7 districts · 18 stores · 82 SKUs · $42K at risk', status: 'critical' as const, tasks: 31, dm: 'Lisa Nguyen' },
+      { name: 'Northeast Region', detail: '4 districts · 12 stores · 64 SKUs · $32K at risk', status: 'progress' as const, tasks: 26, dm: 'Marcus Reed' },
+      { name: 'Central Region',   detail: '3 districts · 8 stores · 40 SKUs · $20K at risk',  status: 'progress' as const, tasks: 15, dm: 'David Park' },
+    ],
+  },
+  {
+    id: 'phantom-stock', type: 'phantom' as const,
+    title: 'Phantom Stock',
+    taskType: 'Inventory Check / Cycle Count',
+    severity: 'High' as const, severityClass: 'high' as const,
+    desc: 'High-stock, zero-sales inventory concentrated across key districts. Significant inventory value at risk.',
+    regionCount: 4, districtCount: 22, storeCount: 42, skuCount: 410, riskValue: '$286K',
+    taskTotal: 98, taskOpen: 44, taskProg: 32, taskSub: 22, taskOver: 11,
+    taskCompletion: 76,
+    lastDetected: '18 min ago',
+    entities: [
+      { name: 'Southeast Region', detail: '8 districts · 16 stores · 148 SKUs · $108K at risk', status: 'critical'  as const, tasks: 38, dm: 'Lisa Nguyen' },
+      { name: 'Pacific Region',   detail: '6 districts · 12 stores · 112 SKUs · $82K at risk',  status: 'progress'  as const, tasks: 28, dm: 'Rachel Torres' },
+      { name: 'Northeast Region', detail: '5 districts · 9 stores · 96 SKUs · $62K at risk',    status: 'progress'  as const, tasks: 21, dm: 'Marcus Reed' },
+      { name: 'Central Region',   detail: '3 districts · 5 stores · 54 SKUs · $34K at risk',    status: 'submitted' as const, tasks: 11, dm: 'David Park' },
+    ],
+  },
+  {
+    id: 'pog-compliance', type: 'pog' as const,
+    title: 'POG Compliance Gap',
+    taskType: 'POG Correction',
+    severity: 'Medium' as const, severityClass: 'medium' as const,
+    desc: 'Shelf layout deviates from active planogram across multiple districts. Camera audits detected misplacements.',
+    regionCount: 2, districtCount: 9, storeCount: 24, skuCount: 64, riskValue: '$41K',
+    taskTotal: 48, taskOpen: 18, taskProg: 19, taskSub: 11, taskOver: 5,
+    taskCompletion: 83,
+    lastDetected: '22 min ago',
+    entities: [
+      { name: 'Southeast Region', detail: '5 districts · 14 stores · 38 fixtures deviating', status: 'critical' as const, tasks: 28, dm: 'Lisa Nguyen' },
+      { name: 'Central Region',   detail: '4 districts · 10 stores · 26 fixtures deviating', status: 'progress' as const, tasks: 20, dm: 'David Park' },
+    ],
+  },
+];
+
 // ─── Component ───
 export const HQHome: React.FC = () => {
   const { user } = useAuth();
@@ -156,6 +215,8 @@ export const HQHome: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isBriefCollapsed, setIsBriefCollapsed] = useState(false);
   const [showBriefModal, setShowBriefModal] = useState(false);
+  const [showBriefAudio, setShowBriefAudio] = useState(false);
+  const [neacDrawer, setNeacDrawer] = useState<null | typeof HQ_EAC_GROUPS[0]>(null);
   const [, setBroadcasts] = useState<BroadcastItem[]>(MOCK_BROADCASTS);
   const [selectedBroadcast, setSelectedBroadcast] = useState<BroadcastItem | null>(null);
   // District Leaderboard state
@@ -420,6 +481,9 @@ export const HQHome: React.FC = () => {
     </div>
   );
 
+  // Keep openHqAlertPanel ref alive for legacy HQ drawer (drawer still wires up hqAlertPanel state)
+  void openHqAlertPanel;
+
   return (
     <div className="store-ops-home hq-home">
       {/* ZONE 1: Welcome Header */}
@@ -466,7 +530,30 @@ export const HQHome: React.FC = () => {
               </div>
             </div>
           </div>
+          <button
+            className={`aup-listen-btn${showBriefAudio ? ' aup-listen-btn--active' : ''}`}
+            onClick={(e) => { e.stopPropagation(); setShowBriefAudio(v => !v); if (isBriefCollapsed) setIsBriefCollapsed(false); }}
+            title="Listen to brief"
+          >
+            <span className="aup-listen-btn-icon">
+              {showBriefAudio
+                ? <span className="aup-soundwave aup-soundwave--sm"><span/><span/><span/><span/></span>
+                : <HeadphonesOutlined sx={{ fontSize: 14 }} />
+              }
+            </span>
+            {showBriefAudio ? 'Playing…' : 'Listen'}
+          </button>
         </div>
+        {showBriefAudio && (
+          <div className="di-brief-audio-bar">
+            <AudioPlayer
+              text="Good afternoon. North America performance is on track this week. Total revenue reached $142M, up 3% versus plan and 2% week over week. Gross margin steady at 38.4%. Regional compliance at 91%. Top performing district: Pacific Northwest at 94 DPI. Focus areas: Southeast compliance gap at 78%, and open store escalations in Central region require attention."
+              title="AI Daily Brief"
+              variant="bar"
+              onClose={() => setShowBriefAudio(false)}
+            />
+          </div>
+        )}
         <div className="ai-brief-body-wrapper">
           <div className={`ai-brief-body ${isBriefCollapsed ? 'collapsed' : ''}`}>
             {aiBriefContent}
@@ -576,140 +663,161 @@ export const HQHome: React.FC = () => {
 
       {/* MAIN 2-COLUMN LAYOUT */}
       <div className="home-main-grid">
-        {/* LEFT COLUMN: Alerts */}
+        {/* LEFT COLUMN: NEAC */}
         <div className="home-col-left">
-          <div className="store-ops-section insights-section-v3">
-            <div className="section-header-v3">
-              <div className="section-title-v3">
-                <WarningAmberOutlined sx={{ fontSize: 16 }} className="header-icon-risk"/>
-                <h2>Alerts</h2>
+          {/* ── Network Execution Action Center ── */}
+          <div className="eac2-section">
+            <div className="eac2-header">
+              <div className="eac2-header-top">
+                <div className="eac2-title-block">
+                  <div className="eac2-icon-wrap">
+                    <BoltOutlined sx={{ fontSize: 18 }}/>
+                  </div>
+                  <div className="eac2-title-text">
+                    <h2 className="eac2-title">Alerts</h2>
+                    <p className="eac2-subtitle">System-generated execution risks across regions, districts, and categories</p>
+                  </div>
+                </div>
+                <div className="eac2-header-badges">
+                  <div className="eac2-sys-badge">
+                    <span className="eac2-sys-badge-dot"/>
+                    Network Monitored
+                  </div>
+                  <span className="eac2-refresh-time">Updated 6 min ago</span>
+                </div>
               </div>
-              <div className="insights-meta">
-                <span className="meta-positive">1 Positive</span>
-                <span className="meta-divider">•</span>
-                <span className="meta-neutral">2 At Risk</span>
+              <div className="eac2-summary-strip">
+                {[
+                  { val: HQ_EAC_GROUPS.reduce((s,g)=>s+g.taskTotal,0), lbl:'Network Tasks', cls:'' },
+                  { val: HQ_EAC_GROUPS.reduce((s,g)=>s+g.taskOpen,0),  lbl:'Open',         cls:'eac2-summary-tile-val--open' },
+                  { val: HQ_EAC_GROUPS.reduce((s,g)=>s+g.taskProg,0),  lbl:'In Progress',  cls:'eac2-summary-tile-val--prog' },
+                  { val: HQ_EAC_GROUPS.reduce((s,g)=>s+g.taskSub,0),   lbl:'Submitted',    cls:'eac2-summary-tile-val--sub' },
+                  { val: HQ_EAC_GROUPS.reduce((s,g)=>s+g.taskOver,0),  lbl:'Overdue',      cls:'eac2-summary-tile-val--over' },
+                ].map(t => (
+                  <div key={t.lbl} className="eac2-summary-tile">
+                    <span className={`eac2-summary-tile-val ${t.cls}`}>{t.val}</span>
+                    <span className="eac2-summary-tile-lbl">{t.lbl}</span>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="insights-content-v3">
-              {/* Compliance Risk — Critical */}
-              <Card size="extraSmall" sx={{ maxWidth: '100%', minHeight: 0, padding: 0, overflow: 'hidden', marginBottom: 'var(--space-lg)' }}>
-                <div className="hero-card-content">
-                  <div className="hero-card-header">
-                    <div className="hero-signal critical">
-                      <WarningAmberOutlined sx={{ fontSize: 14 }}/>
-                      <span>COMPLIANCE RISK</span>
-                    </div>
-                  </div>
-                  <h2 className="hero-headline">Execution Compliance Dropped 6% — District 11</h2>
-                  <p className="hero-context">3 stores missed Monday audit window. Estimated revenue impact $18K. DM Lisa Nguyen has been notified.</p>
-                  <div className="hero-impact">
-                    <ErrorOutlined sx={{ fontSize: 14 }}/>
-                    <span>Compliance gap widening — escalation recommended within 24h</span>
-                  </div>
-                  <div className="hero-top-store">
-                    <StoreOutlined sx={{ fontSize: 12 }}/>
-                    <span>District 11 — Florida (3 stores impacted)</span>
-                  </div>
-                  <div className="hero-actions">
-                    <button type="button" className="hero-action-primary hq-alert-cta" onClick={() => openHqAlertPanel('compliance-risk')}>
-                      <span>View Details</span>
-                      <KeyboardArrowRight sx={{ fontSize: 16 }}/>
-                    </button>
-                  </div>
-                </div>
-              </Card>
 
-              {/* District Performance Trending — Warning */}
-              <Card size="extraSmall" sx={{ maxWidth: '100%', minHeight: 0, padding: 0, overflow: 'hidden', marginBottom: 'var(--space-lg)' }}>
-                <div className="hero-card-content">
-                  <div className="hero-card-header">
-                    <div className="hero-signal warning">
-                      <TrendingUpOutlined sx={{ fontSize: 14 }}/>
-                      <span>DISTRICT TRENDING</span>
-                    </div>
-                    <div className="hero-overdue">
-                      <WarningAmberOutlined sx={{ fontSize: 12 }}/>
-                      <span>Action Needed</span>
-                    </div>
-                  </div>
-                  <h2 className="hero-headline">Execution Gaps Widening in 2 Districts</h2>
-                  <p className="hero-context">Compliance scores declining in District 11 and District 22. Correlated with audit misses and late broadcast acknowledgements.</p>
-                  <div className="hero-impact">
-                    <StoreOutlined sx={{ fontSize: 14 }}/>
-                    <span>District 14 +4% · District 08 +2% · District 22 –3%</span>
-                  </div>
-                  <div className="hero-top-store">
-                    <AutoAwesomeOutlined sx={{ fontSize: 12 }}/>
-                    <span>Ask Alan has prepared an action plan for these districts</span>
-                  </div>
-                  <div className="hero-actions">
-                    <button type="button" className="hero-action-primary hq-alert-cta" onClick={() => openHqAlertPanel('district-trending')}>
-                      <span>View Details</span>
-                      <KeyboardArrowRight sx={{ fontSize: 16 }}/>
-                    </button>
-                  </div>
-                </div>
-              </Card>
+            <div className="eac2-cards-grid">
+              {HQ_EAC_GROUPS.map(g => {
+                const pctOpen = Math.round((g.taskOpen / g.taskTotal) * 100);
+                const pctProg = Math.round((g.taskProg / g.taskTotal) * 100);
+                const pctSub  = Math.round((g.taskSub  / g.taskTotal) * 100);
+                const pctOver = Math.round((g.taskOver / g.taskTotal) * 100);
+                return (
+                  <div key={g.id} className={`eac2-card eac2-card--${g.type} eac2-card--network`} onClick={() => setNeacDrawer(g)}>
 
-              {/* Communication Gap */}
-              <Card size="extraSmall" sx={{ maxWidth: '100%', minHeight: 0, padding: 0, overflow: 'hidden', marginBottom: 'var(--space-lg)' }}>
-                <div className="hero-card-content">
-                  <div className="hero-card-header">
-                    <div className="hero-signal">
-                      <TrendingDownOutlined sx={{ fontSize: 14 }}/>
-                      <span>COMMUNICATION GAP</span>
-                    </div>
-                    <div className="hero-overdue">
-                      <AccessTimeOutlined sx={{ fontSize: 12 }}/>
-                      <span>3 districts below 85%</span>
-                    </div>
-                  </div>
-                  <h2 className="hero-headline">Broadcast Acknowledgement Rate Declining</h2>
-                  <p className="hero-context">Districts 11, 22, and 19 below the 85% threshold. Average response time has increased from 2.1h to 4.8h over the last 7 days.</p>
-                  <div className="hero-impact">
-                    <ErrorOutlined sx={{ fontSize: 14 }}/>
-                    <span>14-store acknowledgement gap on the latest Safety Protocol broadcast</span>
-                  </div>
-                  <div className="hero-top-store">
-                    <StoreOutlined sx={{ fontSize: 12 }}/>
-                    <span>Districts 11, 19, and 22 most impacted</span>
-                  </div>
-                  <div className="hero-actions">
-                    <button type="button" className="hero-action-primary hq-alert-cta" onClick={() => openHqAlertPanel('communication-gap')}>
-                      <span>View Details</span>
-                      <KeyboardArrowRight sx={{ fontSize: 16 }}/>
-                    </button>
-                  </div>
-                </div>
-              </Card>
+                    {/* MAIN: icon + title + desc + metrics + CTAs */}
+                    <div className="eac2-card-main">
+                      <div className="eac2-card-heading">
+                        <div className="eac2-card-icon">
+                          {g.type === 'boh'     && <SyncOutlined sx={{ fontSize: 20 }}/>}
+                          {g.type === 'phantom' && <InventoryOutlined sx={{ fontSize: 20 }}/>}
+                          {g.type === 'pog'     && <GridOnOutlined sx={{ fontSize: 20 }}/>}
+                        </div>
+                        <div className="eac2-card-heading-text">
+                          <h3 className="eac2-card-type">{g.title}</h3>
+                          <p className="eac2-card-desc">{g.desc}</p>
+                        </div>
+                        <div className="eac2-card-badges-col">
+                          <span className={`eac2-severity-badge eac2-severity-badge--${g.severityClass}`}>
+                            <WarningAmberOutlined sx={{ fontSize: 10 }}/> {g.severity}
+                          </span>
+                          <span className="eac2-sysgen-pill">
+                            <BoltOutlined sx={{ fontSize: 9 }}/> Auto-Tasked
+                          </span>
+                        </div>
+                      </div>
 
-              {/* Performance Win — Positive */}
-              <Card size="extraSmall" sx={{ maxWidth: '100%', minHeight: 0, padding: 0, overflow: 'hidden', marginBottom: 'var(--space-lg)' }}>
-                <div className="hero-card-content">
-                  <div className="hero-card-header">
-                    <div className="hero-signal" style={{ background: 'var(--ia-color-success-bg)', color: 'var(--ia-color-success)' }}>
-                      <TaskAltOutlined sx={{ fontSize: 14 }}/>
-                      <span>PERFORMANCE WIN</span>
+                      <div className="eac2-impact-row">
+                        <span className="eac2-metric">
+                          <GroupOutlined sx={{ fontSize: 13 }}/> <strong>{g.regionCount}</strong> Regions
+                        </span>
+                        <span className="eac2-metric">
+                          <BarChartOutlined sx={{ fontSize: 13 }}/> <strong>{g.districtCount}</strong> Districts
+                        </span>
+                        <span className="eac2-metric">
+                          <StoreOutlined sx={{ fontSize: 13 }}/> <strong>{g.storeCount}</strong> Stores
+                        </span>
+                        <span className="eac2-metric eac2-metric--risk">
+                          <ErrorOutlined sx={{ fontSize: 13 }}/> <strong>{g.riskValue}</strong> at risk
+                        </span>
+                      </div>
+
+                      <div className="eac2-card-footer">
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          endIcon={<KeyboardArrowRight sx={{ fontSize: 14 }}/>}
+                          onClick={e => { e.stopPropagation(); setNeacDrawer(g); }}
+                        >
+                          View Districts
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          onClick={e => {
+                            e.stopPropagation();
+                            navigate('/command-center/operations-queue', {
+                              state: {
+                                prefillFromAlert: {
+                                  alertId: g.id,
+                                  title: `[HQ] ${g.title}`,
+                                  description: `${g.taskType}: ${g.desc}`,
+                                  severity: g.severity === 'High' ? 'critical' : 'warning',
+                                  source: 'Automated Execution Alert',
+                                  stores: g.entities.map(e => ({ name: e.name, manager: e.dm, detail: e.detail })),
+                                },
+                              },
+                            });
+                          }}
+                        >
+                          Open Queue
+                        </Button>
+                        <span className="eac2-last-detected">{g.lastDetected}</span>
+                      </div>
                     </div>
+
+                    {/* RIGHT: task panel — 2×2 stat grid */}
+                    <div className="eac2-card-task-panel">
+                      <div className="eac2-task-panel-label">Auto-Created Tasks</div>
+                      <div className="eac2-task-panel-total">{g.taskTotal}</div>
+                      <div className="eac2-task-panel-type">{g.taskType} · {g.taskCompletion}% complete</div>
+                      <div className="eac2-progress-track">
+                        <div className="eac2-progress-seg eac2-progress-seg--over" style={{ width: `${pctOver}%` }}/>
+                        <div className="eac2-progress-seg eac2-progress-seg--open" style={{ width: `${pctOpen}%` }}/>
+                        <div className="eac2-progress-seg eac2-progress-seg--prog" style={{ width: `${pctProg}%` }}/>
+                        <div className="eac2-progress-seg eac2-progress-seg--sub"  style={{ width: `${pctSub}%` }}/>
+                      </div>
+                      <div className="eac2-tasks-breakdown">
+                        <div className="eac2-breakdown-item">
+                          <span className="eac2-breakdown-count" style={{ color: '#3b82f6' }}>{g.taskOpen}</span>
+                          <span className="eac2-breakdown-label">Open</span>
+                        </div>
+                        <div className="eac2-breakdown-item">
+                          <span className="eac2-breakdown-count" style={{ color: '#f59e0b' }}>{g.taskProg}</span>
+                          <span className="eac2-breakdown-label">In Progress</span>
+                        </div>
+                        <div className="eac2-breakdown-item">
+                          <span className="eac2-breakdown-count" style={{ color: '#8b5cf6' }}>{g.taskSub}</span>
+                          <span className="eac2-breakdown-label">Submitted</span>
+                        </div>
+                        {g.taskOver > 0 && (
+                          <div className="eac2-breakdown-item">
+                            <span className="eac2-breakdown-count" style={{ color: '#ef4444' }}>{g.taskOver}</span>
+                            <span className="eac2-breakdown-label">Overdue</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
                   </div>
-                  <h2 className="hero-headline">District 14 — Network-Leading Planogram Compliance, 2nd Week Running</h2>
-                  <p className="hero-context">Top 3 stores at 100% POG adherence; district-wide average 96%. Camera audit scores averaging 96.2. Top performer: Store #2034.</p>
-                  <div className="hero-impact">
-                    <AutoAwesomeOutlined sx={{ fontSize: 14 }}/>
-                    <span>This is a replicable template for underperforming districts</span>
-                  </div>
-                  <div className="hero-top-store">
-                    <GroupOutlined sx={{ fontSize: 12 }}/>
-                    <span>DM John Doe — share-out recommended</span>
-                  </div>
-                  <div className="hero-actions">
-                    <button type="button" className="hero-action-primary hq-alert-cta" onClick={() => openHqAlertPanel('performance-win')}>
-                      <span>View Details</span>
-                      <KeyboardArrowRight sx={{ fontSize: 16 }}/>
-                    </button>
-                  </div>
-                </div>
-              </Card>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -992,33 +1100,35 @@ export const HQHome: React.FC = () => {
         <>
           <div className="detail-panel-overlay" onClick={closeHqAlertPanel} />
           <div className="detail-panel">
-            <div className="detail-panel-header">
-              <button className="detail-panel-close" onClick={closeHqAlertPanel}>
-                <CloseOutlined sx={{ fontSize: 18 }}/>
-              </button>
-            </div>
-            <div className="detail-panel-body">
-              {/* Severity Badge */}
-              <div className="dp-severity-row">
-                <span
-                  className={`dp-severity-badge ${hqAlertPanel.severity === 'success' ? 'risk' : hqAlertPanel.severity}`}
-                  style={hqAlertPanel.severity === 'success' ? { background: 'var(--ia-color-success-bg)', color: 'var(--ia-color-success)' } : undefined}
-                >
-                  {hqAlertPanel.severity !== 'success' && <WarningAmberOutlined sx={{ fontSize: 12 }}/>}
-                  {hqAlertPanel.severity === 'success' && <TaskAltOutlined sx={{ fontSize: 12 }}/>}
+            <div className="dp-hero-header">
+              <div className="dp-hero-top">
+                <div className="dp-hero-icon" style={{ background: hqAlertPanel.severity === 'success' ? '#dcfce7' : hqAlertPanel.severity === 'critical' ? '#fee2e2' : '#fef3c7', color: hqAlertPanel.severity === 'success' ? '#166534' : hqAlertPanel.severity === 'critical' ? '#b91c1c' : '#92400e' }}>
+                  {hqAlertPanel.severity === 'success' ? <TaskAltOutlined sx={{ fontSize: 16 }}/> : <WarningAmberOutlined sx={{ fontSize: 16 }}/>}
+                </div>
+                <span className="dp-hero-type">{hqAlertPanel.source?.toUpperCase() || 'NETWORK ALERT'}</span>
+                <button className="dp-hero-close" onClick={closeHqAlertPanel}>
+                  <CloseOutlined sx={{ fontSize: 17 }}/>
+                </button>
+              </div>
+              <h2 className="dp-hero-title">{hqAlertPanel.title}</h2>
+              <div className="dp-hero-pills">
+                <span className="dp-hero-pill" style={hqAlertPanel.severity === 'success' ? { background: '#dcfce7', color: '#166534' } : hqAlertPanel.severity === 'critical' ? { background: '#fee2e2', color: '#b91c1c' } : { background: '#fef3c7', color: '#92400e' }}>
+                  {hqAlertPanel.severity === 'success' ? <TaskAltOutlined sx={{ fontSize: 10 }}/> : <WarningAmberOutlined sx={{ fontSize: 10 }}/>}
                   {hqAlertPanel.signalLabel}
                 </span>
                 {hqAlertPanel.source && (
-                  <span className="dp-source">
-                    <GroupOutlined sx={{ fontSize: 11 }}/>
+                  <span className="dp-hero-pill" style={{ background: '#f1f5f9', color: '#475569' }}>
                     {hqAlertPanel.source}
                   </span>
                 )}
               </div>
-
-              {/* Title + Description */}
-              <h2 className="dp-title">{hqAlertPanel.title}</h2>
-              <p className="dp-description">{hqAlertPanel.description}</p>
+            </div>
+            <div className="detail-panel-body">
+              {hqAlertPanel.description && (
+                <div className="dp-title-block">
+                  <p className="dp-description">{hqAlertPanel.description}</p>
+                </div>
+              )}
 
               {/* Impact Summary */}
               <div className="dp-impact-summary">
@@ -1105,28 +1215,32 @@ export const HQHome: React.FC = () => {
         <>
           <div className="detail-panel-overlay" onClick={closeBcaPanel} />
           <div className="detail-panel">
-            <div className="detail-panel-header">
-              <button className="detail-panel-close" onClick={closeBcaPanel}>
-                <CloseOutlined sx={{ fontSize: 18 }}/>
-              </button>
-            </div>
-            <div className="detail-panel-body">
-              {/* Severity / Status Row */}
-              <div className="dp-severity-row">
-                <span className={`dp-severity-badge ${bcaSelectedBroadcast.priority === 'high' ? 'critical' : bcaSelectedBroadcast.priority === 'medium' ? 'warning' : 'risk'}`}>
-                  {bcaSelectedBroadcast.priority.toUpperCase()} PRIORITY
+            <div className="dp-hero-header">
+              <div className="dp-hero-top">
+                <div className="dp-hero-icon" style={{ background: '#fce7f3', color: '#9d174d' }}>
+                  <CampaignOutlined sx={{ fontSize: 16 }}/>
+                </div>
+                <span className="dp-hero-type">{bcaSelectedBroadcast.type?.toUpperCase()}</span>
+                <button className="dp-hero-close" onClick={closeBcaPanel}>
+                  <CloseOutlined sx={{ fontSize: 17 }}/>
+                </button>
+              </div>
+              <h2 className="dp-hero-title">{bcaSelectedBroadcast.name}</h2>
+              <div className="dp-hero-pills">
+                <span className="dp-hero-pill" style={bcaSelectedBroadcast.priority === 'high' ? { background: '#fee2e2', color: '#b91c1c' } : bcaSelectedBroadcast.priority === 'medium' ? { background: '#fef3c7', color: '#92400e' } : { background: '#dbeafe', color: '#1d4ed8' }}>
+                  {bcaSelectedBroadcast.priority.charAt(0).toUpperCase() + bcaSelectedBroadcast.priority.slice(1)} Priority
                 </span>
-                <span className="dp-source">
-                  <CampaignOutlined sx={{ fontSize: 11 }}/>
-                  {bcaSelectedBroadcast.type}
+                <span className="dp-hero-pill" style={{ background: '#f1f5f9', color: '#475569' }}>
+                  {bcaSelectedBroadcast.ackedDistricts}/{bcaSelectedBroadcast.districts} districts ack'd
                 </span>
               </div>
-
-              {/* Title */}
-              <h2 className="dp-title">{bcaSelectedBroadcast.name}</h2>
-              <p className="dp-description">
-                Sent {bcaSelectedBroadcast.sentAt} · {bcaSelectedBroadcast.ackedDistricts}/{bcaSelectedBroadcast.districts} districts acknowledged · Avg ack time: {bcaSelectedBroadcast.avgAckTime}
-              </p>
+            </div>
+            <div className="detail-panel-body">
+              <div className="dp-title-block">
+                <p className="dp-description">
+                  Sent {bcaSelectedBroadcast.sentAt} · Avg ack time: {bcaSelectedBroadcast.avgAckTime}
+                </p>
+              </div>
 
               {/* Impact Summary — only when at-risk */}
               {bcaSelectedBroadcast.status === 'at-risk' && (
@@ -1478,6 +1592,162 @@ export const HQHome: React.FC = () => {
         </div>
       )}
 
+      {/* NEAC Drawer */}
+      {neacDrawer && (
+        <>
+          <div className="eac2-drawer-overlay" onClick={() => setNeacDrawer(null)}/>
+          <div className="eac2-drawer">
+            {/* ── Hero header ── */}
+            <div className="eac2-drawer-header">
+              <div className="eac2-drawer-hero-top">
+                <div className="eac2-drawer-hero-id">
+                  <div className={`eac2-drawer-header-icon eac2-drawer-header-icon--${neacDrawer.type}`}>
+                    {neacDrawer.type === 'boh'     && <SyncOutlined sx={{ fontSize: 16 }}/>}
+                    {neacDrawer.type === 'phantom' && <InventoryOutlined sx={{ fontSize: 16 }}/>}
+                    {neacDrawer.type === 'pog'     && <GridOnOutlined sx={{ fontSize: 16 }}/>}
+                  </div>
+                  <span className="eac2-drawer-type">{neacDrawer.taskType} · Network</span>
+                </div>
+                <button className="eac2-drawer-close" onClick={() => setNeacDrawer(null)}>
+                  <CloseOutlined sx={{ fontSize: 18 }}/>
+                </button>
+              </div>
+              <h2 className="eac2-drawer-title">{neacDrawer.title}</h2>
+              <div className="eac2-drawer-hero-pills">
+                <span className={`eac2-drawer-pill eac2-drawer-pill--${neacDrawer.severityClass}`}>{neacDrawer.severity} Severity</span>
+                <span className="eac2-drawer-pill eac2-drawer-pill--auto">⚡ Auto-Monitored</span>
+                <span className="eac2-drawer-pill eac2-drawer-pill--stores">{neacDrawer.regionCount}R · {neacDrawer.districtCount}D · {neacDrawer.storeCount} stores</span>
+              </div>
+            </div>
+
+            {/* ── Body ── */}
+            <div className="eac2-drawer-body">
+              {/* Issue Summary block */}
+              <div className="eac2-drawer-block">
+                <div className="eac2-drawer-block-label">
+                  <WarningAmberOutlined sx={{ fontSize: 11 }}/> Network Summary
+                </div>
+                <div className={`eac2-drawer-risk-banner eac2-drawer-risk-banner--${neacDrawer.severityClass}`}>
+                  <WarningAmberOutlined sx={{ fontSize: 15 }} className="eac2-drawer-risk-banner-icon"/>
+                  <div>
+                    <p className="eac2-drawer-risk-title">{neacDrawer.skuCount} SKUs · {neacDrawer.riskValue} at risk · {neacDrawer.taskCompletion}% completion</p>
+                    <p className="eac2-drawer-risk-desc">{neacDrawer.desc}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Task Status block */}
+              <div className="eac2-drawer-block">
+                <div className="eac2-drawer-block-label">
+                  <TaskAltOutlined sx={{ fontSize: 11 }}/> Auto-Created Task Status · {neacDrawer.taskTotal} total
+                </div>
+                <div className="eac2-drawer-stats">
+                  {[
+                    { val: neacDrawer.taskOpen, lbl: 'Open' },
+                    { val: neacDrawer.taskProg, lbl: 'In Progress' },
+                    { val: neacDrawer.taskSub,  lbl: 'Submitted' },
+                    { val: neacDrawer.taskOver, lbl: 'Overdue' },
+                  ].map(s => (
+                    <div key={s.lbl} className="eac2-drawer-stat-tile">
+                      <span className="eac2-drawer-stat-val">{s.val}</span>
+                      <span className="eac2-drawer-stat-lbl">{s.lbl}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Impacted Regions block */}
+              <div className="eac2-drawer-block">
+                <div className="eac2-drawer-block-label">
+                  <GroupOutlined sx={{ fontSize: 11 }}/> Impacted Regions ({neacDrawer.entities.length})
+                </div>
+                <div className="eac2-entity-list">
+                  {neacDrawer.entities.map((e, i) => (
+                    <div key={i} className={`eac2-entity-card eac2-entity-card--${e.status}`}>
+                      <div className="eac2-entity-header">
+                        <span className="eac2-entity-name">{e.name}</span>
+                        <span className={`eac2-entity-status-badge eac2-entity-status-badge--${e.status}`}>
+                          {e.status === 'critical' ? 'At Risk' : e.status === 'progress' ? 'In Progress' : 'On Track'}
+                        </span>
+                      </div>
+                      <div className="eac2-entity-detail">{e.detail}</div>
+                      <div className="eac2-entity-manager">
+                        <PersonOutlined sx={{ fontSize: 12 }}/> Regional DM: <strong>{e.dm}</strong>
+                      </div>
+                      <div className="eac2-entity-task-row">
+                        <span className="eac2-entity-task-info">
+                          <TaskAltOutlined sx={{ fontSize: 12 }}/> {e.tasks} task{e.tasks > 1 ? 's' : ''}
+                        </span>
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          size="small"
+                          endIcon={<KeyboardArrowRight sx={{ fontSize: 12 }}/>}
+                          onClick={() => {
+                            setNeacDrawer(null);
+                            navigate('/command-center/operations-queue', {
+                              state: {
+                                prefillFromAlert: {
+                                  alertId: `${neacDrawer.id}-${e.name.replace(/\s+/g, '-').toLowerCase()}`,
+                                  title: `${neacDrawer.title} — ${e.name}`,
+                                  description: e.detail,
+                                  severity: neacDrawer.severity === 'High' ? 'critical' : 'warning',
+                                  source: 'Automated Execution Alert',
+                                  stores: [{ name: e.name, manager: e.dm, detail: e.detail }],
+                                },
+                              },
+                            });
+                          }}
+                        >
+                          View Districts
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ── Footer ── */}
+            <div className="eac2-drawer-footer">
+              <Button
+                className="eac2-drawer-cta eac2-drawer-cta--primary"
+                variant="contained"
+                color="primary"
+                startIcon={<BoltOutlined sx={{ fontSize: 14 }}/>}
+                onClick={() => {
+                  setNeacDrawer(null);
+                  navigate('/command-center/operations-queue', {
+                    state: {
+                      prefillFromAlert: {
+                        alertId: neacDrawer.id,
+                        title: `[HQ] ${neacDrawer.title}`,
+                        description: `${neacDrawer.taskType}: ${neacDrawer.desc}`,
+                        severity: neacDrawer.severity === 'High' ? 'critical' : 'warning',
+                        source: 'Automated Execution Alert',
+                        stores: neacDrawer.entities.map(en => ({ name: en.name, manager: en.dm, detail: en.detail })),
+                      },
+                    },
+                  });
+                }}
+              >
+                Open Queue
+              </Button>
+              <Button
+                className="eac2-drawer-cta eac2-drawer-cta--secondary"
+                variant="outlined"
+                onClick={() => setNeacDrawer(null)}
+              >
+                Close
+              </Button>
+            </div>
+            <div className="eac2-drawer-timestamp">
+              <AccessTimeOutlined sx={{ fontSize: 12 }}/> Last detected {neacDrawer.lastDetected} · Auto-assigned to District Managers
+            </div>
+          </div>
+        </>
+      )}
+
       {/* AI Brief Full Modal */}
       {showBriefModal && (
         <div className="brief-modal-overlay" onClick={() => setShowBriefModal(false)}>
@@ -1487,10 +1757,35 @@ export const HQHome: React.FC = () => {
                 <AutoAwesomeOutlined sx={{ fontSize: 18 }}/>
                 <h2>AI Daily Brief</h2>
               </div>
-              <button className="brief-modal-close" onClick={() => setShowBriefModal(false)}>
-                <CloseOutlined sx={{ fontSize: 20 }}/>
-              </button>
+              <div className="di-brief-modal-header-actions">
+                <button
+                  className={`aup-listen-btn${showBriefAudio ? ' aup-listen-btn--active' : ''}`}
+                  onClick={() => setShowBriefAudio(v => !v)}
+                  title="Listen to brief"
+                >
+                  <span className="aup-listen-btn-icon">
+                    {showBriefAudio
+                      ? <span className="aup-soundwave aup-soundwave--sm"><span/><span/><span/><span/></span>
+                      : <HeadphonesOutlined sx={{ fontSize: 14 }} />
+                    }
+                  </span>
+                  {showBriefAudio ? 'Playing…' : 'Listen'}
+                </button>
+                <button className="brief-modal-close" onClick={() => setShowBriefModal(false)}>
+                  <CloseOutlined sx={{ fontSize: 20 }}/>
+                </button>
+              </div>
             </div>
+            {showBriefAudio && (
+              <div className="di-brief-modal-audio">
+                <AudioPlayer
+                  text="Good afternoon. North America performance is on track this week. Total revenue reached $142M, up 3% versus plan and 2% week over week. Gross margin steady at 38.4%. Regional compliance at 91%. Top performing district: Pacific Northwest at 94 DPI. Focus areas: Southeast compliance gap at 78%, and open store escalations in Central region require attention."
+                  title="AI Daily Brief"
+                  variant="card"
+                  onClose={() => setShowBriefAudio(false)}
+                />
+              </div>
+            )}
             <div className="brief-modal-content">
               {aiBriefContent}
             </div>

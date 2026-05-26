@@ -193,66 +193,9 @@
   color: var(--ia-color-text-tertiary);
 }
 
-/* ── Summary Cards Grid ───────────────────────────────────── */
-
-.po-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
-  gap: 12px;
-}
-
-.po-summary-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-}
-
-.po-summary-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.po-summary-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.po-summary-value {
-  font-size: var(--ia-text-lg);
-  font-weight: var(--ia-font-weight-bold);
-  color: var(--ia-color-text-primary);
-  line-height: 1.2;
-  font-variant-numeric: tabular-nums;
-}
-
-.po-summary-label {
-  font-size: var(--ia-text-2xs);
-  font-weight: var(--ia-font-weight-medium);
-  color: var(--ia-color-text-tertiary);
-  letter-spacing: 0.02em;
-  margin-top: 2px;
-}
-
-/* ── Toolbar (Tabs + Filters) ─────────────────────────────── */
-
-.po-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.po-filters {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+/* ── Tabs row ─────────────────────────────────────────────── */
+.po-tabs-row {
+  margin-bottom: -8px;
 }
 
 /* ── Table Enhancements ───────────────────────────────────── */

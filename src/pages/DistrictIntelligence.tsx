@@ -2429,31 +2429,31 @@ export const DistrictIntelligence: React.FC = () => {
         <>
           <div className="detail-panel-overlay" onClick={() => setHeatmapDetail(null)} />
           <div className="detail-panel">
-            <div className="detail-panel-header">
-              <button className="detail-panel-close" onClick={() => setHeatmapDetail(null)}>
-                <CloseOutlined sx={{ fontSize: 18 }}/>
-              </button>
-            </div>
-            <div className="detail-panel-body">
-              {/* Severity / Source Row */}
-              <div className="dp-severity-row">
-                <span
-                  className="dp-severity-badge"
-                  style={{ background: getComplianceColor(heatmapDetail.score), color: getComplianceTextColor(heatmapDetail.score) }}
-                >
-                  {heatmapDetail.score}% COMPLIANCE
+            <div className="dp-hero-header">
+              <div className="dp-hero-top">
+                <div className="dp-hero-icon" style={{ background: '#cffafe', color: '#0e7490' }}>
+                  <AssignmentTurnedInOutlined sx={{ fontSize: 16 }}/>
+                </div>
+                <span className="dp-hero-type">AUDIT HEATMAP</span>
+                <button className="dp-hero-close" onClick={() => setHeatmapDetail(null)}>
+                  <CloseOutlined sx={{ fontSize: 17 }}/>
+                </button>
+              </div>
+              <h2 className="dp-hero-title">{heatmapDetail.category} Audit</h2>
+              <div className="dp-hero-pills">
+                <span className="dp-hero-pill" style={{ background: getComplianceColor(heatmapDetail.score), color: getComplianceTextColor(heatmapDetail.score) }}>
+                  {heatmapDetail.score}% Compliance
                 </span>
-                <span className="dp-source">
-                  <AssignmentTurnedInOutlined sx={{ fontSize: 11 }}/>
-                  Audit Heatmap
+                <span className="dp-hero-pill" style={{ background: '#f1f5f9', color: '#475569' }}>
+                  #{heatmapDetail.storeNumber} · {heatmapDetail.storeName}
                 </span>
               </div>
-
-              {/* Title */}
-              <h2 className="dp-title">{heatmapDetail.category} Audit</h2>
-              <p className="dp-description">
-                #{heatmapDetail.storeNumber} — {heatmapDetail.storeName} · Last audit {heatmapDetail.detail.lastAudit} · Auditor: {heatmapDetail.detail.auditor}
-              </p>
+            </div>
+            <div className="detail-panel-body">
+              {/* Trend + meta context */}
+              <div className="dp-title-block">
+                <p className="dp-description">Last audit {heatmapDetail.detail.lastAudit} · Auditor: {heatmapDetail.detail.auditor}</p>
+              </div>
 
               {/* Trend pill */}
               <div className="dp-impact-summary">
@@ -3376,29 +3376,34 @@ export const DistrictIntelligence: React.FC = () => {
           <>
             <div className="detail-panel-overlay" onClick={() => setActiveKPIPanel(null)} />
             <div className="detail-panel">
-              <div className="detail-panel-header">
-                <button className="detail-panel-close" onClick={() => setActiveKPIPanel(null)}>
-                  <CloseOutlined sx={{ fontSize: 18 }}/>
-                </button>
+              {/* Hero Header */}
+              <div className="dp-hero-header">
+                <div className="dp-hero-top">
+                  <div className="dp-hero-icon" style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}>
+                    <BarChartOutlined sx={{ fontSize: 16 }}/>
+                  </div>
+                  <span className="dp-hero-type">{activeKPIPanel.category.toUpperCase()} · 52-Week Trend</span>
+                  <button className="dp-hero-close" onClick={() => setActiveKPIPanel(null)}>
+                    <CloseOutlined sx={{ fontSize: 17 }}/>
+                  </button>
+                </div>
+                <h2 className="dp-hero-title">{activeKPIPanel.label}</h2>
+                <div className="dp-hero-pills">
+                  <span className={`dp-hero-pill dp-hero-pill--${activeKPIPanel.status === 'negative' ? 'critical' : activeKPIPanel.status === 'warning' ? 'warning' : 'info'}`}>
+                    {activeKPIPanel.status === 'negative' ? <ErrorOutlined sx={{ fontSize: 10 }}/> : activeKPIPanel.status === 'warning' ? <WarningAmberOutlined sx={{ fontSize: 10 }}/> : <NorthEast sx={{ fontSize: 10 }}/>}
+                    {activeKPIPanel.status === 'negative' ? 'At Risk' : activeKPIPanel.status === 'warning' ? 'Watch' : 'Positive'}
+                  </span>
+                  <span className="dp-hero-pill dp-hero-pill--neutral">
+                    Current: <strong>{activeKPIPanel.primaryValue}</strong>{activeKPIPanel.primaryUnit ? ` ${activeKPIPanel.primaryUnit}` : ''}
+                  </span>
+                  {activeKPIPanel.delta && (
+                    <span className={`dp-hero-pill dp-hero-pill--${activeKPIPanel.deltaDirection === 'up' ? 'info' : activeKPIPanel.deltaDirection === 'down' ? 'critical' : 'neutral'}`}>
+                      YoY {activeKPIPanel.delta}
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="detail-panel-body">
-                {/* Severity / Category Row */}
-                <div className="dp-severity-row">
-                  <span className={`dp-severity-badge ${activeKPIPanel.status === 'negative' ? 'critical' : activeKPIPanel.status === 'warning' ? 'warning' : activeKPIPanel.status === 'positive' ? 'risk' : 'risk'}`}>
-                    {activeKPIPanel.category.toUpperCase()}
-                  </span>
-                  <span className="dp-source">
-                    <BarChartOutlined sx={{ fontSize: 11 }}/>
-                    52-Week Trend
-                  </span>
-                </div>
-
-                {/* Title */}
-                <h2 className="dp-title">{activeKPIPanel.label}</h2>
-                <p className="dp-description">
-                  Current: <strong>{activeKPIPanel.primaryValue}</strong>{activeKPIPanel.primaryUnit ? ` ${activeKPIPanel.primaryUnit}` : ''}
-                  {activeKPIPanel.microInsight && <> · {activeKPIPanel.microInsight}</>}
-                </p>
 
                 {/* Period Comparison Metrics */}
                 <div className="dp-section">
@@ -3516,28 +3521,36 @@ export const DistrictIntelligence: React.FC = () => {
         <>
           <div className="detail-panel-overlay" onClick={closeBcaPanel} />
           <div className="detail-panel">
-            <div className="detail-panel-header">
-              <button className="detail-panel-close" onClick={closeBcaPanel}>
-                <CloseOutlined sx={{ fontSize: 18 }}/>
-              </button>
-            </div>
-            <div className="detail-panel-body">
-              {/* Severity / Status Row */}
-              <div className="dp-severity-row">
-                <span className={`dp-severity-badge ${bcaSelectedBroadcast.priority === 'high' ? 'critical' : bcaSelectedBroadcast.priority === 'medium' ? 'warning' : 'risk'}`}>
-                  {bcaSelectedBroadcast.priority.toUpperCase()} PRIORITY
+            {/* Hero Header */}
+            <div className="dp-hero-header">
+              <div className="dp-hero-top">
+                <div className="dp-hero-icon" style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}>
+                  <CampaignOutlined sx={{ fontSize: 16 }}/>
+                </div>
+                <span className="dp-hero-type">{bcaSelectedBroadcast.priority.toUpperCase()} PRIORITY · {bcaSelectedBroadcast.type}</span>
+                <button className="dp-hero-close" onClick={closeBcaPanel}>
+                  <CloseOutlined sx={{ fontSize: 17 }}/>
+                </button>
+              </div>
+              <h2 className="dp-hero-title">{bcaSelectedBroadcast.name}</h2>
+              <div className="dp-hero-pills">
+                <span className={`dp-hero-pill dp-hero-pill--${bcaSelectedBroadcast.priority === 'high' ? 'critical' : bcaSelectedBroadcast.priority === 'medium' ? 'warning' : 'info'}`}>
+                  {bcaSelectedBroadcast.priority === 'high' ? <ErrorOutlined sx={{ fontSize: 10 }}/> : <WarningAmberOutlined sx={{ fontSize: 10 }}/>}
+                  {bcaSelectedBroadcast.priority.charAt(0).toUpperCase() + bcaSelectedBroadcast.priority.slice(1)} Priority
                 </span>
-                <span className="dp-source">
-                  <CampaignOutlined sx={{ fontSize: 11 }}/>
-                  {bcaSelectedBroadcast.type}
+                <span className="dp-hero-pill dp-hero-pill--neutral">
+                  {bcaSelectedBroadcast.acked}/{bcaSelectedBroadcast.stores} stores acked
+                </span>
+                <span className={`dp-hero-pill dp-hero-pill--${bcaSelectedBroadcast.status === 'at-risk' ? 'critical' : 'tasks'}`}>
+                  {bcaSelectedBroadcast.ackRate}% ack rate
                 </span>
               </div>
-
-              {/* Title */}
-              <h2 className="dp-title">{bcaSelectedBroadcast.name}</h2>
-              <p className="dp-description">
-                Sent {bcaSelectedBroadcast.sentAt} · {bcaSelectedBroadcast.acked}/{bcaSelectedBroadcast.stores} stores acknowledged · Avg ack time: {bcaSelectedBroadcast.avgAckTime}
-              </p>
+            </div>
+            <div className="detail-panel-body">
+              {/* Description */}
+              <div className="dp-title-block">
+                <p className="dp-description">Sent {bcaSelectedBroadcast.sentAt} · Avg ack time: {bcaSelectedBroadcast.avgAckTime}</p>
+              </div>
 
               {/* Impact Summary */}
               {bcaSelectedBroadcast.status === 'at-risk' && (

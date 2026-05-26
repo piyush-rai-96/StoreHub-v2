@@ -6,7 +6,11 @@ import LightbulbOutlined from '@mui/icons-material/LightbulbOutlined';
 import EditOutlined from '@mui/icons-material/EditOutlined';
 import SaveOutlined from '@mui/icons-material/SaveOutlined';
 import SendOutlined from '@mui/icons-material/SendOutlined';
-import { Button, Badge, Card, Input } from 'impact-ui';
+import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
+import StorefrontOutlined from '@mui/icons-material/StorefrontOutlined';
+import CalendarTodayOutlined from '@mui/icons-material/CalendarTodayOutlined';
+import InfoOutlined from '@mui/icons-material/InfoOutlined';
+import { Button, Badge } from 'impact-ui';
 import { ImFilterSelect } from '../../../components/common/ImFilterSelect';
 import { OpportunityStatusChip } from './OpportunityStatusChip';
 import { getOpportunityById } from '../../../constants/productOpportunityMock';
@@ -28,14 +32,14 @@ export const AllocationWorkflowPage: React.FC = () => {
   const navigate = useNavigate();
   const opp = useMemo(() => getOpportunityById(opportunityId ?? ''), [opportunityId]);
 
-  const [editedQty, setEditedQty] = useState(opp?.recommendedAllocationQty ?? 0);
-  const [fulfillment, setFulfillment] = useState<FulfillmentPath>(opp?.recommendedFulfillmentPath ?? 'dc_allocation');
-  const [reasonCode, setReasonCode] = useState<ReasonCode>('high_velocity');
+  const [editedQty, setEditedQty]         = useState(opp?.recommendedAllocationQty ?? 0);
+  const [fulfillment, setFulfillment]     = useState<FulfillmentPath>(opp?.recommendedFulfillmentPath ?? 'dc_allocation');
+  const [reasonCode, setReasonCode]       = useState<ReasonCode>('high_velocity');
   const [requiredByDate, setRequiredByDate] = useState('2026-05-28');
-  const [comment, setComment] = useState('');
-  const [status, setStatus] = useState(opp?.status ?? 'open');
-  const [saved, setSaved] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [comment, setComment]             = useState('');
+  const [status, setStatus]               = useState(opp?.status ?? 'open');
+  const [saved, setSaved]                 = useState(false);
+  const [submitted, setSubmitted]         = useState(false);
 
   if (!opp) {
     return (
@@ -50,12 +54,10 @@ export const AllocationWorkflowPage: React.FC = () => {
     );
   }
 
-  const diffVsCurrent = editedQty - opp.currentHoAllocationQty;
-  const diffVsRecommended = editedQty - opp.recommendedAllocationQty;
-  const needsComment = diffVsRecommended !== 0;
-
-  const fmt = (v: number) =>
-    v.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
+  const diffVsCurrent      = editedQty - opp.currentHoAllocationQty;
+  const diffVsRecommended  = editedQty - opp.recommendedAllocationQty;
+  const needsComment       = diffVsRecommended !== 0;
+  const fmt = (v: number) => v.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
 
   const handleSaveDraft = () => {
     setStatus('in_progress');
@@ -63,11 +65,7 @@ export const AllocationWorkflowPage: React.FC = () => {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const canSubmit =
-    editedQty > 0 &&
-    reasonCode &&
-    fulfillment &&
-    (!needsComment || comment.trim().length > 0);
+  const canSubmit = editedQty > 0 && reasonCode && fulfillment && (!needsComment || comment.trim().length > 0);
 
   const handleSubmit = () => {
     if (!canSubmit) return;
@@ -75,229 +73,299 @@ export const AllocationWorkflowPage: React.FC = () => {
     setSubmitted(true);
   };
 
+  const typeColor =
+    opp.opportunityType === 'at_risk'  ? 'error'   as const :
+    opp.opportunityType === 'emerging' ? 'info'    as const : 'success' as const;
+
   return (
     <div className="aw-page">
-      {/* ── Header ── */}
-      <div className="aw-header">
+
+      {/* ══════════════════════════════════════════════
+          BACK NAV
+      ══════════════════════════════════════════════ */}
+      <div className="aw-breadcrumb">
         <Button
           variant="text"
           color="primary"
-          startIcon={<ArrowBackOutlined sx={{ fontSize: 18 }} />}
+          startIcon={<ArrowBackOutlined sx={{ fontSize: 16 }} />}
           onClick={() => navigate('/inventory-management/product-opportunities')}
         >
-          Back to Opportunities
+          Back to Product Opportunities
         </Button>
-        <div className="aw-header-content">
-          <div className="aw-header-top">
-            <h1 className="aw-title">Allocation Workflow</h1>
-            <OpportunityStatusChip status={status} size="medium" />
+      </div>
+
+      {/* ══════════════════════════════════════════════
+          HERO HEADER
+      ══════════════════════════════════════════════ */}
+      <div className="aw-hero">
+        <div className="aw-hero-top">
+          {opp.productImage && (
+            <img
+              src={opp.productImage}
+              alt={opp.productName}
+              className="aw-hero-img"
+              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+          )}
+          <div className="aw-hero-info">
+            <div className="aw-hero-badges">
+              <OpportunityStatusChip status={status} size="small" />
+              <Badge
+                label={opp.opportunityType.replace(/_/g, ' ')}
+                color={typeColor}
+                variant="subtle"
+                size="small"
+              />
+              <Badge
+                label={opp.priority.charAt(0).toUpperCase() + opp.priority.slice(1)}
+                color={opp.priority === 'critical' || opp.priority === 'high' ? 'error' : opp.priority === 'medium' ? 'warning' : 'info'}
+                variant="subtle"
+                size="small"
+              />
+            </div>
+            <h1 className="aw-hero-title">{opp.productName}</h1>
+            <div className="aw-hero-meta">
+              <span className="aw-hero-sku">{opp.sku}</span>
+              <span className="aw-hero-sep" />
+              <StorefrontOutlined sx={{ fontSize: 13 }} />
+              <span>{opp.storeName}</span>
+              <span className="aw-hero-sep" />
+              <CalendarTodayOutlined sx={{ fontSize: 13 }} />
+              <span>{opp.allocationCycle}</span>
+              <span className="aw-hero-sep" />
+              <span className="aw-hero-category">{opp.category}</span>
+            </div>
           </div>
-          <p className="aw-subtitle">Review, adjust, and submit allocation changes for approval.</p>
-          <div className="aw-context">
-            <span><strong>Store:</strong> {opp.storeName}</span>
-            <span><strong>Product:</strong> {opp.productName}</span>
-            <span><strong>SKU:</strong> {opp.sku}</span>
-            <span><strong>Type:</strong> {opp.opportunityType.replace('_', ' ')}</span>
+        </div>
+
+        {/* KPI strip */}
+        <div className="aw-hero-kpis">
+          <div className="aw-hero-kpi">
+            <span className="aw-hero-kpi-label">Opportunity Value</span>
+            <span className="aw-hero-kpi-value aw-hero-kpi--green">{fmt(opp.opportunityValue)}</span>
+          </div>
+          <div className="aw-hero-kpi-divider" />
+          <div className="aw-hero-kpi">
+            <span className="aw-hero-kpi-label">Lost Sales Risk</span>
+            <span className="aw-hero-kpi-value aw-hero-kpi--red">{fmt(opp.lostSalesRisk)}</span>
+          </div>
+          <div className="aw-hero-kpi-divider" />
+          <div className="aw-hero-kpi">
+            <span className="aw-hero-kpi-label">Current HO Alloc</span>
+            <span className="aw-hero-kpi-value">{opp.currentHoAllocationQty} units</span>
+          </div>
+          <div className="aw-hero-kpi-divider" />
+          <div className="aw-hero-kpi">
+            <span className="aw-hero-kpi-label">Recommended</span>
+            <span className="aw-hero-kpi-value aw-hero-kpi--blue">{opp.recommendedAllocationQty} units</span>
+          </div>
+          <div className="aw-hero-kpi-divider" />
+          <div className="aw-hero-kpi">
+            <span className="aw-hero-kpi-label">Allocation Gap</span>
+            <span className="aw-hero-kpi-value aw-hero-kpi--amber">+{opp.allocationGap} units</span>
           </div>
         </div>
       </div>
 
       {submitted ? (
-        <div className="aw-submitted-card">
-          <Card size="extraSmall" sx={{ padding: 0, minHeight: 0 }}>
-            <div className="aw-submitted-content">
-              <SendOutlined sx={{ fontSize: 32, color: 'var(--ia-color-success)' }} />
-              <h2>Allocation Submitted for Approval</h2>
-              <p>
-                Your allocation change request for <strong>{opp.productName}</strong> has been submitted.
-                It is now pending approval.
-              </p>
-              <div className="aw-submitted-actions">
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  onClick={() => navigate('/inventory-management/product-opportunities')}
-                >
-                  Back to Opportunities
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => navigate('/inventory-management/approvals-and-execution')}
-                >
-                  View Approval Queue
-                </Button>
-              </div>
+        /* ══════ SUCCESS STATE ══════ */
+        <div className="aw-submitted-wrap">
+          <div className="aw-submitted-card">
+            <div className="aw-submitted-icon">
+              <CheckCircleOutlined sx={{ fontSize: 48 }} />
             </div>
-          </Card>
+            <h2 className="aw-submitted-title">Allocation Submitted for Approval</h2>
+            <p className="aw-submitted-desc">
+              Your allocation change for <strong>{opp.productName}</strong> has been submitted and is now pending review by the allocation team.
+            </p>
+            <div className="aw-submitted-pills">
+              <span className="aw-submitted-pill">{opp.allocationCycle}</span>
+              <span className="aw-submitted-pill">{editedQty} units</span>
+              <span className="aw-submitted-pill">{FULFILLMENT_LABELS[fulfillment]}</span>
+            </div>
+            <div className="aw-submitted-actions">
+              <Button variant="outlined" color="primary" onClick={() => navigate('/inventory-management/product-opportunities')}>
+                Back to Opportunities
+              </Button>
+              <Button variant="contained" color="primary" onClick={() => navigate('/inventory-management/approvals-and-execution')}>
+                View Approval Queue
+              </Button>
+            </div>
+          </div>
         </div>
       ) : (
-        <div className="aw-grid">
-          {/* ── A. Current Allocation Review ── */}
-          <div className="aw-panel">
-            <div className="aw-panel-header">
-              <InventoryOutlined sx={{ fontSize: 18 }} />
-              <h3>Current Allocation Review</h3>
-              <Badge label="Read Only" color="default" variant="subtle" size="small" />
+        <div className="aw-body">
+
+          {/* ══════════════════════════════════════════════
+              TOP ROW: Review + Recommendation side-by-side
+          ══════════════════════════════════════════════ */}
+          <div className="aw-two-col">
+
+            {/* ── A. Current Allocation Review ── */}
+            <div className="aw-card">
+              <div className="aw-card-header">
+                <InventoryOutlined sx={{ fontSize: 17 }} />
+                <h3>Current Allocation Review</h3>
+                <Badge label="Read Only" color="default" variant="subtle" size="small" />
+              </div>
+              <div className="aw-data-table">
+                {[
+                  { label: 'HO Allocation ID',  value: opp.hoAllocationId,          mod: '' },
+                  { label: 'Allocation Cycle',   value: opp.allocationCycle,         mod: '' },
+                  { label: 'HO Allocation Qty',  value: opp.currentHoAllocationQty,  mod: 'bold' },
+                  { label: 'Received Qty',       value: opp.receivedQty,             mod: '' },
+                  { label: 'In-Transit Qty',     value: opp.inTransitQty,            mod: '' },
+                  { label: 'Store Stock',        value: opp.currentStoreStock,       mod: 'warn' },
+                  { label: 'Required Qty',       value: opp.requiredQty,             mod: '' },
+                  { label: 'Allocation Gap',     value: `+${opp.allocationGap}`,     mod: 'gap' },
+                ].map(({ label, value, mod }) => (
+                  <div key={label} className="aw-data-row">
+                    <span className="aw-data-label">{label}</span>
+                    <span className={`aw-data-value${mod ? ` aw-data-value--${mod}` : ''}`}>{value}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <Card size="extraSmall" sx={{ padding: 0, minHeight: 0 }}>
-              <div className="aw-alloc-grid">
-                <div className="aw-alloc-row">
-                  <span className="aw-alloc-label">HO Allocation ID</span>
-                  <span className="aw-alloc-value">{opp.hoAllocationId}</span>
+
+            {/* ── B. Recommendation ── */}
+            <div className="aw-card">
+              <div className="aw-card-header">
+                <LightbulbOutlined sx={{ fontSize: 17 }} />
+                <h3>AI Recommendation</h3>
+                <Badge label="Auto-Generated" color="info" variant="subtle" size="small" />
+              </div>
+
+              {/* Recommendation highlight tiles */}
+              <div className="aw-rec-tiles">
+                <div className="aw-rec-tile aw-rec-tile--blue">
+                  <span className="aw-rec-tile-label">Recommended Qty</span>
+                  <span className="aw-rec-tile-value">{opp.recommendedAllocationQty}</span>
                 </div>
-                <div className="aw-alloc-row">
-                  <span className="aw-alloc-label">Allocation Cycle</span>
-                  <span className="aw-alloc-value">{opp.allocationCycle}</span>
-                </div>
-                <div className="aw-alloc-row">
-                  <span className="aw-alloc-label">HO Allocation Qty</span>
-                  <span className="aw-alloc-value aw-alloc-value--bold">{opp.currentHoAllocationQty}</span>
-                </div>
-                <div className="aw-alloc-row">
-                  <span className="aw-alloc-label">Received Qty</span>
-                  <span className="aw-alloc-value">{opp.receivedQty}</span>
-                </div>
-                <div className="aw-alloc-row">
-                  <span className="aw-alloc-label">In-Transit Qty</span>
-                  <span className="aw-alloc-value">{opp.inTransitQty}</span>
-                </div>
-                <div className="aw-alloc-row">
-                  <span className="aw-alloc-label">Store Stock</span>
-                  <span className="aw-alloc-value">{opp.currentStoreStock}</span>
-                </div>
-                <div className="aw-alloc-row">
-                  <span className="aw-alloc-label">Required Qty</span>
-                  <span className="aw-alloc-value">{opp.requiredQty}</span>
-                </div>
-                <div className="aw-alloc-row">
-                  <span className="aw-alloc-label">Allocation Gap</span>
-                  <span className="aw-alloc-value aw-alloc-value--gap">+{opp.allocationGap}</span>
+                <div className="aw-rec-tile aw-rec-tile--green">
+                  <span className="aw-rec-tile-label">Opportunity Value</span>
+                  <span className="aw-rec-tile-value">{fmt(opp.opportunityValue)}</span>
                 </div>
               </div>
-            </Card>
-          </div>
 
-          {/* ── B. Recommendation Panel ── */}
-          <div className="aw-panel">
-            <div className="aw-panel-header">
-              <LightbulbOutlined sx={{ fontSize: 18 }} />
-              <h3>Recommendation</h3>
-            </div>
-            <Card size="extraSmall" sx={{ padding: 0, minHeight: 0 }}>
-              <div className="aw-alloc-grid">
-                <div className="aw-alloc-row">
-                  <span className="aw-alloc-label">Recommended Qty</span>
-                  <span className="aw-alloc-value aw-alloc-value--accent">{opp.recommendedAllocationQty}</span>
-                </div>
-                <div className="aw-alloc-row">
-                  <span className="aw-alloc-label">Recommended Change</span>
-                  <span className="aw-alloc-value">+{opp.allocationGap} units</span>
-                </div>
-                <div className="aw-alloc-row">
-                  <span className="aw-alloc-label">Opportunity Value</span>
-                  <span className="aw-alloc-value">{fmt(opp.opportunityValue)}</span>
-                </div>
-                <div className="aw-alloc-row">
-                  <span className="aw-alloc-label">DC Available</span>
-                  <span className="aw-alloc-value">{opp.dcAvailableQty}</span>
-                </div>
-                <div className="aw-alloc-row">
-                  <span className="aw-alloc-label">Transfer Available</span>
-                  <span className="aw-alloc-value">{opp.transferAvailableQty}</span>
-                </div>
-                <div className="aw-alloc-row">
-                  <span className="aw-alloc-label">Fulfillment Path</span>
-                  <span className="aw-alloc-value">{FULFILLMENT_LABELS[opp.recommendedFulfillmentPath]}</span>
-                </div>
+              <div className="aw-data-table aw-data-table--compact">
+                {[
+                  { label: 'Recommended Change',  value: `+${opp.allocationGap} units`, mod: 'accent' },
+                  { label: 'DC Available',         value: opp.dcAvailableQty,            mod: '' },
+                  { label: 'Transfer Available',   value: opp.transferAvailableQty,      mod: '' },
+                  { label: 'Fulfillment Path',     value: FULFILLMENT_LABELS[opp.recommendedFulfillmentPath], mod: '' },
+                  { label: 'Expected Coverage',    value: opp.expectedCoverageImprovement, mod: 'ok' },
+                ].map(({ label, value, mod }) => (
+                  <div key={label} className="aw-data-row">
+                    <span className="aw-data-label">{label}</span>
+                    <span className={`aw-data-value${mod ? ` aw-data-value--${mod}` : ''}`}>{value}</span>
+                  </div>
+                ))}
               </div>
-            </Card>
+
+              {/* Why flagged */}
+              <div className="aw-flag-reason">
+                <InfoOutlined sx={{ fontSize: 14 }} />
+                <p>{opp.flagReason}</p>
+              </div>
+            </div>
           </div>
 
-          {/* ── C. Edit Allocation ── */}
-          <div className="aw-panel aw-panel--full">
-            <div className="aw-panel-header">
-              <EditOutlined sx={{ fontSize: 18 }} />
+          {/* ══════════════════════════════════════════════
+              EDIT ALLOCATION
+          ══════════════════════════════════════════════ */}
+          <div className="aw-card aw-card--edit">
+            <div className="aw-card-header">
+              <EditOutlined sx={{ fontSize: 17 }} />
               <h3>Edit Allocation</h3>
+              <span className="aw-card-header-sub">Fill in the fields below and send for approval</span>
             </div>
-            <Card size="extraSmall" sx={{ padding: '20px', minHeight: 0 }}>
-              <div className="aw-edit-grid">
-                <div className="aw-edit-field">
-                  <label className="aw-edit-label">Edited Allocation Qty</label>
-                  <Input
-                    type="number"
-                    value={String(editedQty)}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditedQty(Number(e.target.value))}
-                  />
-                </div>
-                <div className="aw-edit-field">
-                  <label className="aw-edit-label">Fulfillment Source</label>
-                  <ImFilterSelect
-                    value={fulfillment}
-                    options={FULFILLMENT_OPTIONS}
-                    onChange={v => setFulfillment((v || 'dc_allocation') as FulfillmentPath)}
-                    isClearable={false}
-                    minWidth={220}
-                  />
-                </div>
-                <div className="aw-edit-field">
-                  <label className="aw-edit-label">Required By Date</label>
-                  <Input
-                    type="date"
-                    value={requiredByDate}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRequiredByDate(e.target.value)}
-                  />
-                </div>
-                <div className="aw-edit-field">
-                  <label className="aw-edit-label">Reason Code</label>
-                  <ImFilterSelect
-                    value={reasonCode}
-                    options={REASON_OPTIONS}
-                    onChange={v => setReasonCode((v || 'high_velocity') as ReasonCode)}
-                    isClearable={false}
-                    minWidth={220}
-                  />
-                </div>
-                <div className="aw-edit-field aw-edit-field--full">
-                  <label className="aw-edit-label">
-                    Comment {needsComment && <span className="aw-required">* Required (qty differs from recommendation)</span>}
-                  </label>
-                  <textarea
-                    className="aw-textarea"
-                    rows={3}
-                    placeholder="Add a comment explaining the allocation change..."
-                    value={comment}
-                    onChange={e => setComment(e.target.value)}
-                  />
-                </div>
-              </div>
 
-              {/* Comparison Strip */}
-              <div className="aw-comparison-strip">
-                <div className="aw-comparison-item">
-                  <span className="aw-comparison-label">vs Current HO Alloc</span>
-                  <span className={`aw-comparison-value ${diffVsCurrent > 0 ? 'aw-comparison--positive' : diffVsCurrent < 0 ? 'aw-comparison--negative' : ''}`}>
-                    {diffVsCurrent > 0 ? '+' : ''}{diffVsCurrent} units
-                  </span>
-                </div>
-                <div className="aw-comparison-item">
-                  <span className="aw-comparison-label">vs Recommendation</span>
-                  <span className={`aw-comparison-value ${diffVsRecommended > 0 ? 'aw-comparison--positive' : diffVsRecommended < 0 ? 'aw-comparison--negative' : ''}`}>
-                    {diffVsRecommended > 0 ? '+' : ''}{diffVsRecommended} units
-                  </span>
-                </div>
-                <div className="aw-comparison-item">
-                  <span className="aw-comparison-label">Allocation Delta</span>
-                  <span className="aw-comparison-value aw-comparison--bold">
-                    {diffVsCurrent > 0 ? '+' : ''}{diffVsCurrent} units
-                  </span>
-                </div>
+            <div className="aw-edit-grid">
+              <div className="aw-edit-field">
+                <label className="aw-edit-label">Edited Allocation Qty</label>
+                <input
+                  className="aw-edit-input"
+                  type="number"
+                  value={editedQty}
+                  onChange={e => setEditedQty(Number(e.target.value))}
+                  min={0}
+                />
               </div>
-            </Card>
+              <div className="aw-edit-field">
+                <label className="aw-edit-label">Fulfillment Source</label>
+                <ImFilterSelect
+                  value={fulfillment}
+                  options={FULFILLMENT_OPTIONS}
+                  onChange={v => setFulfillment((v || 'dc_allocation') as FulfillmentPath)}
+                  isClearable={false}
+                  minWidth={220}
+                />
+              </div>
+              <div className="aw-edit-field">
+                <label className="aw-edit-label">Required By Date</label>
+                <input
+                  className="aw-edit-input"
+                  type="date"
+                  value={requiredByDate}
+                  onChange={e => setRequiredByDate(e.target.value)}
+                />
+              </div>
+              <div className="aw-edit-field">
+                <label className="aw-edit-label">Reason Code</label>
+                <ImFilterSelect
+                  value={reasonCode}
+                  options={REASON_OPTIONS}
+                  onChange={v => setReasonCode((v || 'high_velocity') as ReasonCode)}
+                  isClearable={false}
+                  minWidth={220}
+                />
+              </div>
+              <div className="aw-edit-field aw-edit-field--full">
+                <label className="aw-edit-label">
+                  Comment
+                  {needsComment && (
+                    <span className="aw-required"> * Required — qty differs from recommendation</span>
+                  )}
+                </label>
+                <textarea
+                  className="aw-textarea"
+                  rows={3}
+                  placeholder="Add a comment explaining the allocation change..."
+                  value={comment}
+                  onChange={e => setComment(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* ── Comparison Summary Tiles ── */}
+            <div className="aw-cmp-summary">
+              <div className={`aw-cmp-tile ${diffVsCurrent > 0 ? 'aw-cmp-tile--up' : diffVsCurrent < 0 ? 'aw-cmp-tile--down' : 'aw-cmp-tile--neutral'}`}>
+                <span className="aw-cmp-tile-label">vs Current HO Alloc</span>
+                <span className="aw-cmp-tile-value">
+                  {diffVsCurrent > 0 ? '+' : ''}{diffVsCurrent} units
+                </span>
+              </div>
+              <div className={`aw-cmp-tile ${diffVsRecommended > 0 ? 'aw-cmp-tile--up' : diffVsRecommended < 0 ? 'aw-cmp-tile--down' : 'aw-cmp-tile--neutral'}`}>
+                <span className="aw-cmp-tile-label">vs AI Recommendation</span>
+                <span className="aw-cmp-tile-value">
+                  {diffVsRecommended > 0 ? '+' : ''}{diffVsRecommended} units
+                </span>
+              </div>
+              <div className="aw-cmp-tile aw-cmp-tile--total">
+                <span className="aw-cmp-tile-label">New Allocation Total</span>
+                <span className="aw-cmp-tile-value">{editedQty} units</span>
+              </div>
+              <div className="aw-cmp-tile aw-cmp-tile--fulfillment">
+                <span className="aw-cmp-tile-label">Fulfillment Path</span>
+                <span className="aw-cmp-tile-value aw-cmp-tile-value--sm">{FULFILLMENT_LABELS[fulfillment]}</span>
+              </div>
+            </div>
           </div>
 
-          {/* ── Actions ── */}
-          <div className="aw-actions">
+          {/* ══════════════════════════════════════════════
+              ACTION BAR
+          ══════════════════════════════════════════════ */}
+          <div className="aw-action-bar">
             <Button
               variant="outlined"
               color="primary"
@@ -305,7 +373,7 @@ export const AllocationWorkflowPage: React.FC = () => {
             >
               Cancel
             </Button>
-            <div className="aw-actions-right">
+            <div className="aw-action-bar-right">
               <Button
                 variant="outlined"
                 color="primary"
@@ -325,6 +393,7 @@ export const AllocationWorkflowPage: React.FC = () => {
               </Button>
             </div>
           </div>
+
         </div>
       )}
     </div>

@@ -8,7 +8,8 @@ import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined';
 import GavelOutlined from '@mui/icons-material/GavelOutlined';
 import LocalShippingOutlined from '@mui/icons-material/LocalShippingOutlined';
 import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined';
-import { Button, Badge, Card, Input, Tabs } from 'impact-ui';
+import { Button, Badge, Card, Tabs } from 'impact-ui';
+import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import { ImDrawer } from '../../../components/common/ImDrawer';
 import { ImFilterSelect } from '../../../components/common/ImFilterSelect';
 import { OpportunityStatusChip } from './OpportunityStatusChip';
@@ -112,49 +113,83 @@ export const ApprovalsAndExecutionPage: React.FC = () => {
       </div>
 
       <div className="aep-content">
+      {/* ── Summary Tiles ── */}
+      <div className="sc-inv-summary">
+        <div className="sc-inv-summary-tile sc-inv-summary--warn">
+          <span className="sc-inv-summary-label">Pending Approval</span>
+          <span className="sc-inv-summary-value">{allRequests.filter(r => r.status === 'pending_approval').length}</span>
+          <span className="sc-inv-summary-sub">awaiting review</span>
+        </div>
+        <div className="sc-inv-summary-tile sc-inv-summary--success">
+          <span className="sc-inv-summary-label">Approved</span>
+          <span className="sc-inv-summary-value">{allRequests.filter(r => r.status === 'approved').length}</span>
+          <span className="sc-inv-summary-sub">ready to execute</span>
+        </div>
+        <div className="sc-inv-summary-tile sc-inv-summary--total">
+          <span className="sc-inv-summary-label">In Execution</span>
+          <span className="sc-inv-summary-value">{allRecords.filter(r => r.status === 'actioned').length}</span>
+          <span className="sc-inv-summary-sub">actively tracked</span>
+        </div>
+        <div className="sc-inv-summary-tile sc-inv-summary--info">
+          <span className="sc-inv-summary-label">Closed</span>
+          <span className="sc-inv-summary-value">{allRecords.filter(r => r.status === 'closed').length}</span>
+          <span className="sc-inv-summary-sub">completed</span>
+        </div>
+        <div className="sc-inv-summary-tile sc-inv-summary--critical">
+          <span className="sc-inv-summary-label">Rejected</span>
+          <span className="sc-inv-summary-value">{allRequests.filter(r => r.status === 'rejected').length}</span>
+          <span className="sc-inv-summary-sub">needs re-submission</span>
+        </div>
+      </div>
+
       {/* ── Main Tabs ── */}
       <div className="aep-main-tabs">
         <Tabs
           value={mainTab}
           onChange={(_, v: string) => { setMainTab(v); setPage(0); setSearch(''); setExecStatusFilter(''); }}
           tabNames={[
-            {
-              value: 'approvals',
-              label: `Pending Approvals (${allRequests.length})`,
-              icon: <GavelOutlined sx={{ fontSize: 15 }} />,
-            },
-            {
-              value: 'execution',
-              label: `Execution Tracking (${allRecords.length})`,
-              icon: <LocalShippingOutlined sx={{ fontSize: 15 }} />,
-            },
+            { value: 'approvals', label: `Pending Approvals (${allRequests.length})`, icon: <GavelOutlined sx={{ fontSize: 15 }} /> },
+            { value: 'execution', label: `Execution Tracking (${allRecords.length})`, icon: <LocalShippingOutlined sx={{ fontSize: 15 }} /> },
           ]}
           tabPanels={[]}
         />
       </div>
 
-      {/* ── Toolbar ── */}
-      <div className="aep-toolbar">
-        <Input
-          placeholder={mainTab === 'approvals' ? 'Search by product, SKU, store, or ID...' : 'Search by product, SKU, or ID...'}
-          value={search}
-          onChange={e => { setSearch(e.target.value); setPage(0); }}
-          leftIcon={<SearchOutlined sx={{ fontSize: 16 }} />}
-        />
-        {mainTab === 'execution' && (
-          <ImFilterSelect
-            placeholder="Status"
-            value={execStatusFilter}
-            options={[
-              { value: '', label: 'All Statuses' },
-              ...EXEC_STATUS_TABS.filter(s => s !== 'all').map(s => ({
-                value: s,
-                label: OPPORTUNITY_STATUS_LABELS[s as OpportunityStatus],
-              })),
-            ]}
-            onChange={v => { setExecStatusFilter(v); setPage(0); }}
-            minWidth={150}
+      {/* ── Premium Filter Bar ── */}
+      <div className="sc-inv-premium-filter-bar">
+        <div className="sc-inv-search">
+          <SearchOutlined sx={{ fontSize: 15 }}/>
+          <input
+            type="text"
+            placeholder={mainTab === 'approvals' ? 'Search by product, SKU, store, or ID…' : 'Search by product, SKU, or ID…'}
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(0); }}
           />
+          {search && (
+            <button className="sc-inv-search-clear" onClick={() => { setSearch(''); setPage(0); }}>
+              <CloseOutlined sx={{ fontSize: 13 }}/>
+            </button>
+          )}
+        </div>
+        {mainTab === 'execution' && (
+          <>
+            <div className="sc-inv-filter-divider"/>
+            <div className="sc-inv-filter-fields">
+              <ImFilterSelect
+                placeholder="All Statuses"
+                value={execStatusFilter || 'All'}
+                options={[{ value: 'All', label: 'All Statuses' }, ...EXEC_STATUS_TABS.filter(s => s !== 'all').map(s => ({ value: s, label: OPPORTUNITY_STATUS_LABELS[s as OpportunityStatus] }))]}
+                isClearable={!!execStatusFilter}
+                minWidth={160}
+                onChange={v => { setExecStatusFilter(v === 'All' ? '' : (v || '')); setPage(0); }}
+              />
+            </div>
+          </>
+        )}
+        {(search || execStatusFilter) && (
+          <button className="sc-inv-clear-chip" onClick={() => { setSearch(''); setExecStatusFilter(''); setPage(0); }}>
+            <CloseOutlined sx={{ fontSize: 11 }}/> Clear
+          </button>
         )}
       </div>
 

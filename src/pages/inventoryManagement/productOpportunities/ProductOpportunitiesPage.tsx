@@ -4,14 +4,6 @@ import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import TrendingUpOutlined from '@mui/icons-material/TrendingUpOutlined';
 import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined';
 import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
-import AssignmentOutlined from '@mui/icons-material/AssignmentOutlined';
-import AttachMoneyOutlined from '@mui/icons-material/AttachMoneyOutlined';
-import HourglassEmptyOutlined from '@mui/icons-material/HourglassEmptyOutlined';
-import CheckCircleOutlineOutlined from '@mui/icons-material/CheckCircleOutlineOutlined';
-import CancelOutlined from '@mui/icons-material/CancelOutlined';
-import ErrorOutlineOutlined from '@mui/icons-material/ErrorOutlineOutlined';
-import LocalShippingOutlined from '@mui/icons-material/LocalShippingOutlined';
-import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined';
 import ChevronLeftOutlined from '@mui/icons-material/ChevronLeftOutlined';
 import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined';
 import StoreOutlined from '@mui/icons-material/StoreOutlined';
@@ -19,7 +11,8 @@ import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
 import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined';
 import CalendarTodayOutlined from '@mui/icons-material/CalendarTodayOutlined';
 import Check from '@mui/icons-material/Check';
-import { Card, Tabs, Input } from 'impact-ui';
+import { Tabs } from 'impact-ui';
+import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import { ImFilterSelect } from '../../../components/common/ImFilterSelect';
 import { OpportunityStatusChip } from './OpportunityStatusChip';
 import { ProductDetailDrawer } from './ProductDetailDrawer';
@@ -99,22 +92,10 @@ export const ProductOpportunitiesPage: React.FC = () => {
   const fmt = (v: number) =>
     v.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
 
-  const statusOptions = [
-    { value: '', label: 'All Statuses' },
-    ...Object.entries(OPPORTUNITY_STATUS_LABELS).map(([k, v]) => ({ value: k, label: v })),
-  ];
 
-  const summaryCards = [
-    { label: 'Total Open', value: summary.totalOpen, icon: <AssignmentOutlined sx={{ fontSize: 18 }} />, color: 'var(--ia-color-info)' },
-    { label: 'In Progress', value: summary.inProgress, icon: <HourglassEmptyOutlined sx={{ fontSize: 18 }} />, color: 'var(--ia-color-warning)' },
-    { label: 'Pending Approval', value: summary.pendingApproval, icon: <HourglassEmptyOutlined sx={{ fontSize: 18 }} />, color: 'var(--ia-color-warning)' },
-    { label: 'Approved', value: summary.approved, icon: <CheckCircleOutlineOutlined sx={{ fontSize: 18 }} />, color: 'var(--ia-color-success)' },
-    { label: 'Actioned', value: summary.actioned, icon: <LocalShippingOutlined sx={{ fontSize: 18 }} />, color: 'var(--ia-color-info)' },
-    { label: 'Closed', value: summary.closed, icon: <TaskAltOutlined sx={{ fontSize: 18 }} />, color: 'var(--ia-color-success)' },
-    { label: 'Rejected', value: summary.rejected, icon: <CancelOutlined sx={{ fontSize: 18 }} />, color: 'var(--ia-color-error)' },
-    { label: 'Unresolved', value: summary.unresolved, icon: <ErrorOutlineOutlined sx={{ fontSize: 18 }} />, color: 'var(--ia-color-error)' },
-    { label: 'Total Value', value: fmt(summary.totalValue), icon: <AttachMoneyOutlined sx={{ fontSize: 18 }} />, color: 'var(--ia-color-primary)' },
-  ];
+  const topPerformingCount = allOpportunities.filter(o => o.opportunityType === 'top_performing').length;
+  const emergingCount      = allOpportunities.filter(o => o.opportunityType === 'emerging').length;
+  const atRiskCount        = allOpportunities.filter(o => o.opportunityType === 'at_risk').length;
 
   return (
     <div className="po-page">
@@ -170,51 +151,82 @@ export const ProductOpportunitiesPage: React.FC = () => {
       </div>
 
       <div className="po-content">
-      {/* ── Summary Cards ── */}
-      <div className="po-summary-grid">
-        {summaryCards.map(card => (
-          <Card key={card.label} size="extraSmall" sx={{ padding: 0, minHeight: 0 }}>
-            <div className="po-summary-card">
-              <div className="po-summary-icon" style={{ color: card.color, background: `${card.color}12` }}>
-                {card.icon}
-              </div>
-              <div className="po-summary-info">
-                <span className="po-summary-value">{card.value}</span>
-                <span className="po-summary-label">{card.label}</span>
-              </div>
-            </div>
-          </Card>
-        ))}
+      {/* ── Summary Tiles ── */}
+      <div className="sc-inv-summary">
+        <div className="sc-inv-summary-tile sc-inv-summary--total">
+          <span className="sc-inv-summary-label">Total Open</span>
+          <span className="sc-inv-summary-value">{summary.totalOpen}</span>
+          <span className="sc-inv-summary-sub">{allOpportunities.length} tracked SKUs</span>
+        </div>
+        <div className="sc-inv-summary-tile sc-inv-summary--success">
+          <span className="sc-inv-summary-label">Top Performing</span>
+          <span className="sc-inv-summary-value">{topPerformingCount}</span>
+          <span className="sc-inv-summary-sub">high-value opportunities</span>
+        </div>
+        <div className="sc-inv-summary-tile sc-inv-summary--info">
+          <span className="sc-inv-summary-label">Emerging</span>
+          <span className="sc-inv-summary-value">{emergingCount}</span>
+          <span className="sc-inv-summary-sub">growing trend</span>
+        </div>
+        <div className="sc-inv-summary-tile sc-inv-summary--critical">
+          <span className="sc-inv-summary-label">At-Risk</span>
+          <span className="sc-inv-summary-value">{atRiskCount}</span>
+          <span className="sc-inv-summary-sub">requires attention</span>
+        </div>
+        <div className="sc-inv-summary-tile sc-inv-summary--warn">
+          <span className="sc-inv-summary-label">Pending Approval</span>
+          <span className="sc-inv-summary-value">{summary.pendingApproval}</span>
+          <span className="sc-inv-summary-sub">awaiting review</span>
+        </div>
       </div>
 
-      {/* ── Tabs + Filters ── */}
-      <div className="po-toolbar">
+      {/* ── Tabs ── */}
+      <div className="po-tabs-row">
         <Tabs
           value={activeTab}
           onChange={(_, v: string) => { setActiveTab(v); setPage(0); }}
           tabNames={[
-            { value: 'all', label: `All (${allOpportunities.length})` },
-            { value: 'top_performing', label: `Top Performing` },
-            { value: 'emerging', label: `Emerging` },
-            { value: 'at_risk', label: `At-Risk` },
+            { value: 'all',            label: `All (${allOpportunities.length})` },
+            { value: 'top_performing', label: 'Top Performing' },
+            { value: 'emerging',       label: 'Emerging' },
+            { value: 'at_risk',        label: 'At-Risk' },
           ]}
           tabPanels={[]}
         />
-        <div className="po-filters">
-          <Input
-            placeholder="Search products..."
+      </div>
+
+      {/* ── Premium Filter Bar ── */}
+      <div className="sc-inv-premium-filter-bar">
+        <div className="sc-inv-search">
+          <SearchOutlined sx={{ fontSize: 15 }}/>
+          <input
+            type="text"
+            placeholder="Search products, SKU, category…"
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(0); }}
-            leftIcon={<SearchOutlined sx={{ fontSize: 16 }} />}
           />
+          {search && (
+            <button className="sc-inv-search-clear" onClick={() => { setSearch(''); setPage(0); }}>
+              <CloseOutlined sx={{ fontSize: 13 }}/>
+            </button>
+          )}
+        </div>
+        <div className="sc-inv-filter-divider"/>
+        <div className="sc-inv-filter-fields">
           <ImFilterSelect
-            placeholder="Status"
-            value={statusFilter}
-            options={statusOptions}
-            onChange={v => { setStatusFilter(v); setPage(0); }}
+            placeholder="All Statuses"
+            value={statusFilter || 'All'}
+            options={[{ value: 'All', label: 'All Statuses' }, ...Object.entries(OPPORTUNITY_STATUS_LABELS).map(([k, v]) => ({ value: k, label: v }))]}
+            isClearable={!!statusFilter}
             minWidth={160}
+            onChange={v => { setStatusFilter(v === 'All' ? '' : (v || '')); setPage(0); }}
           />
         </div>
+        {(search || statusFilter) && (
+          <button className="sc-inv-clear-chip" onClick={() => { setSearch(''); setStatusFilter(''); setPage(0); }}>
+            <CloseOutlined sx={{ fontSize: 11 }}/> Clear
+          </button>
+        )}
       </div>
 
       {/* ── Product Opportunity Table ── */}

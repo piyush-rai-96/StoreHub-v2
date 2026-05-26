@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import GppGoodOutlined from '@mui/icons-material/GppGoodOutlined';
+import HomeOutlined from '@mui/icons-material/HomeOutlined';
+import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
+import StoreOutlined from '@mui/icons-material/StoreOutlined';
+import LayersOutlined from '@mui/icons-material/LayersOutlined';
+import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined';
+import AssignmentOutlined from '@mui/icons-material/AssignmentOutlined';
+import ForumOutlined from '@mui/icons-material/ForumOutlined';
+import ManageAccountsOutlined from '@mui/icons-material/ManageAccountsOutlined';
+import Inventory2Outlined from '@mui/icons-material/Inventory2Outlined';
 import PersonAddAlt1Outlined from '@mui/icons-material/PersonAddAlt1Outlined';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
@@ -20,7 +29,7 @@ import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
 import {
   Button, Badge, Card,
   Toast, Avatar, EmptyState, Tooltip,
-  Input, Switch, Checkbox, Modal, Select, Tag,
+  Input, Switch, Checkbox, Modal, Select,
 } from 'impact-ui';
 import { useAuth } from '../context/AuthContext';
 import { User, UserRole, ROLE_LABELS, ROLE_ACCESS, ScreenAccess } from '../types';
@@ -38,6 +47,31 @@ const SCREEN_LABELS: Record<ScreenAccess, string> = {
   communications: 'Communications',
   user_access_management: 'User Access Management',
   inventory_management: 'Inventory Management',
+};
+
+interface ScreenMeta { label: string; icon: React.ReactNode; module: string; color: string; }
+const SCREEN_META: Record<ScreenAccess, ScreenMeta> = {
+  home:                   { label: 'Dashboard',              icon: <HomeOutlined sx={{ fontSize: 15 }}/>,            module: 'Store Operations',     color: '#2563eb' },
+  district_intelligence:  { label: 'District Intelligence',  icon: <PlaceOutlinedIcon sx={{ fontSize: 15 }}/>,       module: 'Store Operations',     color: '#2563eb' },
+  store_deep_dive:        { label: 'Store Deep Dive',         icon: <StoreOutlined sx={{ fontSize: 15 }}/>,           module: 'Store Operations',     color: '#2563eb' },
+  master_pog_management:  { label: 'Master POG Management',  icon: <LayersOutlined sx={{ fontSize: 15 }}/>,          module: 'Planogram Intelligence', color: '#7c3aed' },
+  pog_rule_management:    { label: 'POG Rule Management',    icon: <LayersOutlined sx={{ fontSize: 15 }}/>,          module: 'Planogram Intelligence', color: '#7c3aed' },
+  pog_localization_engine:{ label: 'POG Localization Engine',icon: <AutoAwesomeOutlined sx={{ fontSize: 15 }}/>,     module: 'Planogram Intelligence', color: '#7c3aed' },
+  inventory_management:   { label: 'Inventory Management',   icon: <Inventory2Outlined sx={{ fontSize: 15 }}/>,      module: 'Inventory Management', color: '#0891b2' },
+  operations_queue:       { label: 'Operations Queue',       icon: <AssignmentOutlined sx={{ fontSize: 15 }}/>,      module: 'Command Center',       color: '#059669' },
+  communications:         { label: 'Communications',         icon: <ForumOutlined sx={{ fontSize: 15 }}/>,           module: 'Command Center',       color: '#059669' },
+  ai_copilot:             { label: 'Ask Alan',               icon: <AutoAwesomeOutlined sx={{ fontSize: 15 }}/>,     module: 'Command Center',       color: '#059669' },
+  user_access_management: { label: 'User Access Management', icon: <ManageAccountsOutlined sx={{ fontSize: 15 }}/>,  module: 'Administration',       color: '#b45309' },
+};
+
+const MODULE_ORDER = ['Store Operations', 'Inventory Management', 'Planogram Intelligence', 'Command Center', 'Administration'];
+
+const MODULE_STYLES: Record<string, { bg: string; border: string; text: string; dot: string }> = {
+  'Store Operations':      { bg: '#fafbfc', border: '#eaecef', text: '#667085', dot: '#2563eb' },
+  'Inventory Management':  { bg: '#fafbfc', border: '#eaecef', text: '#667085', dot: '#0891b2' },
+  'Planogram Intelligence':{ bg: '#fafbfc', border: '#eaecef', text: '#667085', dot: '#7c3aed' },
+  'Command Center':        { bg: '#fafbfc', border: '#eaecef', text: '#667085', dot: '#059669' },
+  'Administration':        { bg: '#fafbfc', border: '#eaecef', text: '#667085', dot: '#b45309' },
 };
 
 const SCOPE_OPTIONS: Record<UserRole, { label: string; options: string[] }> = {
@@ -421,17 +455,38 @@ export const UserAccessManagement: React.FC = () => {
                 {expandedRow === u.id && (
                   <tr className="uam-expand-row">
                     <td colSpan={6}>
-                      <div className="uam-expand-content">
-                        <div className="uam-expand-label">Screen Access</div>
-                        <div className="uam-expand-chips">
-                          {u.accessRoutes.map(screen => (
-                            <Tag
-                              key={screen}
-                              label={SCREEN_LABELS[screen]}
-                              variant="stroke"
-                              size="small"
-                            />
-                          ))}
+                      <div className="uam-expand-content uam-screen-access-panel">
+                        <div className="uam-screen-access-header">
+                          <GppGoodOutlined sx={{ fontSize: 15, color: '#2563eb' }}/>
+                          <span className="uam-screen-access-title">Screen Access</span>
+                          <span className="uam-screen-access-count">{u.accessRoutes.length} of {Object.keys(SCREEN_META).length} screens</span>
+                        </div>
+                        <div className="uam-screen-access-modules">
+                          {MODULE_ORDER.map(module => {
+                            const screens = u.accessRoutes.filter(s => SCREEN_META[s]?.module === module);
+                            if (screens.length === 0) return null;
+                            const style = MODULE_STYLES[module];
+                            return (
+                              <div key={module} className="uam-screen-module" style={{ background: style.bg, borderColor: style.border }}>
+                                <div className="uam-screen-module-header">
+                                  <span className="uam-screen-module-dot" style={{ background: style.dot }}/>
+                                  <span className="uam-screen-module-name" style={{ color: style.text }}>{module}</span>
+                                  <span className="uam-screen-module-count" style={{ color: style.text }}>{screens.length}</span>
+                                </div>
+                                <div className="uam-screen-module-items">
+                                  {screens.map(screen => {
+                                    const meta = SCREEN_META[screen];
+                                    return (
+                                      <div key={screen} className="uam-screen-item">
+                                        <span className="uam-screen-item-icon" style={{ color: style.dot }}>{meta.icon}</span>
+                                        <span className="uam-screen-item-label">{meta.label}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     </td>

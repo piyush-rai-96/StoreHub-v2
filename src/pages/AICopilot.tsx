@@ -27,10 +27,13 @@ import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
 import BuildOutlined from '@mui/icons-material/BuildOutlined';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import StoreOutlined from '@mui/icons-material/StoreOutlined';
+import HeadphonesOutlined from '@mui/icons-material/HeadphonesOutlined';
 import { Button, Card, Chips, Tabs, Badge, ChatBotComponent } from 'impact-ui';
 import { useAuth } from '../context/AuthContext';
 import type { StorehubOpenAlanDetail } from '../types';
 import { STOREHUB_OPEN_ALAN } from '../utils/openAskAlan';
+import { AudioPlayer } from '../components/common/AudioPlayer';
+import '../components/common/AudioPlayer.css';
 import './AICopilot.css';
 
 // ── Types ──
@@ -516,6 +519,7 @@ export const AICopilot: React.FC = () => {
   const [openSource, setOpenSource] = useState<{ doc: string; section: string; page: string; tag?: string; updated?: string; excerpt?: string } | null>(null);
   const [sourcesPanelMsgId, setSourcesPanelMsgId] = useState<string | null>(null);
   const [isChatBotOpen, setIsChatBotOpen] = useState(false);
+  const [listeningMsgId, setListeningMsgId] = useState<string | null>(null);
 
   // ── Conversation history (session-scoped) ──────────────────────────────────
   interface SavedConversation {
@@ -2627,8 +2631,33 @@ export const AICopilot: React.FC = () => {
                         <div className="cop-msg-meta">
                           <span className="cop-msg-sender">{msg.role === 'user' ? 'You' : 'Ask Alan'}</span>
                           <span className="cop-msg-time">{formatTime(msg.timestamp)}</span>
+                          {msg.role === 'assistant' && !msg.isTyping && !msg.isProcessing && msg.content && (
+                            <button
+                              className={`aup-listen-btn cop-listen-btn${listeningMsgId === msg.id ? ' aup-listen-btn--active' : ''}`}
+                              onClick={() => setListeningMsgId(id => id === msg.id ? null : msg.id)}
+                              title="Listen to this response"
+                            >
+                              <span className="aup-listen-btn-icon">
+                                {listeningMsgId === msg.id
+                                  ? <span className="aup-soundwave aup-soundwave--sm"><span/><span/><span/><span/></span>
+                                  : <HeadphonesOutlined sx={{ fontSize: 13 }} />
+                                }
+                              </span>
+                              {listeningMsgId === msg.id ? 'Playing…' : 'Listen'}
+                            </button>
+                          )}
                         </div>
                         {renderMessageContent(msg)}
+                        {listeningMsgId === msg.id && (
+                          <div className="cop-audio-player-wrap">
+                            <AudioPlayer
+                              text={msg.content}
+                              title="Ask Alan"
+                              variant="card"
+                              onClose={() => setListeningMsgId(null)}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -40,6 +40,11 @@ import SentimentSatisfiedOutlined from '@mui/icons-material/SentimentSatisfiedOu
 import SentimentNeutralOutlined from '@mui/icons-material/SentimentNeutralOutlined';
 import SentimentVeryDissatisfiedOutlined from '@mui/icons-material/SentimentVeryDissatisfiedOutlined';
 import CrisisAlert from '@mui/icons-material/CrisisAlert';
+import ShieldOutlined from '@mui/icons-material/ShieldOutlined';
+import ChevronLeftOutlined from '@mui/icons-material/ChevronLeftOutlined';
+import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined';
+import AssignmentOutlined from '@mui/icons-material/AssignmentOutlined';
+import LinkOutlined from '@mui/icons-material/LinkOutlined';
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import AssignmentTurnedInOutlined from '@mui/icons-material/AssignmentTurnedInOutlined';
 import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutlined';
@@ -564,6 +569,185 @@ const getDiscrepancyColor = (cls: DiscrepancyClass) => {
   }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Phantom Stock Heatmap — Types & Mock Data
+// ─────────────────────────────────────────────────────────────────────────────
+type PhantomRisk = 'High' | 'Medium' | 'Low' | 'Minimal';
+type PhantomStatus = 'Open' | 'In Progress' | 'Resolved' | 'Dismissed';
+
+interface PhantomSkuRow {
+  productName: string;
+  sku: string;
+  bohQty: number;
+  shelfQty: number;
+  lastSaleDate: string;
+  zeroSalesDays: number;
+  inventoryValue: number;
+  riskLevel: 'High' | 'Medium' | 'Low';
+}
+
+interface PhantomRow {
+  id: string;
+  department: string;
+  subDepartment: string;
+  itemClass: string;
+  phantomSkus: number;
+  inventoryUnits: number;
+  bohUnits: number;
+  shelfQty: number;
+  lastSaleDate: string;
+  zeroSalesDays: number;
+  inventoryValue: number;
+  riskLevel: PhantomRisk;
+  linkedTasks: number;
+  status: PhantomStatus;
+  whyFlagged: string;
+  recommendedAction: string;
+  skuBreakdown: PhantomSkuRow[];
+}
+
+const PHANTOM_ROWS: PhantomRow[] = [
+  {
+    id: 'ps-001',
+    department: 'Beverages', subDepartment: 'Carbonated Drinks', itemClass: 'Cola',
+    phantomSkus: 3, inventoryUnits: 144, bohUnits: 144, shelfQty: 0,
+    lastSaleDate: 'Apr 28, 2026', zeroSalesDays: 27, inventoryValue: 1620,
+    riskLevel: 'High', linkedTasks: 2, status: 'Open',
+    whyFlagged: 'System shows 144 units on-hand across 3 SKUs, but zero sales recorded for 27 consecutive days. Shelf image audit confirms shelf gap — product is not reaching customers.',
+    recommendedAction: 'Immediately move all units from BOH to shelf. Check for backroom blockage. Initiate Inventory Check / Cycle Count task.',
+    skuBreakdown: [
+      { productName: 'Coca-Cola Zero 12pk', sku: 'SKU-884221', bohQty: 48, shelfQty: 0, lastSaleDate: 'Apr 28, 2026', zeroSalesDays: 27, inventoryValue: 576, riskLevel: 'High' },
+      { productName: 'Pepsi Max 6pk', sku: 'SKU-884310', bohQty: 60, shelfQty: 0, lastSaleDate: 'Apr 29, 2026', zeroSalesDays: 26, inventoryValue: 660, riskLevel: 'High' },
+      { productName: 'Diet Coke 2L', sku: 'SKU-884450', bohQty: 36, shelfQty: 0, lastSaleDate: 'Apr 30, 2026', zeroSalesDays: 25, inventoryValue: 384, riskLevel: 'Medium' },
+    ],
+  },
+  {
+    id: 'ps-002',
+    department: 'Beverages', subDepartment: 'Energy Drinks', itemClass: 'Energy',
+    phantomSkus: 2, inventoryUnits: 96, bohUnits: 96, shelfQty: 0,
+    lastSaleDate: 'May 2, 2026', zeroSalesDays: 23, inventoryValue: 1440,
+    riskLevel: 'High', linkedTasks: 1, status: 'In Progress',
+    whyFlagged: '96 units of 2 energy drink SKUs confirmed in BOH with zero shelf presence. Sales velocity expected at 12–15 units/week based on cluster average.',
+    recommendedAction: 'Replenish shelf from BOH (Bay 4, Aisle 5). Assign cycle count task to stock associate.',
+    skuBreakdown: [
+      { productName: 'Red Bull 250ml 4pk', sku: 'SKU-990341', bohQty: 60, shelfQty: 0, lastSaleDate: 'May 2, 2026', zeroSalesDays: 23, inventoryValue: 900, riskLevel: 'High' },
+      { productName: 'Monster Energy 500ml', sku: 'SKU-990422', bohQty: 36, shelfQty: 0, lastSaleDate: 'May 3, 2026', zeroSalesDays: 22, inventoryValue: 540, riskLevel: 'High' },
+    ],
+  },
+  {
+    id: 'ps-003',
+    department: 'Personal Care', subDepartment: 'Body Wash', itemClass: 'Body Care',
+    phantomSkus: 2, inventoryUnits: 120, bohUnits: 80, shelfQty: 40,
+    lastSaleDate: 'May 3, 2026', zeroSalesDays: 22, inventoryValue: 1080,
+    riskLevel: 'High', linkedTasks: 1, status: 'Open',
+    whyFlagged: 'System reports 120 units across 2 SKUs. Shelf has 40 units but zero sales for 22 days despite typical velocity of 8 units/week. Possible planogram mismatch hiding product from customers.',
+    recommendedAction: 'Verify shelf position matches active POG. Check if price tags are visible. Confirm product is accessible to shoppers.',
+    skuBreakdown: [
+      { productName: 'Dove Body Wash 400ml', sku: 'SKU-556732', bohQty: 48, shelfQty: 24, lastSaleDate: 'May 3, 2026', zeroSalesDays: 22, inventoryValue: 576, riskLevel: 'High' },
+      { productName: 'Nivea Shower Gel 250ml', sku: 'SKU-556811', bohQty: 32, shelfQty: 16, lastSaleDate: 'May 5, 2026', zeroSalesDays: 20, inventoryValue: 504, riskLevel: 'Medium' },
+    ],
+  },
+  {
+    id: 'ps-004',
+    department: 'Condiments', subDepartment: 'Sauces', itemClass: 'Ketchup',
+    phantomSkus: 1, inventoryUnits: 60, bohUnits: 60, shelfQty: 0,
+    lastSaleDate: 'May 3, 2026', zeroSalesDays: 22, inventoryValue: 660,
+    riskLevel: 'High', linkedTasks: 1, status: 'Open',
+    whyFlagged: '60 units confirmed in BOH with zero shelf presence. Product trapped in backroom since last delivery.',
+    recommendedAction: 'Move 60 units from BOH Aisle 3, Bay 2 to shelf. Verify planogram position.',
+    skuBreakdown: [
+      { productName: 'Heinz Ketchup 1L', sku: 'SKU-334512', bohQty: 60, shelfQty: 0, lastSaleDate: 'May 3, 2026', zeroSalesDays: 22, inventoryValue: 660, riskLevel: 'High' },
+    ],
+  },
+  {
+    id: 'ps-005',
+    department: "Women's", subDepartment: 'Dresses', itemClass: 'Casual Dresses',
+    phantomSkus: 2, inventoryUnits: 48, bohUnits: 32, shelfQty: 16,
+    lastSaleDate: 'May 7, 2026', zeroSalesDays: 18, inventoryValue: 2880,
+    riskLevel: 'Medium', linkedTasks: 1, status: 'Open',
+    whyFlagged: '48 units across 2 casual dress SKUs with 18 days of zero sales. Possible size-run imbalance — system may be miscounting available-to-sell units.',
+    recommendedAction: 'Conduct physical size-run audit. Verify system inventory matches shelf. Check for incorrect size tagging.',
+    skuBreakdown: [
+      { productName: 'Floral Midi Dress — Navy', sku: 'SKU-WOM-DRS-014', bohQty: 18, shelfQty: 10, lastSaleDate: 'May 7, 2026', zeroSalesDays: 18, inventoryValue: 1620, riskLevel: 'Medium' },
+      { productName: 'Linen Wrap Dress — White', sku: 'SKU-WOM-DRS-021', bohQty: 14, shelfQty: 6, lastSaleDate: 'May 8, 2026', zeroSalesDays: 17, inventoryValue: 1260, riskLevel: 'Medium' },
+    ],
+  },
+  {
+    id: 'ps-006',
+    department: "Men's", subDepartment: 'Bottoms', itemClass: 'Denim',
+    phantomSkus: 2, inventoryUnits: 55, bohUnits: 30, shelfQty: 25,
+    lastSaleDate: 'May 9, 2026', zeroSalesDays: 16, inventoryValue: 2475,
+    riskLevel: 'Medium', linkedTasks: 1, status: 'In Progress',
+    whyFlagged: 'Denim inventory showing 16 days of zero sales despite 55 units on-hand. Cluster average for this class is 8 units/week. Possible display or placement issue.',
+    recommendedAction: 'Review shelf display and ensure correct size runs are visible. Check fitting room returns are being re-shelved promptly.',
+    skuBreakdown: [
+      { productName: 'Slim Fit Denim — Dark Wash', sku: 'SKU-MEN-DNM-003', bohQty: 18, shelfQty: 14, lastSaleDate: 'May 9, 2026', zeroSalesDays: 16, inventoryValue: 1440, riskLevel: 'Medium' },
+      { productName: 'Straight Leg Jeans — Black', sku: 'SKU-MEN-DNM-011', bohQty: 12, shelfQty: 11, lastSaleDate: 'May 10, 2026', zeroSalesDays: 15, inventoryValue: 1035, riskLevel: 'Medium' },
+    ],
+  },
+  {
+    id: 'ps-007',
+    department: "Women's", subDepartment: 'Tops', itemClass: 'Basics',
+    phantomSkus: 1, inventoryUnits: 36, bohUnits: 12, shelfQty: 24,
+    lastSaleDate: 'May 12, 2026', zeroSalesDays: 13, inventoryValue: 720,
+    riskLevel: 'Low', linkedTasks: 0, status: 'Open',
+    whyFlagged: '36 units on-hand with 13 zero-sales days. Slightly below normal velocity but within acceptable range. May be seasonal slowdown.',
+    recommendedAction: 'Monitor for next 7 days. If sales remain zero, initiate cycle count to verify accuracy.',
+    skuBreakdown: [
+      { productName: "Women's V-Neck Basic Tee — White", sku: 'SKU-WOM-TOP-014', bohQty: 12, shelfQty: 24, lastSaleDate: 'May 12, 2026', zeroSalesDays: 13, inventoryValue: 720, riskLevel: 'Low' },
+    ],
+  },
+  {
+    id: 'ps-008',
+    department: 'Beverages', subDepartment: 'Juices', itemClass: 'Juice',
+    phantomSkus: 1, inventoryUnits: 24, bohUnits: 12, shelfQty: 12,
+    lastSaleDate: 'May 14, 2026', zeroSalesDays: 11, inventoryValue: 240,
+    riskLevel: 'Low', linkedTasks: 0, status: 'Open',
+    whyFlagged: '24 units with 11 days zero sales. Monitor — may be slow-moving seasonal item.',
+    recommendedAction: 'Monitor. Initiate cycle count if zero sales continue past 14 days.',
+    skuBreakdown: [
+      { productName: 'Tropicana OJ 1L', sku: 'SKU-JCE-001', bohQty: 12, shelfQty: 12, lastSaleDate: 'May 14, 2026', zeroSalesDays: 11, inventoryValue: 240, riskLevel: 'Low' },
+    ],
+  },
+  {
+    id: 'ps-009',
+    department: 'Footwear', subDepartment: "Men's Footwear", itemClass: 'Formal',
+    phantomSkus: 1, inventoryUnits: 18, bohUnits: 10, shelfQty: 8,
+    lastSaleDate: 'May 11, 2026', zeroSalesDays: 14, inventoryValue: 1980,
+    riskLevel: 'Medium', linkedTasks: 1, status: 'Open',
+    whyFlagged: 'Formal footwear SKU showing 14 days zero sales with 18 units on-hand. Higher-value inventory at risk. Sales typically slow in this class but velocity of zero is abnormal.',
+    recommendedAction: 'Verify product is on display and correctly positioned. Check if size range available matches customer demand profile.',
+    skuBreakdown: [
+      { productName: 'Oxford Leather Shoes — Black', sku: 'SKU-FTW-FRM-002', bohQty: 10, shelfQty: 8, lastSaleDate: 'May 11, 2026', zeroSalesDays: 14, inventoryValue: 1980, riskLevel: 'Medium' },
+    ],
+  },
+  {
+    id: 'ps-010',
+    department: 'Personal Care', subDepartment: 'Skin Care', itemClass: 'Moisturiser',
+    phantomSkus: 1, inventoryUnits: 30, bohUnits: 18, shelfQty: 12,
+    lastSaleDate: 'May 15, 2026', zeroSalesDays: 10, inventoryValue: 750,
+    riskLevel: 'Low', linkedTasks: 0, status: 'Open',
+    whyFlagged: '30 units, 10 days zero sales. Below threshold for automatic task creation but flagged for monitoring.',
+    recommendedAction: 'Monitor. No action needed unless zero-sales period extends past 14 days.',
+    skuBreakdown: [
+      { productName: 'Nivea Daily Moisturiser 200ml', sku: 'SKU-SKN-003', bohQty: 18, shelfQty: 12, lastSaleDate: 'May 15, 2026', zeroSalesDays: 10, inventoryValue: 750, riskLevel: 'Low' },
+    ],
+  },
+];
+
+// Heatmap dimensions
+const PS_HEATMAP_DEPTS = ["Women's", "Men's", 'Footwear', 'Beverages', 'Personal Care', 'Condiments'];
+const PS_HEATMAP_CLASSES = ['Basics', 'Denim', 'Dresses', 'Formal', 'Body Care', 'Moisturiser', 'Cola', 'Energy', 'Juice', 'Ketchup'];
+
+const PS_HEATMAP_DATA: Record<string, Record<string, PhantomRisk | null>> = {
+  "Women's": { 'Basics': 'Low', 'Denim': null, 'Dresses': 'Medium', 'Formal': null, 'Body Care': null, 'Moisturiser': null, 'Cola': null, 'Energy': null, 'Juice': null, 'Ketchup': null },
+  "Men's": { 'Basics': null, 'Denim': 'Medium', 'Dresses': null, 'Formal': null, 'Body Care': null, 'Moisturiser': null, 'Cola': null, 'Energy': null, 'Juice': null, 'Ketchup': null },
+  'Footwear': { 'Basics': null, 'Denim': null, 'Dresses': null, 'Formal': 'Medium', 'Body Care': null, 'Moisturiser': null, 'Cola': null, 'Energy': null, 'Juice': null, 'Ketchup': null },
+  'Beverages': { 'Basics': null, 'Denim': null, 'Dresses': null, 'Formal': null, 'Body Care': null, 'Moisturiser': null, 'Cola': 'High', 'Energy': 'High', 'Juice': 'Low', 'Ketchup': null },
+  'Personal Care': { 'Basics': null, 'Denim': null, 'Dresses': null, 'Formal': null, 'Body Care': 'High', 'Moisturiser': 'Low', 'Cola': null, 'Energy': null, 'Juice': null, 'Ketchup': null },
+  'Condiments': { 'Basics': null, 'Denim': null, 'Dresses': null, 'Formal': null, 'Body Care': null, 'Moisturiser': null, 'Cola': null, 'Energy': null, 'Juice': null, 'Ketchup': 'High' },
+};
+
 export const StoreDeepDive: React.FC = () => {
   const { user } = useAuth();
   const isDMReadOnly = user?.role === 'DM';
@@ -576,6 +760,18 @@ export const StoreDeepDive: React.FC = () => {
   const [storeSearchQuery, setStoreSearchQuery] = useState('');
   const [pogSectionFilter, setPogSectionFilter] = useState('');
   const [pogCategoryFilter, setPogCategoryFilter] = useState('');
+
+  // ── Phantom Stock Heatmap State ──
+  const [psSearch, setPsSearch] = useState('');
+  const [psDeptFilter, setPsDeptFilter] = useState('');
+  const [psSubDeptFilter, setPsSubDeptFilter] = useState('');
+  const [psClassFilter, setPsClassFilter] = useState('');
+  const [psRiskFilter, setPsRiskFilter] = useState('');
+  const [psStatusFilter, setPsStatusFilter] = useState('');
+  const [psTimeWindow, setPsTimeWindow] = useState('30d');
+  const [psPage, setPsPage] = useState(0);
+  const [psDrawerRow, setPsDrawerRow] = useState<PhantomRow | null>(null);
+  const PS_PAGE_SIZE = 6;
 
   // ── Calendar / Period Filter State ──
   const [showCalendar, setShowCalendar] = useState(false);
@@ -1265,77 +1461,172 @@ export const StoreDeepDive: React.FC = () => {
             { value: 'shelf', label: 'Shelf Audit', icon: <CameraAltOutlined sx={{ fontSize: 14 }}/> },
             { value: 'pog', label: 'Store POG', icon: <LayersOutlined sx={{ fontSize: 14 }}/> },
             { value: 'inbound', label: 'Inbound Delivery', icon: <LocalShippingOutlined sx={{ fontSize: 14 }}/> },
+            { value: 'phantom', label: 'Phantom Stock', icon: <ShieldOutlined sx={{ fontSize: 14 }}/> },
             { value: 'comp', label: 'Comp Benchmarking', icon: <TrackChangesOutlined sx={{ fontSize: 14 }}/> },
           ]}
           tabPanels={[
             /* Overall Summary Panel */
             <div className="tab-panel overall-panel">
-              <div className="overall-grid">
-                {/* Recent Alerts Timeline */}
-                <div className="alerts-timeline">
-                  <h3>Recent Alerts</h3>
-                  <div className="timeline-list">
-                    <div className="timeline-item critical">
-                      <div className="timeline-dot" />
-                      <div className="timeline-content">
-                        <span className="timeline-time">2 hours ago</span>
-                        <p>Safety checkpoint auto-fail detected in SEA audit</p>
-                      </div>
-                    </div>
-                    <div className="timeline-item warning">
-                      <div className="timeline-dot" />
-                      <div className="timeline-content">
-                        <span className="timeline-time">6 hours ago</span>
-                        <p>Inbound shipment delayed — 8 SKUs at OOS risk</p>
-                      </div>
-                    </div>
-                    <div className="timeline-item warning">
-                      <div className="timeline-dot" />
-                      <div className="timeline-content">
-                        <span className="timeline-time">1 day ago</span>
-                        <p>VoC satisfaction dropped below 75% threshold</p>
-                      </div>
-                    </div>
-                    <div className="timeline-item info">
-                      <div className="timeline-dot" />
-                      <div className="timeline-content">
-                        <span className="timeline-time">2 days ago</span>
-                        <p>Shelf audit completed — 74% compliance</p>
-                      </div>
-                    </div>
+              {/* ── Alerts ── */}
+              <div className="sdd-alerts-section">
+                <div className="sdd-alerts-header">
+                  <div className="sdd-alerts-title">
+                    <WarningAmberOutlined sx={{ fontSize: 16, color: 'var(--ia-color-error-strong)' }}/>
+                    <span>Alerts</span>
+                  </div>
+                  <span className="sdd-alerts-count">3 Alerts</span>
+                </div>
+
+                {/* KPI Summary Tiles — same component as Operational Breakdown */}
+                <div className="sc-inv-summary sdd-alert-kpi-summary">
+                  <div className="sc-inv-summary-tile sc-inv-summary--critical">
+                    <span className="sc-inv-summary-label">Critical</span>
+                    <span className="sc-inv-summary-value">1</span>
+                    <span className="sc-inv-summary-sub">auto-fail triggered</span>
+                  </div>
+                  <div className="sc-inv-summary-tile sc-inv-summary--warn">
+                    <span className="sc-inv-summary-label">High Priority</span>
+                    <span className="sc-inv-summary-value">2</span>
+                    <span className="sc-inv-summary-sub">requires action today</span>
+                  </div>
+                  <div className="sc-inv-summary-tile sc-inv-summary--info">
+                    <span className="sc-inv-summary-label">Overdue Actions</span>
+                    <span className="sc-inv-summary-value">2</span>
+                    <span className="sc-inv-summary-sub">past SLA deadline</span>
+                  </div>
+                  <div className="sc-inv-summary-tile sc-inv-summary--total">
+                    <span className="sc-inv-summary-label">Total Active</span>
+                    <span className="sc-inv-summary-value">3</span>
+                    <span className="sc-inv-summary-sub">open alerts this week</span>
                   </div>
                 </div>
 
-                {/* Top Recommendations */}
-                <div className="top-recommendations">
-                  <h3>AI Recommendations</h3>
-                  <div className="recommendation-list">
-                    <div className="recommendation-item">
-                      <div className="rec-icon urgent">
-                        <WarningAmberOutlined sx={{ fontSize: 14 }}/>
-                      </div>
-                      <div className="rec-content">
-                        <span className="rec-title">Address safety compliance immediately</span>
-                        <p>Emergency signage failure requires same-day resolution</p>
-                      </div>
+                <div className="sdd-alert-list">
+                  {/* Card 1 — Critical: Safety */}
+                  <div className="sdd-alert-card sdd-alert-card--critical">
+                    <div className="sdd-alert-chips">
+                      <span className="sdd-chip sdd-chip--critical">
+                        <ErrorOutlined sx={{ fontSize: 11 }}/>
+                        Critical
+                      </span>
                     </div>
-                    <div className="recommendation-item">
-                      <div className="rec-icon high">
-                        <GroupOutlined sx={{ fontSize: 14 }}/>
-                      </div>
-                      <div className="rec-content">
-                        <span className="rec-title">Review peak hour staffing</span>
-                        <p>10am–2pm window showing 35% increase in wait time complaints</p>
-                      </div>
+                    <h4 className="sdd-alert-title">Safety Checkpoint Auto-Fail Detected</h4>
+                    <p className="sdd-alert-desc">Emergency exit signage not illuminated — auto-fail triggered in SEA audit 2 hours ago. Immediate rectification required before next district visit.</p>
+                    <div className="sdd-alert-impact-row">
+                      <span className="sdd-alert-impact-item">
+                        <ErrorOutlined sx={{ fontSize: 12 }}/>
+                        Immediate resolution required — audit score at risk
+                      </span>
+                      <span className="sdd-alert-impact-store">
+                        <StoreOutlined sx={{ fontSize: 11 }}/>
+                        2 hours ago
+                      </span>
                     </div>
-                    <div className="recommendation-item">
-                      <div className="rec-icon high">
-                        <InventoryOutlined sx={{ fontSize: 14 }}/>
-                      </div>
-                      <div className="rec-content">
-                        <span className="rec-title">Prepare for delayed inbound</span>
-                        <p>Prioritize shelf recovery for 8 OOS-risk SKUs when shipment arrives</p>
-                      </div>
+                    <div className="sdd-alert-footer">
+                      <button className="sdd-alert-cta">
+                        View Details
+                        <KeyboardArrowRight sx={{ fontSize: 16 }}/>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Card 2 — VOC Trending */}
+                  <div className="sdd-alert-card">
+                    <div className="sdd-alert-chips">
+                      <span className="sdd-chip sdd-chip--voc">
+                        <NorthEast sx={{ fontSize: 11 }}/>
+                        VoC Trending
+                      </span>
+                      <span className="sdd-chip sdd-chip--risk">
+                        <WarningAmberOutlined sx={{ fontSize: 11 }}/>
+                        Rising Risk
+                      </span>
+                    </div>
+                    <h4 className="sdd-alert-title">"Checkout Wait" — Top Rising Complaint</h4>
+                    <p className="sdd-alert-desc">Mentions up +35% over last 2 weeks. Correlates with peak-hour staffing gaps and declining VoC satisfaction score from 4.2 → 3.8.</p>
+                    <div className="sdd-alert-store-pills">
+                      <span className="sdd-store-pill">10am–2pm peak window</span>
+                      <span className="sdd-store-pill">5pm–7pm evening rush</span>
+                      <span className="sdd-store-pill">Checkout Lanes 3 & 4</span>
+                    </div>
+                    <div className="sdd-alert-ask-alan">
+                      <AutoAwesomeOutlined sx={{ fontSize: 12 }}/>
+                      Ask Alan has prepared a staffing action plan for this theme
+                    </div>
+                    <div className="sdd-alert-footer">
+                      <button className="sdd-alert-cta">
+                        View Details
+                        <KeyboardArrowRight sx={{ fontSize: 16 }}/>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Card 3 — Inventory Risk */}
+                  <div className="sdd-alert-card">
+                    <div className="sdd-alert-chips">
+                      <span className="sdd-chip sdd-chip--impacted">
+                        <SouthEast sx={{ fontSize: 11 }}/>
+                        8 SKUs at Risk
+                      </span>
+                      <span className="sdd-chip sdd-chip--overdue">
+                        <AccessTimeOutlined sx={{ fontSize: 11 }}/>
+                        2 overdue actions
+                      </span>
+                    </div>
+                    <h4 className="sdd-alert-title">Inbound Shipment Delay — OOS Risk</h4>
+                    <p className="sdd-alert-desc">DC shipment delayed by 1 day. 8 SKUs in Beverages & Snacks projected to hit zero stock before arrival. Shelf replenishment plan required.</p>
+                    <div className="sdd-alert-impact-row">
+                      <span className="sdd-alert-impact-item">
+                        <AttachMoneyOutlined sx={{ fontSize: 12 }}/>
+                        Potential $2.1K daily revenue risk if unresolved
+                      </span>
+                      <span className="sdd-alert-impact-store">
+                        <StoreOutlined sx={{ fontSize: 11 }}/>
+                        6 hours ago
+                      </span>
+                    </div>
+                    <div className="sdd-alert-footer">
+                      <button className="sdd-alert-cta">
+                        View Details
+                        <KeyboardArrowRight sx={{ fontSize: 16 }}/>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── AI Recommendations ── */}
+              <div className="sdd-recs-section">
+                <div className="sdd-recs-header">
+                  <AutoAwesomeOutlined sx={{ fontSize: 15, color: 'var(--ia-color-primary)' }}/>
+                  <span>AI Recommendations</span>
+                </div>
+                <div className="sdd-recs-list">
+                  <div className="sdd-rec-item">
+                    <div className="sdd-rec-icon sdd-rec-icon--urgent">
+                      <WarningAmberOutlined sx={{ fontSize: 14 }}/>
+                    </div>
+                    <div className="sdd-rec-body">
+                      <span className="sdd-rec-title">Address safety compliance immediately</span>
+                      <p>Emergency signage failure requires same-day resolution before district visit</p>
+                    </div>
+                  </div>
+                  <div className="sdd-rec-item">
+                    <div className="sdd-rec-icon sdd-rec-icon--high">
+                      <GroupOutlined sx={{ fontSize: 14 }}/>
+                    </div>
+                    <div className="sdd-rec-body">
+                      <span className="sdd-rec-title">Review peak hour staffing coverage</span>
+                      <p>10am–2pm window showing 35% increase in checkout wait complaints</p>
+                    </div>
+                  </div>
+                  <div className="sdd-rec-item">
+                    <div className="sdd-rec-icon sdd-rec-icon--high">
+                      <InventoryOutlined sx={{ fontSize: 14 }}/>
+                    </div>
+                    <div className="sdd-rec-body">
+                      <span className="sdd-rec-title">Prepare shelf plan for delayed inbound</span>
+                      <p>Prioritize 8 OOS-risk SKUs for immediate shelf placement when shipment arrives</p>
                     </div>
                   </div>
                 </div>
@@ -1830,6 +2121,443 @@ export const StoreDeepDive: React.FC = () => {
                 </div>
               </div>
             </div>,
+            /* ── Phantom Stock Heatmap Panel ── */
+            (() => {
+              const psFiltered = PHANTOM_ROWS.filter(r => {
+                if (psSearch.trim()) {
+                  const q = psSearch.toLowerCase();
+                  if (!r.department.toLowerCase().includes(q) && !r.itemClass.toLowerCase().includes(q) && !r.subDepartment.toLowerCase().includes(q)) return false;
+                }
+                if (psDeptFilter && r.department !== psDeptFilter) return false;
+                if (psSubDeptFilter && r.subDepartment !== psSubDeptFilter) return false;
+                if (psClassFilter && r.itemClass !== psClassFilter) return false;
+                if (psRiskFilter && r.riskLevel !== psRiskFilter) return false;
+                if (psStatusFilter && r.status !== psStatusFilter) return false;
+                return true;
+              });
+
+              const totalPhantomSkus = PHANTOM_ROWS.reduce((s, r) => s + r.phantomSkus, 0);
+              const totalInvRisk = PHANTOM_ROWS.reduce((s, r) => s + r.inventoryValue, 0);
+              const highestRiskDept = (() => {
+                const counts: Record<string, number> = {};
+                PHANTOM_ROWS.filter(r => r.riskLevel === 'High').forEach(r => { counts[r.department] = (counts[r.department] || 0) + r.phantomSkus; });
+                return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'Beverages';
+              })();
+              const openCycleTasks = PHANTOM_ROWS.filter(r => r.linkedTasks > 0 && r.status !== 'Resolved').reduce((s, r) => s + r.linkedTasks, 0);
+
+              const psTotalPages = Math.ceil(psFiltered.length / PS_PAGE_SIZE);
+              const psPaginated = psFiltered.slice(psPage * PS_PAGE_SIZE, (psPage + 1) * PS_PAGE_SIZE);
+
+              const psRiskColor = (risk: PhantomRisk | null) => {
+                if (!risk) return { bg: '#f8fafc', text: '#cbd5e1', border: '#f1f5f9' };
+                if (risk === 'High') return { bg: '#fef2f2', text: '#dc2626', border: '#fecaca' };
+                if (risk === 'Medium') return { bg: '#fff7ed', text: '#c2410c', border: '#fed7aa' };
+                if (risk === 'Low') return { bg: '#fefce8', text: '#a16207', border: '#fde68a' };
+                return { bg: '#f0fdf4', text: '#16a34a', border: '#bbf7d0' };
+              };
+
+              const psDepts = Array.from(new Set(PHANTOM_ROWS.map(r => r.department)));
+              const psSubDepts = Array.from(new Set(PHANTOM_ROWS.map(r => r.subDepartment)));
+              const psClasses = Array.from(new Set(PHANTOM_ROWS.map(r => r.itemClass)));
+
+              return (
+                <div className="tab-panel phantom-panel">
+                  {/* Header */}
+                  <div className="ps-panel-header">
+                    <div className="ps-panel-title-row">
+                      <ShieldOutlined sx={{ fontSize: 18, color: '#7c3aed' }} />
+                      <h3 className="ps-panel-title">Phantom Stock Heatmap</h3>
+                      <span className="ps-auto-badge">System-Generated · Auto Tasks Created</span>
+                    </div>
+                    <p className="ps-panel-subtitle">
+                      System-detected inventory with zero or abnormally low sales. Linked Inventory Check / Cycle Count tasks are auto-created in Operations Queue.
+                    </p>
+                  </div>
+
+                  {/* KPI Strip */}
+                  <div className="ps-kpi-strip">
+                    <div className="ps-kpi-tile ps-kpi-tile--purple">
+                      <div className="ps-kpi-icon">
+                        <ShieldOutlined sx={{ fontSize: 18 }} />
+                      </div>
+                      <div className="ps-kpi-content">
+                        <span className="ps-kpi-value">{totalPhantomSkus}</span>
+                        <span className="ps-kpi-label">Phantom Stock SKUs</span>
+                      </div>
+                    </div>
+                    <div className="ps-kpi-tile ps-kpi-tile--red">
+                      <div className="ps-kpi-icon">
+                        <AttachMoneyOutlined sx={{ fontSize: 18 }} />
+                      </div>
+                      <div className="ps-kpi-content">
+                        <span className="ps-kpi-value">${(totalInvRisk / 1000).toFixed(1)}K</span>
+                        <span className="ps-kpi-label">Inventory at Risk</span>
+                      </div>
+                    </div>
+                    <div className="ps-kpi-tile ps-kpi-tile--orange">
+                      <div className="ps-kpi-icon">
+                        <WarningAmberOutlined sx={{ fontSize: 18 }} />
+                      </div>
+                      <div className="ps-kpi-content">
+                        <span className="ps-kpi-value">{highestRiskDept}</span>
+                        <span className="ps-kpi-label">Highest Risk Dept</span>
+                      </div>
+                    </div>
+                    <div className="ps-kpi-tile ps-kpi-tile--blue">
+                      <div className="ps-kpi-icon">
+                        <AssignmentOutlined sx={{ fontSize: 18 }} />
+                      </div>
+                      <div className="ps-kpi-content">
+                        <span className="ps-kpi-value">{openCycleTasks}</span>
+                        <span className="ps-kpi-label">Open Cycle Count Tasks</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Heatmap */}
+                  <div className="ps-heatmap-card">
+                    <div className="ps-heatmap-header">
+                      <span className="ps-heatmap-title">Department × Class Risk Concentration</span>
+                      <div className="ps-heatmap-legend">
+                        <span className="ps-legend-item ps-legend--high">High</span>
+                        <span className="ps-legend-item ps-legend--medium">Medium</span>
+                        <span className="ps-legend-item ps-legend--low">Low</span>
+                        <span className="ps-legend-item ps-legend--minimal">Minimal</span>
+                        <span className="ps-legend-item ps-legend--none">—</span>
+                      </div>
+                    </div>
+                    <div className="ps-heatmap-wrap">
+                      <table className="ps-heatmap-table">
+                        <thead>
+                          <tr>
+                            <th className="ps-heatmap-corner">Dept \ Class</th>
+                            {PS_HEATMAP_CLASSES.map(cls => (
+                              <th key={cls} className="ps-heatmap-col-header">{cls}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {PS_HEATMAP_DEPTS.map(dept => (
+                            <tr key={dept}>
+                              <td className="ps-heatmap-row-header">{dept}</td>
+                              {PS_HEATMAP_CLASSES.map(cls => {
+                                const risk = PS_HEATMAP_DATA[dept]?.[cls] ?? null;
+                                const colors = psRiskColor(risk);
+                                const matchingRow = PHANTOM_ROWS.find(r => r.department === dept && r.itemClass === cls);
+                                return (
+                                  <td key={cls}
+                                    className={`ps-heatmap-cell${risk ? ' ps-heatmap-cell--active' : ''}`}
+                                    style={risk ? { background: colors.bg, border: `1.5px solid ${colors.border}` } : {}}
+                                    onClick={() => matchingRow && setPsDrawerRow(matchingRow)}
+                                    title={risk ? `${dept} / ${cls} — ${risk} Risk` : ''}
+                                  >
+                                    {risk && (
+                                      <span className="ps-heatmap-cell-label" style={{ color: colors.text }}>
+                                        {risk}
+                                      </span>
+                                    )}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Filters */}
+                  <div className="ps-filters-bar">
+                    <div className="ps-search-wrap">
+                      <SearchOutlined className="ps-search-icon" />
+                      <input
+                        className="ps-search-input"
+                        placeholder="Search department, class…"
+                        value={psSearch}
+                        onChange={e => { setPsSearch(e.target.value); setPsPage(0); }}
+                      />
+                    </div>
+                    <select className="ps-filter-select" value={psDeptFilter} onChange={e => { setPsDeptFilter(e.target.value); setPsPage(0); }}>
+                      <option value="">All Departments</option>
+                      {psDepts.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                    <select className="ps-filter-select" value={psSubDeptFilter} onChange={e => { setPsSubDeptFilter(e.target.value); setPsPage(0); }}>
+                      <option value="">All Sub-Depts</option>
+                      {psSubDepts.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                    <select className="ps-filter-select" value={psClassFilter} onChange={e => { setPsClassFilter(e.target.value); setPsPage(0); }}>
+                      <option value="">All Classes</option>
+                      {psClasses.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                    <select className="ps-filter-select" value={psRiskFilter} onChange={e => { setPsRiskFilter(e.target.value); setPsPage(0); }}>
+                      <option value="">All Risk Levels</option>
+                      <option value="High">High</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Low">Low</option>
+                      <option value="Minimal">Minimal</option>
+                    </select>
+                    <select className="ps-filter-select" value={psStatusFilter} onChange={e => { setPsStatusFilter(e.target.value); setPsPage(0); }}>
+                      <option value="">All Statuses</option>
+                      <option value="Open">Open</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Resolved">Resolved</option>
+                      <option value="Dismissed">Dismissed</option>
+                    </select>
+                    <select className="ps-filter-select" value={psTimeWindow} onChange={e => setPsTimeWindow(e.target.value)}>
+                      <option value="7d">Last 7 days</option>
+                      <option value="14d">Last 14 days</option>
+                      <option value="30d">Last 30 days</option>
+                      <option value="90d">Last 90 days</option>
+                    </select>
+                  </div>
+
+                  {/* Table */}
+                  <div className="ps-table-card">
+                    <div className="ps-table-header-bar">
+                      <span className="ps-table-title">Phantom Stock Detail — Department / Class Level</span>
+                      <span className="ps-table-count">{psFiltered.length} records</span>
+                    </div>
+                    <div className="ps-table-wrap">
+                      <table className="ps-table">
+                        <thead>
+                          <tr>
+                            <th>Department</th>
+                            <th>Sub-Dept / Class</th>
+                            <th>Phantom SKUs</th>
+                            <th>Inv. Units</th>
+                            <th>BOH Units</th>
+                            <th>Shelf Qty</th>
+                            <th>Last Sale</th>
+                            <th>Zero-Sales Days</th>
+                            <th>Inv. Value</th>
+                            <th>Risk Level</th>
+                            <th>Tasks</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {psPaginated.length === 0 ? (
+                            <tr><td colSpan={13}>
+                              <div className="ps-empty">
+                                <ShieldOutlined sx={{ fontSize: 24, color: '#cbd5e1' }} />
+                                <p>No records match your filters</p>
+                              </div>
+                            </td></tr>
+                          ) : psPaginated.map(row => {
+                            const rc = psRiskColor(row.riskLevel);
+                            return (
+                              <tr key={row.id} className="ps-table-row" onClick={() => setPsDrawerRow(row)}>
+                                <td>
+                                  <span className="ps-dept-name">{row.department}</span>
+                                </td>
+                                <td>
+                                  <div className="ps-dept-cell">
+                                    <span className="ps-dept-sub">{row.subDepartment}</span>
+                                    <span className="ps-dept-class">{row.itemClass}</span>
+                                  </div>
+                                </td>
+                                <td><span className="ps-num-badge">{row.phantomSkus}</span></td>
+                                <td>{row.inventoryUnits}</td>
+                                <td>{row.bohUnits}</td>
+                                <td>{row.shelfQty}</td>
+                                <td><span className="ps-date">{row.lastSaleDate}</span></td>
+                                <td>
+                                  <span className={`ps-days-badge${row.zeroSalesDays >= 20 ? ' ps-days-badge--high' : row.zeroSalesDays >= 14 ? ' ps-days-badge--med' : ''}`}>
+                                    {row.zeroSalesDays}d
+                                  </span>
+                                </td>
+                                <td><span className="ps-value">${row.inventoryValue.toLocaleString()}</span></td>
+                                <td>
+                                  <span className="ps-risk-chip" style={{ background: rc.bg, color: rc.text, borderColor: rc.border }}>
+                                    {row.riskLevel}
+                                  </span>
+                                </td>
+                                <td>
+                                  {row.linkedTasks > 0 ? (
+                                    <span className="ps-linked-tasks">
+                                      <LinkOutlined sx={{ fontSize: 12 }} /> {row.linkedTasks}
+                                    </span>
+                                  ) : <span style={{ color: '#cbd5e1' }}>—</span>}
+                                </td>
+                                <td>
+                                  <span className={`ps-status-chip ps-status-chip--${row.status.toLowerCase().replace(' ', '_')}`}>
+                                    {row.status}
+                                  </span>
+                                </td>
+                                <td>
+                                  <button className="ps-review-btn" onClick={e => { e.stopPropagation(); setPsDrawerRow(row); }}>
+                                    Review
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                    {psTotalPages > 1 && (
+                      <div className="ps-pagination">
+                        <span className="ps-pag-info">
+                          Showing {psPage * PS_PAGE_SIZE + 1}–{Math.min((psPage + 1) * PS_PAGE_SIZE, psFiltered.length)} of {psFiltered.length}
+                        </span>
+                        <button className="ps-pag-btn" disabled={psPage === 0} onClick={() => setPsPage(p => p - 1)}>
+                          <ChevronLeftOutlined sx={{ fontSize: 16 }} />
+                        </button>
+                        <button className="ps-pag-btn" disabled={psPage >= psTotalPages - 1} onClick={() => setPsPage(p => p + 1)}>
+                          <ChevronRightOutlined sx={{ fontSize: 16 }} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right-Side Detail Drawer */}
+                  {psDrawerRow && (
+                    <div className="ps-drawer-overlay" onClick={() => setPsDrawerRow(null)}>
+                      <div className="ps-drawer" onClick={e => e.stopPropagation()}>
+                        <div className="ps-drawer-header">
+                          <div className="ps-drawer-title-row">
+                            <div>
+                              <h3 className="ps-drawer-title">{psDrawerRow.department} — {psDrawerRow.itemClass}</h3>
+                              <span className="ps-drawer-sub">{psDrawerRow.subDepartment}</span>
+                            </div>
+                            <button className="ps-drawer-close" onClick={() => setPsDrawerRow(null)}>
+                              <CloseOutlined sx={{ fontSize: 18 }} />
+                            </button>
+                          </div>
+                          <div className="ps-drawer-chips">
+                            {(() => { const rc = psRiskColor(psDrawerRow.riskLevel); return (
+                              <span className="ps-risk-chip" style={{ background: rc.bg, color: rc.text, borderColor: rc.border }}>
+                                {psDrawerRow.riskLevel} Risk
+                              </span>
+                            ); })()}
+                            <span className={`ps-status-chip ps-status-chip--${psDrawerRow.status.toLowerCase().replace(' ', '_')}`}>
+                              {psDrawerRow.status}
+                            </span>
+                            {psDrawerRow.linkedTasks > 0 && (
+                              <span className="ps-linked-tasks">
+                                <LinkOutlined sx={{ fontSize: 12 }} /> {psDrawerRow.linkedTasks} Linked Task{psDrawerRow.linkedTasks > 1 ? 's' : ''}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Why Flagged */}
+                        <div className="ps-drawer-section">
+                          <div className="ps-drawer-section-title">
+                            <InfoOutlined sx={{ fontSize: 15, color: '#7c3aed' }} /> Why Flagged
+                          </div>
+                          <div className="ps-drawer-why-box">
+                            {psDrawerRow.whyFlagged}
+                          </div>
+                        </div>
+
+                        {/* Inventory & Sales Summary */}
+                        <div className="ps-drawer-section">
+                          <div className="ps-drawer-section-title">
+                            <InventoryOutlined sx={{ fontSize: 15, color: '#2563eb' }} /> Inventory &amp; Sales Evidence
+                          </div>
+                          <div className="ps-drawer-ev-grid">
+                            <div className="ps-drawer-ev-tile">
+                              <span className="ps-drawer-ev-label">Inventory Units</span>
+                              <span className="ps-drawer-ev-value">{psDrawerRow.inventoryUnits}</span>
+                            </div>
+                            <div className="ps-drawer-ev-tile">
+                              <span className="ps-drawer-ev-label">BOH Units</span>
+                              <span className="ps-drawer-ev-value">{psDrawerRow.bohUnits}</span>
+                            </div>
+                            <div className="ps-drawer-ev-tile">
+                              <span className="ps-drawer-ev-label">Shelf Qty</span>
+                              <span className="ps-drawer-ev-value">{psDrawerRow.shelfQty}</span>
+                            </div>
+                            <div className="ps-drawer-ev-tile">
+                              <span className="ps-drawer-ev-label">Zero-Sales Days</span>
+                              <span className="ps-drawer-ev-value ps-drawer-ev-value--alert">{psDrawerRow.zeroSalesDays}d</span>
+                            </div>
+                            <div className="ps-drawer-ev-tile">
+                              <span className="ps-drawer-ev-label">Last Sale Date</span>
+                              <span className="ps-drawer-ev-value">{psDrawerRow.lastSaleDate}</span>
+                            </div>
+                            <div className="ps-drawer-ev-tile">
+                              <span className="ps-drawer-ev-label">Inventory Value</span>
+                              <span className="ps-drawer-ev-value">${psDrawerRow.inventoryValue.toLocaleString()}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* SKU Breakdown */}
+                        <div className="ps-drawer-section">
+                          <div className="ps-drawer-section-title">
+                            <GridOnOutlined sx={{ fontSize: 15, color: '#2563eb' }} /> SKU-Level Breakdown
+                          </div>
+                          <div className="ps-sku-list">
+                            {psDrawerRow.skuBreakdown.map((sku, i) => {
+                              const rc = psRiskColor(sku.riskLevel);
+                              return (
+                                <div key={i} className="ps-sku-row">
+                                  <div className="ps-sku-main">
+                                    <span className="ps-sku-name">{sku.productName}</span>
+                                    <span className="ps-sku-code">{sku.sku}</span>
+                                  </div>
+                                  <div className="ps-sku-stats">
+                                    <span className="ps-sku-stat"><span className="ps-sku-stat-label">BOH</span> {sku.bohQty}</span>
+                                    <span className="ps-sku-stat"><span className="ps-sku-stat-label">Shelf</span> {sku.shelfQty}</span>
+                                    <span className="ps-sku-stat"><span className="ps-sku-stat-label">0-Sale</span> {sku.zeroSalesDays}d</span>
+                                    <span className="ps-sku-stat"><span className="ps-sku-stat-label">Value</span> ${sku.inventoryValue.toLocaleString()}</span>
+                                    <span className="ps-risk-chip ps-risk-chip--sm" style={{ background: rc.bg, color: rc.text, borderColor: rc.border }}>{sku.riskLevel}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Linked Tasks */}
+                        {psDrawerRow.linkedTasks > 0 && (
+                          <div className="ps-drawer-section">
+                            <div className="ps-drawer-section-title">
+                              <AssignmentOutlined sx={{ fontSize: 15, color: '#2563eb' }} /> Linked Operations Queue Tasks
+                            </div>
+                            <div className="ps-linked-task-card">
+                              <div className="ps-linked-task-top">
+                                <span className="ps-linked-task-id">OQ-PS-{psDrawerRow.id.replace('ps-', '')}</span>
+                                <span className="ps-auto-task-badge">Auto-Created</span>
+                                <span className={`ps-status-chip ps-status-chip--${psDrawerRow.status.toLowerCase().replace(' ', '_')}`}>{psDrawerRow.status}</span>
+                              </div>
+                              <div className="ps-linked-task-body">
+                                <span className="ps-linked-task-type">Inventory Check / Cycle Count</span>
+                                <span className="ps-linked-task-store">{selectedStore.storeName}</span>
+                              </div>
+                              <div className="ps-linked-task-meta">
+                                <span>Source: <strong>Phantom Stock Alert</strong></span>
+                                <span>SLA: 24–48 hours</span>
+                                <span>Priority: {psDrawerRow.riskLevel === 'High' ? 'High' : 'Medium'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Recommended Action */}
+                        <div className="ps-drawer-section">
+                          <div className="ps-drawer-section-title">
+                            <AutoAwesomeOutlined sx={{ fontSize: 15, color: '#2563eb' }} /> Recommended Action
+                          </div>
+                          <div className="ps-drawer-rec-box">
+                            {psDrawerRow.recommendedAction}
+                          </div>
+                        </div>
+
+                        <div className="ps-drawer-footer">
+                          <button className="ps-drawer-ops-btn" onClick={() => setPsDrawerRow(null)}>
+                            <OpenInNewOutlined sx={{ fontSize: 14 }} /> Open in Operations Queue
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })(),
             /* Comp Benchmarking Panel */
             (() => {
               const sm = storeMetrics;

@@ -7,7 +7,7 @@ import './ImDrawer.css';
 interface ImDrawerProps {
   open: boolean;
   onClose: () => void;
-  title: string;
+  title?: string;
   subtitle?: string;
   width?: number;
   footer?: React.ReactNode;
@@ -44,21 +44,23 @@ export const ImDrawer: React.FC<ImDrawerProps> = ({
         aria-modal="true"
         aria-labelledby="ia-drawer-title"
       >
-        <header className="ia-drawer-header">
-          <div>
-            <h3 id="ia-drawer-title">{title}</h3>
-            {subtitle && <p className="ia-drawer-sub">{subtitle}</p>}
-          </div>
-          <Button
-            variant="text"
-            size="small"
-            onClick={onClose}
-            aria-label="Close"
-            className="ia-drawer-close-btn"
-          >
-            <Close sx={{ fontSize: 20 }} />
-          </Button>
-        </header>
+        {title && (
+          <header className="ia-drawer-header">
+            <div>
+              <h3 id="ia-drawer-title">{title}</h3>
+              {subtitle && <p className="ia-drawer-sub">{subtitle}</p>}
+            </div>
+            <Button
+              variant="text"
+              size="small"
+              onClick={onClose}
+              aria-label="Close"
+              className="ia-drawer-close-btn"
+            >
+              <Close sx={{ fontSize: 20 }} />
+            </Button>
+          </header>
+        )}
         <div className="ia-drawer-body">{children}</div>
         {footer && <footer className="ia-drawer-footer">{footer}</footer>}
       </aside>

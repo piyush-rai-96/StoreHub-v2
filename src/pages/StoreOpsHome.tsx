@@ -37,9 +37,15 @@ import ChatBubbleOutlineOutlined from '@mui/icons-material/ChatBubbleOutlineOutl
 import StarBorderOutlined from '@mui/icons-material/StarBorderOutlined';
 import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
 import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
+import HeadphonesOutlined from '@mui/icons-material/HeadphonesOutlined';
+import SyncOutlined from '@mui/icons-material/SyncOutlined';
+import GridOnOutlined from '@mui/icons-material/GridOnOutlined';
+import PersonOutlined from '@mui/icons-material/PersonOutlined';
 import { Button, Card } from 'impact-ui';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { AudioPlayer } from '../components/common/AudioPlayer';
+import '../components/common/AudioPlayer.css';
 import {
   SystemState,
   ActionItem,
@@ -126,7 +132,7 @@ const generateMockInsights = (): EnhancedInsightItem[] => [
     context: '12 SKUs below safety stock — immediate reorder needed',
     signal: '3 stores impacted',
     trend: 'down',
-    actionHint: 'View Impacted Stores',
+    actionHint: 'View Stores',
     actionCta: 'Review SKUs at Risk',
     isHero: true,
     impactDetail: 'Potential $24K revenue loss if unresolved',
@@ -559,6 +565,58 @@ const AssigneeDropdown: React.FC<AssigneeDropdownProps> = ({ value, options, onC
 };
 
 
+// ─── EAC v2 mock data ────────────────────────────────────────────────────────
+const DM_EAC_GROUPS = [
+  {
+    id: 'boh-to-shelf', type: 'boh' as const,
+    title: 'BOH-to-Shelf Sync',
+    taskType: 'Shelf Replenishment',
+    severity: 'High' as const, severityClass: 'high' as const,
+    desc: 'Shelf gaps detected with available backroom inventory. Items are in BOH but not reaching the shelf.',
+    storeCount: 5, skuCount: 23, riskValue: '$12.4K',
+    taskTotal: 18, taskOpen: 8, taskProg: 7, taskSub: 3, taskOver: 2,
+    lastDetected: '4 min ago',
+    stores: [
+      { name: 'Nashville Flagship #2034',    detail: '7 SKUs · Personal Care · 3 open tasks',          status: 'critical'  as const, tasks: 3, manager: 'Sarah Johnson' },
+      { name: 'Memphis Central #1876',       detail: '5 SKUs · Household · In progress',               status: 'progress'  as const, tasks: 4, manager: 'Marcus Reed' },
+      { name: 'Franklin Town Center #1234',  detail: '4 SKUs · Baby Care · In progress',               status: 'progress'  as const, tasks: 3, manager: 'Lisa Chen' },
+      { name: 'Murfreesboro Plaza #4532',    detail: '4 SKUs · Nutrition · 4 open tasks',              status: 'critical'  as const, tasks: 4, manager: 'Kevin Patel' },
+      { name: 'Chattanooga Riverside #2198', detail: '3 SKUs · Snacks · Submitted for review',         status: 'submitted' as const, tasks: 4, manager: 'Rachel Torres' },
+    ],
+  },
+  {
+    id: 'phantom-stock', type: 'phantom' as const,
+    title: 'Phantom Stock',
+    taskType: 'Inventory Check / Cycle Count',
+    severity: 'Medium' as const, severityClass: 'medium' as const,
+    desc: 'High-stock, zero-sales items detected. System inventory exists but no recent sales — possible count discrepancy.',
+    storeCount: 3, skuCount: 34, riskValue: '$18.4K',
+    taskTotal: 12, taskOpen: 6, taskProg: 4, taskSub: 2, taskOver: 1,
+    lastDetected: '12 min ago',
+    stores: [
+      { name: 'Nashville Flagship #2034',  detail: '14 SKUs · $8.6K at risk · Cycle count in progress', status: 'progress' as const, tasks: 4, manager: 'Sarah Johnson' },
+      { name: 'Memphis Central #1876',     detail: '12 SKUs · $5.8K at risk · 4 open tasks',            status: 'critical' as const, tasks: 4, manager: 'Marcus Reed' },
+      { name: 'Murfreesboro Plaza #4532',  detail: '8 SKUs · $4.0K at risk · 4 open tasks',             status: 'critical' as const, tasks: 4, manager: 'Kevin Patel' },
+    ],
+  },
+  {
+    id: 'pog-compliance', type: 'pog' as const,
+    title: 'POG Compliance Gap',
+    taskType: 'POG Correction',
+    severity: 'High' as const, severityClass: 'high' as const,
+    desc: 'Shelf layout deviates from active planogram. Camera audit detected misplacements and missing facings.',
+    storeCount: 4, skuCount: 8, riskValue: '$9.2K',
+    taskTotal: 9, taskOpen: 4, taskProg: 3, taskSub: 2, taskOver: 1,
+    lastDetected: '8 min ago',
+    stores: [
+      { name: 'Nashville Flagship #2034',   detail: 'Beverage Aisle 3A · 3 POG deviations · 2 open tasks', status: 'critical'  as const, tasks: 2, manager: 'Sarah Johnson' },
+      { name: 'Memphis Central #1876',      detail: 'Snacks End Cap 7B · Correction in progress',           status: 'progress'  as const, tasks: 3, manager: 'Marcus Reed' },
+      { name: 'Franklin Town Center #1234', detail: 'Dairy Section 2C · 2 open tasks',                      status: 'critical'  as const, tasks: 2, manager: 'Lisa Chen' },
+      { name: 'Knoxville East #3421',       detail: 'HBA Section 4D · Submitted for review',                status: 'submitted' as const, tasks: 2, manager: 'David Park' },
+    ],
+  },
+];
+
 export const StoreOpsHome: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -572,13 +630,17 @@ export const StoreOpsHome: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [, setSystemState] = useState<SystemState>('HIGH_ACTIVITY');
-  const [insights, setInsights] = useState<EnhancedInsightItem[]>([]);
+  const [, setInsights] = useState<EnhancedInsightItem[]>([]);
   const [actionItems, setActionItems] = useState<ActionItemV2[]>([]);
   const [broadcasts, setBroadcasts] = useState<BroadcastMessage[]>([]);
   const [, setLastRefresh] = useState<Date>(new Date());
   const [broadcastsExpanded, setBroadcastsExpanded] = useState(true);
   const [isBriefCollapsed, setIsBriefCollapsed] = useState(false);
   const [showBriefModal, setShowBriefModal] = useState(false);
+  const [showBriefAudio, setShowBriefAudio] = useState(false);
+  // EAC v2 drawer state
+  const [eacDrawer, setEacDrawer] = useState<null | typeof DM_EAC_GROUPS[0]>(null);
+
   // Detail Panel (right-side slide-in)
   const [detailPanel, setDetailPanel] = useState<DetailPanelState>(null);
   const [panelSubView, setPanelSubView] = useState<PanelSubView>(null);
@@ -930,7 +992,8 @@ export const StoreOpsHome: React.FC = () => {
     });
   };
 
-  const openAlertPanel = (alertType: 'product-recall' | 'voc-trending' | 'inventory-risk') => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _openAlertPanel = (alertType: 'product-recall' | 'voc-trending' | 'inventory-risk') => {
     switch (alertType) {
       case 'product-recall':
         setDetailPanel({
@@ -1002,6 +1065,7 @@ export const StoreOpsHome: React.FC = () => {
         break;
     }
   };
+  void _openAlertPanel; // function retained for legacy panel wiring
 
   const handlePanelAction = (action: string) => {
     const parentTitle = detailPanel?.type === 'alert' ? detailPanel.data.title : '';
@@ -1151,7 +1215,30 @@ export const StoreOpsHome: React.FC = () => {
               </div>
             </div>
           </div>
+          <button
+            className={`aup-listen-btn${showBriefAudio ? ' aup-listen-btn--active' : ''}`}
+            onClick={(e) => { e.stopPropagation(); setShowBriefAudio(v => !v); if (isBriefCollapsed) setIsBriefCollapsed(false); }}
+            title="Listen to brief"
+          >
+            <span className="aup-listen-btn-icon">
+              {showBriefAudio
+                ? <span className="aup-soundwave aup-soundwave--sm"><span/><span/><span/><span/></span>
+                : <HeadphonesOutlined sx={{ fontSize: 14 }} />
+              }
+            </span>
+            {showBriefAudio ? 'Playing…' : 'Listen'}
+          </button>
         </div>
+        {showBriefAudio && (
+          <div className="di-brief-audio-bar">
+            <AudioPlayer
+              text="Good afternoon, Clarke. Your district is performing well this week. Sales and Margin. District weekly revenue came in at $1.26M, up 8% versus target and 5% week over week. 6 of 8 stores exceeded plan. Gross margin held steady at 34.2%. District Performance Index reached 87 this week, placing the district in the top 10% Excellence Tier. Compliance. All audits completed, district-wide POG adherence at 97%. Task execution at 87% on-time completion rate. Customer experience VoC Score improved to 72, up 12 points quarter over quarter."
+              title="AI Daily Brief"
+              variant="bar"
+              onClose={() => setShowBriefAudio(false)}
+            />
+          </div>
+        )}
         <div className="ai-brief-body-wrapper">
           <div className={`ai-brief-body ${isBriefCollapsed ? 'collapsed' : ''}`}>
             <div className="ai-brief-summary">
@@ -1220,125 +1307,163 @@ export const StoreOpsHome: React.FC = () => {
 
       {/* MAIN 2-COLUMN LAYOUT */}
       <div className="home-main-grid">
-        {/* LEFT COLUMN: Alerts → Action Queue */}
+        {/* LEFT COLUMN: EAC → Action Queue */}
         <div className="home-col-left">
-          {/* Issue Needs Attention */}
-          <div className="store-ops-section insights-section-v3">
-            <div className="section-header-v3">
-              <div className="section-title-v3">
-                {insights.some(i => i.type === 'risk') ? (
-                  <>
-                    <WarningAmberOutlined sx={{ fontSize: 16 }} className="header-icon-risk"/>
-                    <h2>Alerts</h2>
-                  </>
-                ) : (
-                  <>
-                    <AutoAwesomeOutlined sx={{ fontSize: 18 }} className="header-icon-positive"/>
-                    <h2>Alerts</h2>
-                  </>
-                )}
+          {/* ── Execution Action Center ── */}
+          <div className="eac2-section">
+            {/* Header */}
+            <div className="eac2-header">
+              <div className="eac2-header-top">
+                <div className="eac2-title-block">
+                  <div className="eac2-icon-wrap">
+                    <BoltOutlined sx={{ fontSize: 18 }}/>
+                  </div>
+                  <div className="eac2-title-text">
+                    <h2 className="eac2-title">Alerts</h2>
+                    <p className="eac2-subtitle">System-generated execution issues across your stores</p>
+                  </div>
+                </div>
+                <div className="eac2-header-badges">
+                  <div className="eac2-sys-badge">
+                    <span className="eac2-sys-badge-dot"/>
+                    System Monitored
+                  </div>
+                  <span className="eac2-refresh-time">Updated 4 min ago</span>
+                </div>
               </div>
-              <div className="insights-meta">
-                <span className="meta-positive">{2 + insights.filter(i => i.isHero || i.type === 'risk').slice(0, 1).length} Alerts</span>
+              {/* Summary KPI strip */}
+              <div className="eac2-summary-strip">
+                {[
+                  { val: DM_EAC_GROUPS.reduce((s,g)=>s+g.taskTotal,0), lbl:'Auto Tasks', cls:'' },
+                  { val: DM_EAC_GROUPS.reduce((s,g)=>s+g.taskOpen,0),  lbl:'Open',      cls:'eac2-summary-tile-val--open' },
+                  { val: DM_EAC_GROUPS.reduce((s,g)=>s+g.taskProg,0),  lbl:'In Progress',cls:'eac2-summary-tile-val--prog' },
+                  { val: DM_EAC_GROUPS.reduce((s,g)=>s+g.taskSub,0),   lbl:'Submitted', cls:'eac2-summary-tile-val--sub' },
+                  { val: DM_EAC_GROUPS.reduce((s,g)=>s+g.taskOver,0),  lbl:'Overdue',   cls:'eac2-summary-tile-val--over' },
+                ].map(t => (
+                  <div key={t.lbl} className="eac2-summary-tile">
+                    <span className={`eac2-summary-tile-val ${t.cls}`}>{t.val}</span>
+                    <span className="eac2-summary-tile-lbl">{t.lbl}</span>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="insights-content-v3">
-              {/* Product Recall — Critical */}
-              <Card size="extraSmall" sx={{ maxWidth: '100%', minHeight: 0, padding: 0, overflow: 'hidden', marginBottom: 'var(--space-lg)' }}>
-                <div className="hero-card-content">
-                  <div className="hero-card-header">
-                    <div className="hero-signal critical">
-                      <WarningAmberOutlined sx={{ fontSize: 14 }}/>
-                      <span>CRITICAL</span>
-                    </div>
-                  </div>
-                  <h2 className="hero-headline">Product Recall — Organic Baby Lotion Batch #7742</h2>
-                  <p className="hero-context">Organic Baby Lotion Batch #7742 must be removed immediately. FDA safety alert issued 2 hours ago. 3 stores impacted.</p>
-                  <div className="hero-impact">
-                    <ErrorOutlined sx={{ fontSize: 14 }}/>
-                    <span>Immediate removal required across all impacted locations</span>
-                  </div>
-                  <div className="hero-top-store">
-                    <StoreOutlined sx={{ fontSize: 12 }}/>
-                    <span>Store #1234 most critical</span>
-                  </div>
-                  <div className="hero-actions">
-                    <Button variant="contained" color="primary" className="hero-action-primary" onClick={() => openAlertPanel('product-recall')} endIcon={<KeyboardArrowRight sx={{ fontSize: 16 }}/>}>
-                      View Impacted Stores
-                    </Button>
-                  </div>
-                </div>
-              </Card>
 
-              {/* VoC Trending — Rising Risk */}
-              <Card size="extraSmall" sx={{ maxWidth: '100%', minHeight: 0, padding: 0, overflow: 'hidden', marginBottom: 'var(--space-lg)' }}>
-                <div className="hero-card-content">
-                  <div className="hero-card-header">
-                    <div className="hero-signal warning">
-                      <TrendingUpOutlined sx={{ fontSize: 14 }}/>
-                      <span>VOC TRENDING</span>
-                    </div>
-                    <div className="hero-overdue">
-                      <WarningAmberOutlined sx={{ fontSize: 12 }}/>
-                      <span>Rising Risk</span>
-                    </div>
-                  </div>
-                  <h2 className="hero-headline">"Messy Aisles" — Top Rising Theme</h2>
-                  <p className="hero-context">Mentions up +34% over last 2 weeks across 3 stores. Correlates with declining SEA Cleanliness scores and negative sales trajectory.</p>
-                  <div className="hero-impact">
-                    <StoreOutlined sx={{ fontSize: 14 }}/>
-                    <span>Murfreesboro Plaza #4532 (+22%) · Chattanooga Riverside #2198 (+18%) · Knoxville East #3421 (+12%)</span>
-                  </div>
-                  <div className="hero-top-store">
-                    <AutoAwesomeOutlined sx={{ fontSize: 12 }}/>
-                    <span>Ask Alan has prepared an action plan for this theme</span>
-                  </div>
-                  <div className="hero-actions">
-                    <Button variant="contained" color="primary" className="hero-action-primary" onClick={() => openAlertPanel('voc-trending')} endIcon={<KeyboardArrowRight sx={{ fontSize: 16 }}/>}>
-                      View Impacted Stores
-                    </Button>
-                  </div>
-                </div>
-              </Card>
+            {/* Three issue-group cards — stacked rows, horizontal layout */}
+            <div className="eac2-cards-grid">
+              {DM_EAC_GROUPS.map(g => {
+                const pctOpen = Math.round((g.taskOpen / g.taskTotal) * 100);
+                const pctProg = Math.round((g.taskProg / g.taskTotal) * 100);
+                const pctSub  = Math.round((g.taskSub  / g.taskTotal) * 100);
+                const pctOver = Math.round((g.taskOver / g.taskTotal) * 100);
+                return (
+                  <div key={g.id} className={`eac2-card eac2-card--${g.type}`} onClick={() => setEacDrawer(g)}>
 
-              {/* Inventory Risk */}
-              {insights.filter(i => i.isHero || i.type === 'risk').slice(0, 1).map((item) => (
-                <Card key={item.id} size="extraSmall" sx={{ maxWidth: '100%', minHeight: 0, padding: 0, overflow: 'hidden', marginBottom: 'var(--space-lg)' }}>
-                  <div className="hero-card-content">
-                    <div className="hero-card-header">
-                      <div className="hero-signal">
-                        <TrendingDownOutlined sx={{ fontSize: 14 }}/>
-                        <span>{item.signal}</span>
-                      </div>
-                      {item.overdueCount && (
-                        <div className="hero-overdue">
-                          <AccessTimeOutlined sx={{ fontSize: 12 }}/>
-                          <span>{item.overdueCount} overdue actions</span>
+                    {/* MAIN: icon + title + desc + metrics + CTAs */}
+                    <div className="eac2-card-main">
+                      <div className="eac2-card-heading">
+                        <div className="eac2-card-icon">
+                          {g.type === 'boh'     && <SyncOutlined sx={{ fontSize: 20 }}/>}
+                          {g.type === 'phantom' && <InventoryOutlined sx={{ fontSize: 20 }}/>}
+                          {g.type === 'pog'     && <GridOnOutlined sx={{ fontSize: 20 }}/>}
                         </div>
-                      )}
-                    </div>
-                    <h2 className="hero-headline">{item.headline}</h2>
-                    <p className="hero-context">{item.context}</p>
-                    {item.impactDetail && (
-                      <div className="hero-impact">
-                        <ErrorOutlined sx={{ fontSize: 14 }}/>
-                        <span>{item.impactDetail}</span>
+                        <div className="eac2-card-heading-text">
+                          <h3 className="eac2-card-type">{g.title}</h3>
+                          <p className="eac2-card-desc">{g.desc}</p>
+                        </div>
+                        <div className="eac2-card-badges-col">
+                          <span className={`eac2-severity-badge eac2-severity-badge--${g.severityClass}`}>
+                            <WarningAmberOutlined sx={{ fontSize: 10 }}/> {g.severity}
+                          </span>
+                          <span className="eac2-sysgen-pill">
+                            <BoltOutlined sx={{ fontSize: 9 }}/> Auto-Tasked
+                          </span>
+                        </div>
                       </div>
-                    )}
-                    {item.topStore && (
-                      <div className="hero-top-store">
-                        <StoreOutlined sx={{ fontSize: 12 }}/>
-                        <span>{item.topStore}</span>
+
+                      {/* Impact metrics */}
+                      <div className="eac2-impact-row">
+                        <span className="eac2-metric">
+                          <StoreOutlined sx={{ fontSize: 13 }}/> <strong>{g.storeCount}</strong> Stores
+                        </span>
+                        <span className="eac2-metric">
+                          <InventoryOutlined sx={{ fontSize: 13 }}/> <strong>{g.skuCount}</strong> SKUs
+                        </span>
+                        <span className="eac2-metric eac2-metric--risk">
+                          <ErrorOutlined sx={{ fontSize: 13 }}/> <strong>{g.riskValue}</strong> at risk
+                        </span>
                       </div>
-                    )}
-                    <div className="hero-actions">
-                      <Button variant="contained" color="primary" className="hero-action-primary" onClick={() => openAlertPanel('inventory-risk')} endIcon={<KeyboardArrowRight sx={{ fontSize: 16 }}/>}>
-                        View Impacted Stores
+
+                    {/* CTAs */}
+                    <div className="eac2-card-footer">
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        endIcon={<KeyboardArrowRight sx={{ fontSize: 14 }}/>}
+                        onClick={e => { e.stopPropagation(); setEacDrawer(g); }}
+                      >
+                        View Stores
                       </Button>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        onClick={e => {
+                          e.stopPropagation();
+                          navigate('/command-center/operations-queue', {
+                            state: {
+                              prefillFromAlert: {
+                                alertId: g.id,
+                                title: g.title,
+                                description: `${g.taskType}: ${g.desc}`,
+                                severity: g.severity === 'High' ? 'critical' : 'warning',
+                                source: 'Automated Execution Alert',
+                                stores: g.stores.map(s => ({ name: s.name, manager: s.manager, detail: s.detail })),
+                              },
+                            },
+                          });
+                        }}
+                      >
+                        Open Queue
+                      </Button>
+                      <span className="eac2-last-detected">{g.lastDetected}</span>
                     </div>
                   </div>
-                </Card>
-              ))}
+
+                    {/* RIGHT: task panel — hero count + bar + 2×2 stat grid */}
+                    <div className="eac2-card-task-panel">
+                      <div className="eac2-task-panel-label">Auto-Created Tasks</div>
+                      <div className="eac2-task-panel-total">{g.taskTotal}</div>
+                      <div className="eac2-task-panel-type">{g.taskType}</div>
+                      <div className="eac2-progress-track">
+                        <div className="eac2-progress-seg eac2-progress-seg--over" style={{ width: `${pctOver}%` }}/>
+                        <div className="eac2-progress-seg eac2-progress-seg--open" style={{ width: `${pctOpen}%` }}/>
+                        <div className="eac2-progress-seg eac2-progress-seg--prog" style={{ width: `${pctProg}%` }}/>
+                        <div className="eac2-progress-seg eac2-progress-seg--sub"  style={{ width: `${pctSub}%` }}/>
+                      </div>
+                      <div className="eac2-tasks-breakdown">
+                        <div className="eac2-breakdown-item">
+                          <span className="eac2-breakdown-count" style={{ color: '#3b82f6' }}>{g.taskOpen}</span>
+                          <span className="eac2-breakdown-label">Open</span>
+                        </div>
+                        <div className="eac2-breakdown-item">
+                          <span className="eac2-breakdown-count" style={{ color: '#f59e0b' }}>{g.taskProg}</span>
+                          <span className="eac2-breakdown-label">In Progress</span>
+                        </div>
+                        <div className="eac2-breakdown-item">
+                          <span className="eac2-breakdown-count" style={{ color: '#8b5cf6' }}>{g.taskSub}</span>
+                          <span className="eac2-breakdown-label">Submitted</span>
+                        </div>
+                        {g.taskOver > 0 && (
+                          <div className="eac2-breakdown-item">
+                            <span className="eac2-breakdown-count" style={{ color: '#ef4444' }}>{g.taskOver}</span>
+                            <span className="eac2-breakdown-label">Overdue</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -1589,6 +1714,162 @@ export const StoreOpsHome: React.FC = () => {
         </div>
       </div>
 
+      {/* EAC v2 Drawer */}
+      {eacDrawer && (
+        <>
+          <div className="eac2-drawer-overlay" onClick={() => setEacDrawer(null)}/>
+          <div className="eac2-drawer">
+            {/* ── Hero header ── */}
+            <div className="eac2-drawer-header">
+              <div className="eac2-drawer-hero-top">
+                <div className="eac2-drawer-hero-id">
+                  <div className={`eac2-drawer-header-icon eac2-drawer-header-icon--${eacDrawer.type}`}>
+                    {eacDrawer.type === 'boh'     && <SyncOutlined sx={{ fontSize: 16 }}/>}
+                    {eacDrawer.type === 'phantom' && <InventoryOutlined sx={{ fontSize: 16 }}/>}
+                    {eacDrawer.type === 'pog'     && <GridOnOutlined sx={{ fontSize: 16 }}/>}
+                  </div>
+                  <span className="eac2-drawer-type">{eacDrawer.taskType}</span>
+                </div>
+                <button className="eac2-drawer-close" onClick={() => setEacDrawer(null)}>
+                  <CloseOutlined sx={{ fontSize: 18 }}/>
+                </button>
+              </div>
+              <h2 className="eac2-drawer-title">{eacDrawer.title}</h2>
+              <div className="eac2-drawer-hero-pills">
+                <span className={`eac2-drawer-pill eac2-drawer-pill--${eacDrawer.severityClass}`}>{eacDrawer.severity} Severity</span>
+                <span className="eac2-drawer-pill eac2-drawer-pill--auto">⚡ Auto-Monitored</span>
+                <span className="eac2-drawer-pill eac2-drawer-pill--stores">{eacDrawer.storeCount} stores impacted</span>
+              </div>
+            </div>
+
+            {/* ── Body ── */}
+            <div className="eac2-drawer-body">
+              {/* Issue Summary block */}
+              <div className="eac2-drawer-block">
+                <div className="eac2-drawer-block-label">
+                  <WarningAmberOutlined sx={{ fontSize: 11 }}/> Issue Summary
+                </div>
+                <div className={`eac2-drawer-risk-banner eac2-drawer-risk-banner--${eacDrawer.severityClass}`}>
+                  <WarningAmberOutlined sx={{ fontSize: 15 }} className="eac2-drawer-risk-banner-icon"/>
+                  <div>
+                    <p className="eac2-drawer-risk-title">{eacDrawer.skuCount} SKUs · {eacDrawer.riskValue} inventory at risk</p>
+                    <p className="eac2-drawer-risk-desc">{eacDrawer.desc}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Task Status block */}
+              <div className="eac2-drawer-block">
+                <div className="eac2-drawer-block-label">
+                  <TaskAltOutlined sx={{ fontSize: 11 }}/> Auto-Created Task Status · {eacDrawer.taskTotal} total
+                </div>
+                <div className="eac2-drawer-stats">
+                  {[
+                    { val: eacDrawer.taskOpen, lbl: 'Open' },
+                    { val: eacDrawer.taskProg, lbl: 'In Progress' },
+                    { val: eacDrawer.taskSub,  lbl: 'Submitted' },
+                    { val: eacDrawer.taskOver, lbl: 'Overdue' },
+                  ].map(s => (
+                    <div key={s.lbl} className="eac2-drawer-stat-tile">
+                      <span className="eac2-drawer-stat-val">{s.val}</span>
+                      <span className="eac2-drawer-stat-lbl">{s.lbl}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Impacted Stores block */}
+              <div className="eac2-drawer-block">
+                <div className="eac2-drawer-block-label">
+                  <StoreOutlined sx={{ fontSize: 11 }}/> Impacted Stores ({eacDrawer.stores.length})
+                </div>
+                <div className="eac2-entity-list">
+                  {eacDrawer.stores.map((s, i) => (
+                    <div key={i} className={`eac2-entity-card eac2-entity-card--${s.status}`}>
+                      <div className="eac2-entity-header">
+                        <span className="eac2-entity-name">{s.name}</span>
+                        <span className={`eac2-entity-status-badge eac2-entity-status-badge--${s.status}`}>
+                          {s.status === 'critical' ? 'Open' : s.status === 'progress' ? 'In Progress' : 'Submitted'}
+                        </span>
+                      </div>
+                      <div className="eac2-entity-detail">{s.detail}</div>
+                      <div className="eac2-entity-manager">
+                        <PersonOutlined sx={{ fontSize: 12 }}/> Assigned to <strong>{s.manager}</strong>
+                      </div>
+                      <div className="eac2-entity-task-row">
+                        <span className="eac2-entity-task-info">
+                          <TaskAltOutlined sx={{ fontSize: 12 }}/> {s.tasks} task{s.tasks > 1 ? 's' : ''}
+                        </span>
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          size="small"
+                          endIcon={<KeyboardArrowRight sx={{ fontSize: 12 }}/>}
+                          onClick={() => {
+                            setEacDrawer(null);
+                            navigate('/command-center/operations-queue', {
+                              state: {
+                                prefillFromAlert: {
+                                  alertId: `${eacDrawer.id}-${s.name.replace(/\s+/g, '-').toLowerCase()}`,
+                                  title: `${eacDrawer.title} — ${s.name}`,
+                                  description: s.detail,
+                                  severity: eacDrawer.severity === 'High' ? 'critical' : 'warning',
+                                  source: 'Automated Execution Alert',
+                                  stores: [{ name: s.name, manager: s.manager, detail: s.detail }],
+                                },
+                              },
+                            });
+                          }}
+                        >
+                          Open Task
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ── Footer ── */}
+            <div className="eac2-drawer-footer">
+              <Button
+                className="eac2-drawer-cta eac2-drawer-cta--primary"
+                variant="contained"
+                color="primary"
+                startIcon={<BoltOutlined sx={{ fontSize: 14 }}/>}
+                onClick={() => {
+                  setEacDrawer(null);
+                  navigate('/command-center/operations-queue', {
+                    state: {
+                      prefillFromAlert: {
+                        alertId: eacDrawer.id,
+                        title: eacDrawer.title,
+                        description: `${eacDrawer.taskType}: ${eacDrawer.desc}`,
+                        severity: eacDrawer.severity === 'High' ? 'critical' : 'warning',
+                        source: 'Automated Execution Alert',
+                        stores: eacDrawer.stores.map(s => ({ name: s.name, manager: s.manager, detail: s.detail })),
+                      },
+                    },
+                  });
+                }}
+              >
+                Open Queue
+              </Button>
+              <Button
+                className="eac2-drawer-cta eac2-drawer-cta--secondary"
+                variant="outlined"
+                onClick={() => setEacDrawer(null)}
+              >
+                Close
+              </Button>
+            </div>
+            <div className="eac2-drawer-timestamp">
+              <AccessTimeOutlined sx={{ fontSize: 12 }}/> Last detected {eacDrawer.lastDetected} · Auto-assigned to store managers
+            </div>
+          </div>
+        </>
+      )}
+
       {/* AI Brief Full Modal */}
       {showBriefModal && (
         <div className="brief-modal-overlay" onClick={() => setShowBriefModal(false)}>
@@ -1598,10 +1879,35 @@ export const StoreOpsHome: React.FC = () => {
                 <AutoAwesomeOutlined sx={{ fontSize: 18 }}/>
                 <h2>AI Daily Brief</h2>
               </div>
-              <button className="brief-modal-close" onClick={() => setShowBriefModal(false)}>
-                <CloseOutlined sx={{ fontSize: 20 }}/>
-              </button>
+              <div className="di-brief-modal-header-actions">
+                <button
+                  className={`aup-listen-btn${showBriefAudio ? ' aup-listen-btn--active' : ''}`}
+                  onClick={() => setShowBriefAudio(v => !v)}
+                  title="Listen to brief"
+                >
+                  <span className="aup-listen-btn-icon">
+                    {showBriefAudio
+                      ? <span className="aup-soundwave aup-soundwave--sm"><span/><span/><span/><span/></span>
+                      : <HeadphonesOutlined sx={{ fontSize: 14 }} />
+                    }
+                  </span>
+                  {showBriefAudio ? 'Playing…' : 'Listen'}
+                </button>
+                <button className="brief-modal-close" onClick={() => setShowBriefModal(false)}>
+                  <CloseOutlined sx={{ fontSize: 20 }}/>
+                </button>
+              </div>
             </div>
+            {showBriefAudio && (
+              <div className="di-brief-modal-audio">
+                <AudioPlayer
+                  text="Good afternoon, Clarke. Your district is performing well this week. Sales and Margin. District weekly revenue came in at $1.26M, up 8% versus target and 5% week over week. 6 of 8 stores exceeded plan. Gross margin held steady at 34.2%. District Performance Index reached 87 this week, placing the district in the top 10% Excellence Tier. Compliance. All audits completed, district-wide POG adherence at 97%. Task execution at 87% on-time completion rate. Customer experience VoC Score improved to 72, up 12 points quarter over quarter."
+                  title="AI Daily Brief"
+                  variant="card"
+                  onClose={() => setShowBriefAudio(false)}
+                />
+              </div>
+            )}
             <div className="brief-modal-content">
               <div className="ai-brief-summary">
                 <p className="ai-brief-paragraph">
@@ -2824,17 +3130,73 @@ export const StoreOpsHome: React.FC = () => {
         <>
           <div className="detail-panel-overlay" onClick={closeDetailPanel} />
           <div className="detail-panel">
-            <div className="detail-panel-header">
-              {panelSubView && (
-                <button className="detail-panel-back" onClick={goBackToPanel}>
-                  <ArrowForwardOutlined sx={{ fontSize: 16 }} style={{ transform: 'rotate(180deg)' }}/>
-                  <span>Back</span>
+            {/* Hero header — shown for main action view */}
+            {detailPanel.type === 'action' && !panelSubView ? (() => {
+              const a = detailPanel.data;
+              const srcIcon: Record<string, React.ReactNode> = {
+                Planogram: <GridOnOutlined sx={{ fontSize: 16 }}/>,
+                Compliance: <AssignmentTurnedInOutlined sx={{ fontSize: 16 }}/>,
+                Receiving: <SyncOutlined sx={{ fontSize: 16 }}/>,
+                Customer: <WarningAmberOutlined sx={{ fontSize: 16 }}/>,
+              };
+              const srcColor: Record<string, string> = {
+                Planogram: '#6d28d9',
+                Compliance: '#0e7490',
+                Receiving: '#1d4ed8',
+                Customer: '#b45309',
+              };
+              const srcBg: Record<string, string> = {
+                Planogram: '#ede9fe',
+                Compliance: '#cffafe',
+                Receiving: '#dbeafe',
+                Customer: '#fef3c7',
+              };
+              const sevColor: Record<string, string> = { critical: '#b91c1c', high: '#92400e', medium: '#1d4ed8', low: '#166534' };
+              const sevBg: Record<string, string> = { critical: '#fee2e2', high: '#fef3c7', medium: '#dbeafe', low: '#dcfce7' };
+              const sev = a.severity || 'medium';
+              return (
+                <div className="dp-hero-header">
+                  <div className="dp-hero-top">
+                    <div className="dp-hero-icon" style={{ background: srcBg[a.source_module] || '#f1f5f9', color: srcColor[a.source_module] || '#475569' }}>
+                      {srcIcon[a.source_module] || <BoltOutlined sx={{ fontSize: 16 }}/>}
+                    </div>
+                    <span className="dp-hero-type">{a.source_module?.toUpperCase()}</span>
+                    <button className="dp-hero-close" onClick={closeDetailPanel}>
+                      <CloseOutlined sx={{ fontSize: 17 }}/>
+                    </button>
+                  </div>
+                  <h2 className="dp-hero-title">{a.title}</h2>
+                  <div className="dp-hero-pills">
+                    <span className="dp-hero-pill" style={{ background: sevBg[sev], color: sevColor[sev] }}>
+                      <WarningAmberOutlined sx={{ fontSize: 10 }}/> {sev.charAt(0).toUpperCase() + sev.slice(1)} Severity
+                    </span>
+                    {a.status === 'overdue' && (
+                      <span className="dp-hero-pill" style={{ background: '#fee2e2', color: '#b91c1c' }}>
+                        <AccessTimeOutlined sx={{ fontSize: 10 }}/> Overdue
+                      </span>
+                    )}
+                    {a.context && (
+                      <span className="dp-hero-pill" style={{ background: '#f1f5f9', color: '#475569' }}>
+                        {a.context}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })() : (
+              /* Simple header for sub-views */
+              <div className="detail-panel-header">
+                {panelSubView && (
+                  <button className="detail-panel-back" onClick={goBackToPanel}>
+                    <ArrowForwardOutlined sx={{ fontSize: 16 }} style={{ transform: 'rotate(180deg)' }}/>
+                    <span>Back</span>
+                  </button>
+                )}
+                <button className="detail-panel-close" onClick={closeDetailPanel}>
+                  <CloseOutlined sx={{ fontSize: 18 }}/>
                 </button>
-              )}
-              <button className="detail-panel-close" onClick={closeDetailPanel}>
-                <CloseOutlined sx={{ fontSize: 18 }}/>
-              </button>
-            </div>
+              </div>
+            )}
 
             {/* ===== SUB-VIEW: Assign Task ===== */}
             {panelSubView?.view === 'assign-task' && (
@@ -3315,25 +3677,14 @@ export const StoreOpsHome: React.FC = () => {
             {/* ===== MAIN VIEW: Action Details ===== */}
             {detailPanel.type === 'action' && !panelSubView && (() => {
               const action = detailPanel.data;
-              const severityMap: Record<string, string> = { critical: 'CRITICAL', high: 'HIGH', medium: 'MEDIUM', low: 'LOW' };
-              const severityLabel = severityMap[action.severity] || 'MEDIUM';
               return (
               <div className="detail-panel-body">
-                {/* Severity + Source */}
-                <div className="dp-severity-row">
-                  <span className={`dp-severity-badge ${action.severity === 'critical' ? 'critical' : action.severity === 'high' ? 'risk' : 'warning'}`}>
-                    <WarningAmberOutlined sx={{ fontSize: 12 }}/>
-                    {severityLabel}
-                  </span>
-                  <span className="dp-source">
-                    <GroupOutlined sx={{ fontSize: 11 }}/>
-                    {action.source_module}
-                  </span>
-                </div>
-
-                {/* Title */}
-                <h2 className="dp-title">{action.title}</h2>
-                {action.impact && <p className="dp-description">{action.impact}</p>}
+                {/* Impact / description context */}
+                {action.impact && (
+                  <div className="dp-title-block">
+                    <p className="dp-description">{action.impact}</p>
+                  </div>
+                )}
 
                 {/* Impact Summary */}
                 <div className="dp-impact-summary">

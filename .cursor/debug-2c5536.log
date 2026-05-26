@@ -1,0 +1,2 @@
+{"sessionId":"2c5536","location":"StoreOpsHome.tsx:eac2-drawer-ref","message":"eac2-drawer actual width after mount","data":{"offsetWidth":560,"getBCRWidth":560,"computedWidth":"560px","cssClass":"eac2-drawer"},"hypothesisId":"H-A","runId":"post-fix","timestamp":1779787063740}
+{"sessionId":"2c5536","location":"StoreOpsHome.tsx:detail-panel-ref","message":"detail-panel actual width after mount","data":{"offsetWidth":560,"getBCRWidth":560,"computedWidth":"560px","cssClass":"detail-panel"},"hypothesisId":"H-A","runId":"post-fix","timestamp":1779787068726}

@@ -1250,6 +1250,18 @@
   margin-bottom: 6px;
 }
 
+/* Per-category label/unit contrast on colored tile backgrounds */
+[data-kpi-category="execution"]    .kpi-tile-label,
+[data-kpi-category="execution"]    .kpi-tile-unit  { color: #3b5bab; }
+[data-kpi-category="commercial"]   .kpi-tile-label,
+[data-kpi-category="commercial"]   .kpi-tile-unit  { color: #2d7a3c; }
+[data-kpi-category="customer"]     .kpi-tile-label,
+[data-kpi-category="customer"]     .kpi-tile-unit  { color: #6635a8; }
+[data-kpi-category="operations"]   .kpi-tile-label,
+[data-kpi-category="operations"]   .kpi-tile-unit  { color: #1a6b6b; }
+[data-kpi-category="profitability"].kpi-tile-label,
+[data-kpi-category="profitability"].kpi-tile-unit  { color: #7a5218; }
+
 /* Insight chip — replaces repetitive secondary numeric block */
 .kpi-tile-insight {
   display: inline-flex;
@@ -1923,6 +1935,39 @@
   flex: 1;
 }
 
+/* ── Brief header right area (listen button) ─────────────────────────── */
+.di-brief-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ── Brief audio bar (below header, above body) ──────────────────────── */
+.di-brief-audio-bar {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--ia-color-bg-muted);
+  background: var(--ia-color-bg-subtle);
+}
+
+/* ── Modal header actions row ────────────────────────────────────────── */
+.di-brief-modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ── Audio card inside modal ─────────────────────────────────────────── */
+.di-brief-modal-audio {
+  padding: 16px 24px 0;
+}
+
+/* ── CTA row (Read Full Brief button) ────────────────────────────────── */
+.di-brief-cta-row {
+  display: flex;
+  align-items: center;
+}
+
 .broadcast-section-header {
   display: flex;
   align-items: center;
@@ -2592,10 +2637,16 @@
   font-weight: var(--ia-font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  color: var(--ia-color-text-tertiary);
+  color: var(--ia-color-text-tertiary); /* overridden per card below */
   margin-bottom: 8px;
   white-space: nowrap;
 }
+/* Per-card label contrast */
+.bca-kpi-card:nth-child(1) .bca-kpi-label  { color: #3b5bab; }
+.bca-kpi-card:nth-child(2) .bca-kpi-label  { color: #2d7a3c; }
+.bca-kpi-card:nth-child(3) .bca-kpi-label  { color: #6635a8; }
+.bca-kpi-card:nth-child(4) .bca-kpi-label  { color: #1a6b6b; }
+.bca-kpi-card:nth-child(5) .bca-kpi-label  { color: #7a5218; }
 
 .bca-kpi-value {
   font-size: var(--ia-text-3xl);
@@ -2614,6 +2665,12 @@
   color: var(--ia-color-text-tertiary);
   letter-spacing: 0.2px;
 }
+/* Per-card context contrast */
+.bca-kpi-card:nth-child(1) .bca-kpi-context { color: #3b5bab; }
+.bca-kpi-card:nth-child(2) .bca-kpi-context { color: #2d7a3c; }
+.bca-kpi-card:nth-child(3) .bca-kpi-context { color: #6635a8; }
+.bca-kpi-card:nth-child(4) .bca-kpi-context { color: #1a6b6b; }
+.bca-kpi-card:nth-child(5) .bca-kpi-context { color: #7a5218; }
 
 /* B. Sub-section shared */
 .bca-sub-section {
@@ -3615,8 +3672,8 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: 440px;
-  max-width: 90vw;
+  width: 560px;
+  max-width: 92vw;
   background: var(--ia-color-surface);
   box-shadow: -8px 0 30px rgba(0, 0, 0, 0.12);
   z-index: 1000;
