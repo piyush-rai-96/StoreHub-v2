@@ -4,7 +4,7 @@
 
 .aep-page {
   min-height: 100%;
-  background: var(--ia-color-surface);
+  background: var(--ia-color-bg-subtle);
   padding-bottom: 40px;
 }
 

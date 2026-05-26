@@ -13,7 +13,7 @@ import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import { Button, Badge } from 'impact-ui';
 import { ImFilterSelect } from '../../../components/common/ImFilterSelect';
 import { OpportunityStatusChip } from './OpportunityStatusChip';
-import { getOpportunityById } from '../../../constants/productOpportunityMock';
+import { getOpportunityById, addApprovalRequest } from '../../../constants/productOpportunityMock';
 import {
   FULFILLMENT_LABELS,
   REASON_CODE_LABELS,
@@ -71,6 +71,38 @@ export const AllocationWorkflowPage: React.FC = () => {
     if (!canSubmit) return;
     setStatus('pending_approval');
     setSubmitted(true);
+    // Push into shared approval queue so ApprovalsAndExecution shows it
+    addApprovalRequest({
+      opportunityId: opp.id,
+      storeId: opp.storeId,
+      storeName: opp.storeName,
+      region: opp.region,
+      productImage: opp.productImage,
+      productName: opp.productName,
+      sku: opp.sku,
+      category: opp.category,
+      opportunityType: opp.opportunityType,
+      opportunityValue: opp.opportunityValue,
+      currentHoAllocationQty: opp.currentHoAllocationQty,
+      recommendedAllocationQty: opp.recommendedAllocationQty,
+      editedAllocationQty: editedQty,
+      approvedAllocationQty: 0,
+      fulfillmentSource: fulfillment,
+      requiredByDate: requiredByDate,
+      reasonCode: reasonCode,
+      comment: comment,
+      diffVsRecommendation: editedQty - opp.recommendedAllocationQty,
+      allocationDelta: editedQty - opp.currentHoAllocationQty,
+      submittedBy: 'Store Manager',
+      dcAvailableQty: opp.dcAvailableQty,
+      transferAvailableQty: opp.transferAvailableQty,
+      salesLast7Days: opp.salesLast7Days,
+      salesLast30Days: opp.salesLast30Days,
+      forecastDemand: opp.forecastDemand,
+      currentStoreStock: opp.currentStoreStock,
+      inTransitQty: opp.inTransitQty,
+      receivedQty: opp.receivedQty,
+    });
   };
 
   const typeColor =

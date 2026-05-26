@@ -4,11 +4,11 @@
 
 .po-page {
   min-height: 100%;
-  background: var(--ia-color-surface);
+  background: var(--ia-color-bg-subtle);
   padding-bottom: 40px;
 }
 
-/* ── Page Header — District Intelligence pattern ── */
+/* ── Page Header — exact District Intelligence pattern ── */
 
 .po-page-header {
   display: flex;
@@ -39,20 +39,24 @@
   letter-spacing: -0.02em;
 }
 
+.po-page-title-row svg {
+  color: var(--ia-color-primary);
+}
+
 .po-content {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 24px 32px 0;
+  padding: 20px 32px 0;
 }
 
 .po-header-meta {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
-/* Store Picker — gradient pill */
+/* Store Picker — mirrors di-district-picker exactly */
 
 .po-store-picker-wrap {
   position: relative;
@@ -63,7 +67,7 @@
   align-items: center;
   gap: 8px;
   padding: 6px 14px;
-  background: linear-gradient(135deg, var(--ia-color-primary-soft) 0%, var(--ia-color-primary-border) 30%, var(--ia-color-primary-soft) 100%);
+  background: linear-gradient(135deg, var(--ia-color-primary-soft) 0%, var(--ia-color-primary-border) 100%);
   border: 1px solid var(--ia-color-primary-border);
   border-radius: 8px;
   font-size: var(--ia-text-13);
@@ -76,6 +80,7 @@
 
 .po-store-picker:hover {
   background: linear-gradient(135deg, var(--ia-color-primary-border) 0%, var(--ia-color-primary-soft) 100%);
+  border-color: var(--ia-color-primary-border);
 }
 
 .po-store-picker .po-rotated {
@@ -86,8 +91,8 @@
   font-size: var(--ia-text-2xs);
   font-weight: var(--ia-font-weight-medium);
   color: var(--ia-color-primary);
-  padding: 2px 8px;
-  background: rgba(255, 255, 255, 0.7);
+  padding: 2px 7px;
+  background: rgba(255,255,255,0.7);
   border-radius: 4px;
 }
 
@@ -168,7 +173,7 @@
   flex-shrink: 0;
 }
 
-/* Cycle pill — matches District Intelligence period-selector */
+/* Cycle pill — mirrors DI period-selector */
 
 .po-cycle-pill {
   display: flex;
@@ -177,10 +182,15 @@
   padding: 6px 12px;
   background: var(--ia-color-surface);
   border: 1px solid var(--ia-color-border);
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: var(--ia-text-13);
   font-weight: var(--ia-font-weight-medium);
   color: var(--ia-color-text-secondary);
+  transition: background 0.15s;
+}
+
+.po-cycle-pill:hover {
+  background: var(--ia-color-bg-subtle);
 }
 
 /* Updated timestamp */

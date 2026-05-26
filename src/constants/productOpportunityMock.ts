@@ -549,8 +549,25 @@ export function getOpportunityById(id: string): ProductOpportunity | undefined {
   return MOCK_OPPORTUNITIES.find(o => o.id === id);
 }
 
+/* ── Runtime approval queue (persists across navigations within the session) ── */
+const _runtimeRequests: AllocationRequest[] = [];
+let _reqCounter = MOCK_ALLOCATION_REQUESTS.length + 1;
+
+export function addApprovalRequest(req: Omit<AllocationRequest, 'requestId' | 'status' | 'submittedDate' | 'slaDueDate'>): void {
+  const now = new Date();
+  const sla = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000); // 3-day SLA
+  _runtimeRequests.unshift({
+    ...req,
+    requestId: `REQ-${String(_reqCounter++).padStart(4, '0')}`,
+    status: 'pending_approval',
+    submittedDate: now.toISOString(),
+    slaDueDate: sla.toISOString(),
+  } as AllocationRequest);
+}
+
 export function getApprovalRequests(): AllocationRequest[] {
-  return MOCK_ALLOCATION_REQUESTS.filter(r => r.status === 'pending_approval');
+  const base = MOCK_ALLOCATION_REQUESTS.filter(r => r.status === 'pending_approval');
+  return [..._runtimeRequests, ...base];
 }
 
 export function getExecutionRecords(): ExecutionRecord[] {
