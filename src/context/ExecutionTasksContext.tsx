@@ -35,6 +35,10 @@ export interface ExecutionTask {
   slaHours?: number;
   severityRationale?: string;
   confidenceScore?: number;
+  detectionMethod?: string;
+  affectedSkuCount?: number;
+  estimatedMinutes?: number;
+  checklist?: { text: string; done: boolean }[];
   beforeImage?: string;
   afterImage?: string;
 }

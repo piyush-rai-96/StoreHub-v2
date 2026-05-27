@@ -17,6 +17,8 @@ import StoreOutlined from '@mui/icons-material/StoreOutlined';
 import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
 import ImageOutlined from '@mui/icons-material/ImageOutlined';
 import SecurityOutlined from '@mui/icons-material/SecurityOutlined';
+import TrackChangesOutlined from '@mui/icons-material/TrackChangesOutlined';
+import ChecklistOutlined from '@mui/icons-material/ChecklistOutlined';
 import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
 import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
 import Check from '@mui/icons-material/Check';
@@ -558,6 +560,53 @@ export const TaskCenter: React.FC = () => {
       const createdAt = new Date().toISOString();
       const taskType: ExecutionTask['type'] = payload.alertId === 'alert-inventory' ? 'Add' : 'Reset Shelf';
 
+      // Alert-type-specific enrichment
+      const isPhantom = (payload.alertId || '').toLowerCase().includes('phantom') || (payload.title || '').toLowerCase().includes('phantom');
+      const isBOH    = (payload.alertId || '').toLowerCase().includes('boh') || (payload.alertId || '').toLowerCase().includes('inventory');
+      const isPOG    = (payload.alertId || '').toLowerCase().includes('pog') || (payload.alertId || '').toLowerCase().includes('planogram');
+
+      const alertType: ExecutionTask['alertType'] = isPhantom ? 'Phantom Stock' : isBOH ? 'BOH-to-Shelf Sync' : isPOG ? 'POG Compliance Gap' : undefined;
+
+      const checklists: Record<string, { text: string; done: boolean }[]> = {
+        'Phantom Stock': [
+          { text: 'Pull the SKU list flagged by the phantom stock detection engine', done: false },
+          { text: 'Physically locate and count each affected SKU in the sales zone', done: false },
+          { text: 'Check backroom for any unprocessed receiving that inflated system count', done: false },
+          { text: 'Compare physical count against system inventory for each SKU', done: false },
+          { text: 'Submit cycle count adjustment in POS/inventory system', done: false },
+          { text: 'Reset shelf and confirm product is physically present or removed', done: false },
+          { text: 'Mark task complete and attach photo evidence of corrected shelf', done: false },
+        ],
+        'BOH-to-Shelf Sync': [
+          { text: 'Print or pull the BOH replenishment list for affected SKUs', done: false },
+          { text: 'Locate all flagged items in the backroom', done: false },
+          { text: 'Transport items to the sales floor during a non-selling window', done: false },
+          { text: 'Replenish shelves and straighten facings per planogram', done: false },
+          { text: 'Update receiving log if items were unprocessed inbound', done: false },
+          { text: 'Attach before/after shelf photo via the compliance tool', done: false },
+        ],
+        'POG Compliance Gap': [
+          { text: 'Print the current planogram for the flagged fixture', done: false },
+          { text: 'Walk the fixture and identify all out-of-position items', done: false },
+          { text: 'Rearrange products to match planogram spec (positions, facings)', done: false },
+          { text: 'Ensure pricing labels are aligned with restocked positions', done: false },
+          { text: 'Submit post-reset photo to the compliance audit portal', done: false },
+          { text: 'Note any missing items for replenishment follow-up', done: false },
+        ],
+      };
+
+      const detectionMethods: Record<string, string> = {
+        'Phantom Stock': 'AI Inventory Engine — cross-referenced POS sales velocity vs system on-hand for 14+ days',
+        'BOH-to-Shelf Sync': 'AI Inventory Engine — detected BOH quantity > 0 with shelf OOS condition',
+        'POG Compliance Gap': 'Camera Shelf Audit AI — computer vision scan detected deviation from planogram spec',
+      };
+
+      const estimatedMinutesByType: Record<string, number> = {
+        'Phantom Stock': 30,
+        'BOH-to-Shelf Sync': 20,
+        'POG Compliance Gap': 25,
+      };
+
       const newTasks: ExecutionTask[] = payload.stores.map((s, idx) => {
         const memberMatch = teamMembers.find(m => m.name === s.manager);
         const id = `tc-prefill-${payload.alertId || 'alert'}-${Date.now()}-${idx}`;
@@ -576,12 +625,18 @@ export const TaskCenter: React.FC = () => {
           storeName: s.name,
           storeGroup: 'Alert-driven Tasks',
           pogName: '—',
-          category: payload.alertId === 'alert-inventory' ? 'Inventory' : 'Operations',
+          category: isBOH ? 'Inventory' : 'Operations',
           createdAt,
           localizationId: `alert-${payload.alertId || 'gen'}-${idx}`,
           source: 'Automated Execution Alert',
           slaHours: priority === 'High' ? 24 : 48,
           severityRationale: s.detail,
+          alertType,
+          confidenceScore: isPhantom ? 91 : isBOH ? 88 : isPOG ? 94 : undefined,
+          detectionMethod: alertType ? detectionMethods[alertType] : undefined,
+          affectedSkuCount: isPhantom ? 14 : isBOH ? 8 : undefined,
+          estimatedMinutes: alertType ? estimatedMinutesByType[alertType] : undefined,
+          checklist: alertType ? checklists[alertType] : undefined,
         };
       });
 
@@ -1574,10 +1629,47 @@ export const TaskCenter: React.FC = () => {
                   </div>
                 )}
 
+                {/* Detection Summary — alert-driven tasks only */}
+                {selectedTask.alertType && (
+                  <div className="tc-detail-block">
+                    <div className="tc-detail-block-label"><TrackChangesOutlined sx={{ fontSize: 12 }} /> Detection Summary</div>
+                    <div className="tc-detection-summary">
+                      <div className="tc-detection-type-row">
+                        <span className={`tc-alert-type-badge tc-alert-type-badge--${selectedTask.alertType.toLowerCase().replace(/[\s-]+/g, '-')}`}>
+                          {selectedTask.alertType}
+                        </span>
+                        {selectedTask.confidenceScore !== undefined && (
+                          <span className="tc-confidence-pill">
+                            <AutoAwesomeOutlined sx={{ fontSize: 10 }} />
+                            {selectedTask.confidenceScore}% confidence
+                          </span>
+                        )}
+                      </div>
+                      {selectedTask.detectionMethod && (
+                        <p className="tc-detection-method">{selectedTask.detectionMethod}</p>
+                      )}
+                      <div className="tc-detection-meta-row">
+                        {selectedTask.affectedSkuCount !== undefined && (
+                          <div className="tc-detection-meta-item">
+                            <span className="tc-detection-meta-label">Affected SKUs</span>
+                            <span className="tc-detection-meta-value">{selectedTask.affectedSkuCount}</span>
+                          </div>
+                        )}
+                        {selectedTask.estimatedMinutes !== undefined && (
+                          <div className="tc-detection-meta-item">
+                            <span className="tc-detection-meta-label">Est. resolution</span>
+                            <span className="tc-detection-meta-value">{selectedTask.estimatedMinutes} min</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Severity Rationale */}
                 {selectedTask.severityRationale && (
                   <div className="tc-detail-block">
-                    <div className="tc-detail-block-label"><SecurityOutlined sx={{ fontSize: 12 }} /> Severity Rationale</div>
+                    <div className="tc-detail-block-label"><SecurityOutlined sx={{ fontSize: 12 }} /> Why This Was Flagged</div>
                     <div className="tc-detail-rationale">
                       {selectedTask.severityRationale}
                     </div>
@@ -1587,6 +1679,21 @@ export const TaskCenter: React.FC = () => {
                         <span className="tc-detail-impact-value">{selectedTask.impact}</span>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* Resolution Checklist */}
+                {selectedTask.checklist && selectedTask.checklist.length > 0 && (
+                  <div className="tc-detail-block">
+                    <div className="tc-detail-block-label"><ChecklistOutlined sx={{ fontSize: 12 }} /> Resolution Steps</div>
+                    <div className="tc-resolution-checklist">
+                      {selectedTask.checklist.map((item, i) => (
+                        <div key={i} className={`tc-checklist-item${item.done ? ' tc-checklist-item--done' : ''}`}>
+                          <div className="tc-checklist-num">{i + 1}</div>
+                          <span className="tc-checklist-text">{item.text}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
