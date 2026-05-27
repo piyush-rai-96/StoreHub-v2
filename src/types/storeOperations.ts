@@ -16,7 +16,7 @@ export type Priority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type TaskType = 'AI' | 'ASSIGNED' | 'FOLLOW_UP';
 
 // Broadcast category
-export type BroadcastCategory = 'Safety' | 'Operations' | 'Audit' | 'Merchandising' | 'HR' | 'General';
+export type BroadcastCategory = 'Safety' | 'Operations' | 'Audit' | 'Merchandising' | 'HR' | 'General' | 'Marketing' | 'Visual Merchandising';
 
 // User context
 export interface UserContext {

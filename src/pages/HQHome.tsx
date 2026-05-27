@@ -93,10 +93,10 @@ interface HQBroadcastTrackRow {
 }
 const HQ_BROADCAST_OVERVIEW = {
   active: 4,
-  sentThisWeek: 7,
-  ackPct: 81,
-  avgAckTime: '4h 48m',
-  trendVsLast: -7,
+  sentThisWeek: 9,
+  ackPct: 76,
+  avgAckTime: '3h 22m',
+  trendVsLast: -5,
 };
 interface HQDistrictComplianceRow { district: string; districtId: string; ackRate: number; avgTime: string; tier: 'top' | 'at-risk' | 'defaulter'; missedCount: number }
 interface HQBroadcastInsight { pattern: string; recommendation: string }
@@ -109,8 +109,8 @@ const HQ_DISTRICT_COMPLIANCE_BASE: HQDistrictComplianceRow[] = [
   { district: 'District 11 — Florida',   districtId: 'd11', ackRate: 60, avgTime: '5h 20m', tier: 'defaulter', missedCount: 6 },
 ];
 const HQ_BROADCAST_INSIGHTS: HQBroadcastInsight[] = [
-  { pattern: 'Safety and compliance broadcasts achieve 95%+ ack within 2 hours network-wide — significantly faster than informational ones (avg 5h).', recommendation: 'Tag operational broadcasts as "Action Required" to leverage the urgency pattern and improve ack rates.' },
-  { pattern: 'Districts 11 and 22 are repeat defaulters — combined 10 missed acknowledgements over the last 14 days, correlating with their lower DPI.', recommendation: 'Schedule a focused engagement review with DMs of Districts 11 and 22; consider linking ack-rate to district scorecard.' },
+  { pattern: 'Action Required broadcasts (signage kits, floorset shifts, test store compliance) achieve 94%+ ack within 2h network-wide — significantly faster than informational sends (avg 4h 50m).', recommendation: 'Continue tagging time-sensitive merchandising and transfer broadcasts as "Action Required" to drive urgency and reduce compliance gaps.' },
+  { pattern: 'Districts 11 and 22 are repeat late-ackowledgers — combined 9 delayed acknowledgements over the last 14 days, correlating with lower floorset compliance scores.', recommendation: 'Schedule a focused review with DMs of Districts 11 and 22 before the Summer 2 floorset; link ack-rate to district execution scorecard.' },
 ];
 
 // HQ Alert right-side detail panel data shape (mirrors AlertPanelData on DM Home)
@@ -131,19 +131,22 @@ interface HQAlertItem {
 }
 
 const HQ_BROADCAST_EFFECTIVENESS: HQBroadcastTrackRow[] = [
-  { id: 'hb1', name: 'Holiday Season Execution Standards', priority: 'high', ackRate: 80, avgAckTime: '1h 45m', status: 'good', type: 'Action Required', sentAt: '2h ago', districts: 5, ackedDistricts: 4 },
-  { id: 'hb2', name: 'New Safety Protocol — Aisle Markings', priority: 'high', ackRate: 60, avgAckTime: '4h 50m', status: 'at-risk', type: 'Action Required', sentAt: '1d ago', districts: 5, ackedDistricts: 3 },
-  { id: 'hb3', name: 'Q4 Compliance Reporting Deadline', priority: 'medium', ackRate: 100, avgAckTime: '1h 10m', status: 'good', type: 'Action Required', sentAt: '6h ago', districts: 5, ackedDistricts: 5 },
-  { id: 'hb4', name: 'SS26 Planogram Guidelines Rollout', priority: 'medium', ackRate: 80, avgAckTime: '3h 20m', status: 'good', type: 'Informational', sentAt: '2d ago', districts: 5, ackedDistricts: 4 },
-  { id: 'hb5', name: 'New Training Module Available', priority: 'low', ackRate: 100, avgAckTime: '2h 15m', status: 'good', type: 'Informational', sentAt: '3d ago', districts: 5, ackedDistricts: 5 },
-  { id: 'hb6', name: 'Regional VoC Trends — Action Plan', priority: 'medium', ackRate: 60, avgAckTime: '5h 05m', status: 'at-risk', type: 'Action Required', sentAt: '4d ago', districts: 5, ackedDistricts: 3 },
+  { id: 'hb1', name: 'Semi-Annual Sale — Signage Kit Confirmation', priority: 'high', ackRate: 72, avgAckTime: '2h 10m', status: 'at-risk', type: 'Action Required', sentAt: '30m ago', districts: 5, ackedDistricts: 4 },
+  { id: 'hb2', name: 'Summer 2 Floorset — Overnight Shift Scheduling', priority: 'high', ackRate: 60, avgAckTime: '3h 45m', status: 'at-risk', type: 'Action Required', sentAt: '2h ago', districts: 5, ackedDistricts: 3 },
+  { id: 'hb3', name: 'Test Store — Early Set Compliance Deadline 6.7', priority: 'high', ackRate: 100, avgAckTime: '1h 05m', status: 'good', type: 'Action Required', sentAt: '4h ago', districts: 5, ackedDistricts: 5 },
+  { id: 'hb4', name: 'Store-to-Store Transfers — This Week\'s Labor Schedule', priority: 'medium', ackRate: 80, avgAckTime: '2h 50m', status: 'good', type: 'Action Required', sentAt: '6h ago', districts: 5, ackedDistricts: 4 },
+  { id: 'hb5', name: 'SS26 Planogram Guidelines Rollout', priority: 'medium', ackRate: 80, avgAckTime: '3h 20m', status: 'good', type: 'Informational', sentAt: '2d ago', districts: 5, ackedDistricts: 4 },
+  { id: 'hb6', name: 'Visual Merch Standards Update — Summer Windows', priority: 'medium', ackRate: 60, avgAckTime: '5h 05m', status: 'at-risk', type: 'Action Required', sentAt: '3d ago', districts: 5, ackedDistricts: 3 },
   { id: 'hb7', name: 'Monthly Network Performance Recap', priority: 'low', ackRate: 100, avgAckTime: '1h 30m', status: 'good', type: 'Informational', sentAt: '5d ago', districts: 5, ackedDistricts: 5 },
+  { id: 'hb8', name: 'New Training Module — Seasonal Execution', priority: 'low', ackRate: 100, avgAckTime: '2h 15m', status: 'good', type: 'Informational', sentAt: '6d ago', districts: 5, ackedDistricts: 5 },
+  { id: 'hb9', name: 'Q2 Compliance Reporting Deadline', priority: 'medium', ackRate: 100, avgAckTime: '1h 10m', status: 'good', type: 'Action Required', sentAt: '7d ago', districts: 5, ackedDistricts: 5 },
 ];
 
 const MOCK_BROADCASTS: BroadcastItem[] = [
-  { id: 'b1', title: 'Holiday Season Execution Standards', description: 'All districts must complete holiday planogram execution by Dec 15. Updated guidelines attached for seasonal end-caps and promotional displays.', type: 'critical', category: 'Operations', sender: 'Regional Safety', timeSent: '2h ago', isRead: false },
-  { id: 'b2', title: 'Q4 Compliance Reporting Deadline', description: 'Q4 compliance reports due by end of week. Please ensure all store audits are completed and submitted through the portal.', type: 'info', category: 'Compliance', sender: 'District Manager', timeSent: '6h ago', isRead: true },
-  { id: 'b3', title: 'New Safety Protocol — Aisle Markings', description: 'Updated safety protocol for aisle markings effective immediately. All stores must comply within 48 hours. Training materials available in the portal.', type: 'critical', category: 'Safety', sender: 'Regional Safety', timeSent: '1d ago', isRead: false },
+  { id: 'b1', title: 'Semi-Annual Sale — Signage Kit Confirmation', description: 'Reminder: "Semi Annual Sale" sets Friday Open Business. Please confirm you have received in-store signage kits for Windows, Marquee, and sign toppers.', type: 'critical', category: 'Marketing', sender: 'Marketing Calendar', timeSent: '30m ago', isRead: false },
+  { id: 'b2', title: 'Summer 2 Floorset — Overnight Shift Scheduling', description: 'Reminder: Summer 2 floorset sets next Thursday overnight. Have you scheduled the overnight shifts required to complete the set?', type: 'critical', category: 'Visual Merchandising', sender: 'VM Planning', timeSent: '2h ago', isRead: false },
+  { id: 'b3', title: 'Test Store — Early Set Compliance by 6.7.2026', description: 'Your store has been selected for an upcoming early set test. Your info packet (linked) includes items, pricing, and visual merchandising requirements. Please complete the set and confirm compliance by June 7, 2026.', type: 'critical', category: 'Operations', sender: 'HQ Merchandising', timeSent: '4h ago', isRead: false },
+  { id: 'b4', title: 'Store-to-Store Transfers — This Week\'s Schedule', description: 'Alert for this week\'s transfers in and transfers out. Labor estimates based upon inbound/outbound execution are attached. Please ensure scheduling during non-selling hours.', type: 'info', category: 'Operations', sender: 'Operations Team', timeSent: '6h ago', isRead: true },
 ];
 
 // ─── Helpers ───
@@ -320,8 +323,8 @@ export const HQHome: React.FC = () => {
       data = {
         id, severity: 'warning', signalLabel: 'COMMUNICATION GAP', source: 'Broadcast Analytics', timestamp: nowIso,
         title: 'Broadcast Acknowledgement Rate Declining',
-        description: 'Districts 11, 22, and 19 below the 85% threshold. Average response time has increased from 2.1h to 4.8h over the last 7 days.',
-        impactSummary: '14-store acknowledgement gap on the latest Safety Protocol broadcast',
+        description: 'Districts 11, 22, and 19 below the 85% threshold. "Summer 2 Floorset — Overnight Shift Scheduling" has a 13-store gap 2 hours after send.',
+        impactSummary: '13-store ack gap on Summer 2 Floorset broadcast — floorset at risk',
         entityLabel: 'Districts',
         entities: [
           { id: 'd11', name: 'District 11 — Florida', status: 'critical', detail: '60% ack rate · 6 missed acks · Avg 5h 20m', manager: 'Lisa Nguyen' },
@@ -469,8 +472,8 @@ export const HQHome: React.FC = () => {
         <h3 className="ai-brief-section-title"><NotificationsOutlined sx={{ fontSize: 14 }}/> Broadcasts &amp; Communication</h3>
         <ul className="ai-brief-bullets">
           <li>Broadcast reach is <strong>94.1%</strong> (+1.8pp WoW) — the highest in 8 weeks. Acknowledgement rate, however, declined in 3 districts (11, 19, 22) below the 85% threshold.</li>
-          <li>Average response time to HQ broadcasts increased from <strong>2.1h to 4.8h</strong> over the last 7 days. Recommend a follow-up nudge to underperforming districts.</li>
-          <li>"New Safety Protocol — Aisle Markings" broadcast issued 1 day ago: 18 of 32 stores acknowledged. 14-store gap remains.</li>
+          <li>Average response time to HQ broadcasts improved from <strong>4.8h to 3.4h</strong> over the last 7 days, driven by apparel execution urgency. Districts 11 and 22 remain below 70% ack rate.</li>
+          <li>"Summer 2 Floorset — Overnight Shift Scheduling" broadcast issued 2h ago: 19 of 32 stores acknowledged. 13-store gap remains; nudge recommended before end of day.</li>
         </ul>
       </div>
 
