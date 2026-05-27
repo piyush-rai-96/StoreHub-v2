@@ -826,7 +826,7 @@ const broadcastActions: BroadcastAction[] = [
 interface SMBroadcast {
   id: string;
   priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
-  category: 'Safety' | 'Operations' | 'Compliance' | 'Announcement' | 'Merchandising' | 'HR';
+  category: 'Safety' | 'Operations' | 'Compliance' | 'Announcement' | 'Merchandising' | 'HR' | 'Marketing' | 'Visual Merchandising';
   title: string;
   description: string;
   sender: string;
@@ -834,36 +834,46 @@ interface SMBroadcast {
   isRead: boolean;
 }
 
-// HQ Broadcasts — IDENTICAL data and content to DM Home (StoreOpsHome generateMockBroadcasts)
+// HQ Broadcasts — mirrors StoreOpsHome generateMockBroadcasts (apparel retailer content)
 const SM_HQ_BROADCASTS: SMBroadcast[] = [
+  {
+    id: '1',
+    priority: 'HIGH',
+    category: 'Marketing',
+    title: 'Semi-Annual Sale — Signage Kit Confirmation',
+    description: 'Reminder: "Semi Annual Sale" sets Friday Open Business. Please confirm you have received your in-store signage kits for Windows, Marquee, and sign toppers.',
+    sender: 'Marketing Calendar',
+    timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+    isRead: false,
+  },
   {
     id: '2',
     priority: 'HIGH',
-    category: 'Operations',
-    title: 'Holiday Schedule Update',
-    description: 'Updated store hours for upcoming holiday weekend. Please review and confirm your availability by Friday.',
-    sender: 'District Manager',
+    category: 'Visual Merchandising',
+    title: 'Summer 2 Floorset — Overnight Shift Scheduling',
+    description: 'Reminder: Summer 2 floorset sets next Thursday overnight. Have you scheduled the overnight shifts required to complete the set?',
+    sender: 'VM Planning',
     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     isRead: false,
   },
   {
     id: '3',
-    priority: 'MEDIUM',
-    category: 'Merchandising',
-    title: 'New Planogram Guidelines',
-    description: 'New planogram guidelines released. Review updated shelf layouts for seasonal products.',
-    sender: 'Merchandising Team',
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    isRead: true,
+    priority: 'HIGH',
+    category: 'Operations',
+    title: 'Test Store — Early Set Compliance by 6.7.2026',
+    description: 'Your store has been selected for an upcoming early set test. Your info packet includes items, pricing, and visual merchandising. Complete the set and confirm compliance by June 7, 2026.',
+    sender: 'HQ Merchandising',
+    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+    isRead: false,
   },
   {
     id: '4',
-    priority: 'LOW',
-    category: 'HR',
-    title: 'Training Module Available',
-    description: 'New training module available for team members. Confirm staffing assignments.',
-    sender: 'HR Department',
-    timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+    priority: 'MEDIUM',
+    category: 'Operations',
+    title: 'Store-to-Store Transfers — This Week\'s Schedule',
+    description: 'Alert for this week\'s transfers in and transfers out. Labor estimates based upon inbound/outbound execution are attached. Please ensure scheduling during non-selling hours.',
+    sender: 'Operations Team',
+    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
     isRead: true,
   },
 ];
