@@ -21,6 +21,7 @@ import CampaignOutlined from '@mui/icons-material/CampaignOutlined';
 import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import SendOutlined from '@mui/icons-material/SendOutlined';
+import AttachFileOutlined from '@mui/icons-material/AttachFileOutlined';
 import InventoryOutlined from '@mui/icons-material/InventoryOutlined';
 import ChatOutlined from '@mui/icons-material/ChatOutlined';
 import OpenInNewOutlined from '@mui/icons-material/OpenInNewOutlined';
@@ -36,6 +37,7 @@ import SouthEast from '@mui/icons-material/SouthEast';
 import FilterListOutlined from '@mui/icons-material/FilterListOutlined';
 import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined';
 import { Button, Card, Tabs } from 'impact-ui';
+import { ImFilterSelect } from '../components/common/ImFilterSelect';
 import { useAuth } from '../context/AuthContext';
 import { openAskAlan } from '../utils/openAskAlan';
 import { AIDailyBrief } from '../components/common/AIDailyBrief';
@@ -841,6 +843,9 @@ export const DistrictIntelligence: React.FC = () => {
   const [bwSubject, setBwSubject] = useState('');
   const [bwMessage, setBwMessage] = useState('');
   const [bwSending, setBwSending] = useState(false);
+  const [bwAttachments, setBwAttachments] = useState<{name: string; size: string; type: string}[]>([]);
+  const [bwRequiredActions, setBwRequiredActions] = useState<string[]>(['']);
+  const [bwKeyDates, setBwKeyDates] = useState<{label: string; date: string}[]>([{label: '', date: ''}]);
   const openBroadcastWizard = () => {
     setBwStep(1);
     setBwAudience('all-stores');
@@ -851,6 +856,9 @@ export const DistrictIntelligence: React.FC = () => {
     setBwSubject('');
     setBwMessage('');
     setBwSending(false);
+    setBwAttachments([]);
+    setBwRequiredActions(['']);
+    setBwKeyDates([{label: '', date: ''}]);
     setShowBroadcastWizard(true);
   };
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -1093,7 +1101,7 @@ export const DistrictIntelligence: React.FC = () => {
           bullets: [
             '<strong>VoC: Messy Aisles</strong> — +22% theme spike across 3 stores (Johnson City Mall +45%, Clarksville Crossing +38%, Franklin Town Center +31%). WoW trend is accelerating; last week was +14%. Root cause: cleaning staff hours were cut by 2hrs/day at these locations last month.',
             '<strong>SEA Auto-Fail: Fire Exit</strong> at Johnson City Mall is a <strong>CRITICAL</strong> regulatory exposure. Display fixture blocking emergency Exit B. Auto-escalated to DM 2 hours ago; store manager acknowledgment still pending. Any delay risks store closure and penalties.',
-            '<strong>Inbound OOS Risk</strong> at Clarksville Crossing — 3 SKUs (Summer Dress, Linen Pants, Cotton Blouse) delayed 48h from DC. Revenue impact estimated at $2,400. Adaptation plan awaiting DM approval.',
+            '<strong>Inbound OOS Risk</strong> at Clarksville Crossing — 3 SKUs (Summer Midi Dress, Women\'s V-Neck Basics, Women\'s Classic Blazer) delayed 48h from DC. Revenue impact estimated at $2,400. Adaptation plan awaiting DM approval.',
           ],
         },
         {
@@ -2786,35 +2794,30 @@ export const DistrictIntelligence: React.FC = () => {
                 {/* ── Step 1: Audience ── */}
                 {bwStep === 1 && (
                   <div className="bw-step-content">
-                    <div className="bw-field-label">Who should receive this broadcast?</div>
+                    <div className="bw-field-label bw-field-label--section">Who should receive this broadcast?</div>
                     <div className="bw-audience-options">
-                      <div className={`bw-audience-card ${bwAudience === 'all-stores' ? 'selected' : ''}`} onClick={() => setBwAudience('all-stores')}>
-                        <div className="bw-audience-radio">{bwAudience === 'all-stores' && <div className="bw-audience-dot" />}</div>
-                        <div className="bw-audience-body">
-                          <div className="bw-audience-title"><StoreOutlined sx={{ fontSize: 14 }}/> All Stores in District</div>
-                          <div className="bw-audience-desc">Send to every store ({totalStores}) and their managers</div>
+                      {([
+                        { id: 'all-stores', icon: <StoreOutlined sx={{ fontSize: 16 }}/>, title: `All Stores in District (${totalStores})`, desc: 'Reaches every store and their managers' },
+                        { id: 'specific-stores', icon: <FilterListOutlined sx={{ fontSize: 16 }}/>, title: 'Specific Stores', desc: 'Pick one or more stores from your district' },
+                        { id: 'managers', icon: <GroupOutlined sx={{ fontSize: 16 }}/>, title: 'District Managers Only', desc: 'Send only to selected store / area managers' },
+                      ] as const).map(opt => (
+                        <div key={opt.id} className={`bw-audience-card ${bwAudience === opt.id ? 'selected' : ''}`} onClick={() => setBwAudience(opt.id)}>
+                          <div className={`bw-audience-icon-wrap ${bwAudience === opt.id ? 'active' : ''}`}>{opt.icon}</div>
+                          <div className="bw-audience-body">
+                            <div className="bw-audience-title">{opt.title}</div>
+                            <div className="bw-audience-desc">{opt.desc}</div>
+                          </div>
+                          <div className={`bw-audience-radio-outer ${bwAudience === opt.id ? 'active' : ''}`}>
+                            {bwAudience === opt.id && <div className="bw-audience-dot" />}
+                          </div>
                         </div>
-                      </div>
-                      <div className={`bw-audience-card ${bwAudience === 'specific-stores' ? 'selected' : ''}`} onClick={() => setBwAudience('specific-stores')}>
-                        <div className="bw-audience-radio">{bwAudience === 'specific-stores' && <div className="bw-audience-dot" />}</div>
-                        <div className="bw-audience-body">
-                          <div className="bw-audience-title"><FilterListOutlined sx={{ fontSize: 14 }}/> Specific Stores</div>
-                          <div className="bw-audience-desc">Pick one or more stores from your district</div>
-                        </div>
-                      </div>
-                      <div className={`bw-audience-card ${bwAudience === 'managers' ? 'selected' : ''}`} onClick={() => setBwAudience('managers')}>
-                        <div className="bw-audience-radio">{bwAudience === 'managers' && <div className="bw-audience-dot" />}</div>
-                        <div className="bw-audience-body">
-                          <div className="bw-audience-title"><GroupOutlined sx={{ fontSize: 14 }}/> District Managers Only</div>
-                          <div className="bw-audience-desc">Send to selected store/area managers</div>
-                        </div>
-                      </div>
+                      ))}
                     </div>
 
                     {bwAudience === 'specific-stores' && (
                       <div className="bw-selector">
                         <div className="bw-selector-header">
-                          <span className="bw-selector-title">Select stores ({bwSelectedStores.length}/{totalStores})</span>
+                          <span className="bw-selector-title">Select stores <span className="bw-selector-count">{bwSelectedStores.length}/{totalStores}</span></span>
                           <button className="bw-selector-toggle" onClick={() =>
                             setBwSelectedStores(bwSelectedStores.length === totalStores ? [] : activeStores.map(s => s.storeNumber))
                           }>{bwSelectedStores.length === totalStores ? 'Clear All' : 'Select All'}</button>
@@ -2826,11 +2829,18 @@ export const DistrictIntelligence: React.FC = () => {
                               <div key={s.storeNumber} className={`bw-selector-item ${selected ? 'selected' : ''}`} onClick={() =>
                                 setBwSelectedStores(prev => selected ? prev.filter(id => id !== s.storeNumber) : [...prev, s.storeNumber])
                               }>
-                                <div className={`bw-checkbox ${selected ? 'checked' : ''}`}>{selected && <Check sx={{ fontSize: 11 }}/>}</div>
-                                <div className="bw-selector-item-body">
-                                  <span className="bw-selector-item-title">{s.storeName} #{s.storeNumber}</span>
-                                  <span className="bw-selector-item-sub">{s.dpiTier} · SPI {s.dpi} · {s.status}</span>
+                                <div className="bw-selector-avatar bw-selector-avatar--store">
+                                  <StoreOutlined sx={{ fontSize: 14 }}/>
                                 </div>
+                                <div className="bw-selector-item-body">
+                                  <span className="bw-selector-item-title">{s.storeName}</span>
+                                  <div className="bw-selector-item-meta">
+                                    <span className="bw-selector-tag">#{s.storeNumber}</span>
+                                    <span className={`bw-selector-tag bw-selector-tag--tier ${s.dpiTier === 'Excellence' ? 'elite' : s.dpiTier === 'Stable' ? 'high' : s.dpiTier === 'AtRisk' || s.dpiTier === 'Crisis' ? 'low' : ''}`}>{s.dpiTier}</span>
+                                    <span className="bw-selector-tag">DPI {s.dpi}</span>
+                                  </div>
+                                </div>
+                                <div className={`bw-checkbox ${selected ? 'checked' : ''}`}>{selected && <Check sx={{ fontSize: 11 }}/>}</div>
                               </div>
                             );
                           })}
@@ -2841,7 +2851,7 @@ export const DistrictIntelligence: React.FC = () => {
                     {bwAudience === 'managers' && (
                       <div className="bw-selector">
                         <div className="bw-selector-header">
-                          <span className="bw-selector-title">Select managers ({bwSelectedManagers.length}/{teamMembers.length})</span>
+                          <span className="bw-selector-title">Select managers <span className="bw-selector-count">{bwSelectedManagers.length}/{teamMembers.length}</span></span>
                           <button className="bw-selector-toggle" onClick={() =>
                             setBwSelectedManagers(bwSelectedManagers.length === teamMembers.length ? [] : teamMembers.map(m => m.id))
                           }>{bwSelectedManagers.length === teamMembers.length ? 'Clear All' : 'Select All'}</button>
@@ -2849,15 +2859,19 @@ export const DistrictIntelligence: React.FC = () => {
                         <div className="bw-selector-list">
                           {teamMembers.map(m => {
                             const selected = bwSelectedManagers.includes(m.id);
+                            const initials = m.name.split(' ').map((n: string) => n[0]).join('').slice(0,2);
                             return (
                               <div key={m.id} className={`bw-selector-item ${selected ? 'selected' : ''}`} onClick={() =>
                                 setBwSelectedManagers(prev => selected ? prev.filter(id => id !== m.id) : [...prev, m.id])
                               }>
-                                <div className={`bw-checkbox ${selected ? 'checked' : ''}`}>{selected && <Check sx={{ fontSize: 11 }}/>}</div>
+                                <div className="bw-selector-avatar bw-selector-avatar--person">{initials}</div>
                                 <div className="bw-selector-item-body">
                                   <span className="bw-selector-item-title">{m.name}</span>
-                                  <span className="bw-selector-item-sub">{m.role}</span>
+                                  <div className="bw-selector-item-meta">
+                                    <span className="bw-selector-tag">{m.role}</span>
+                                  </div>
                                 </div>
+                                <div className={`bw-checkbox ${selected ? 'checked' : ''}`}>{selected && <Check sx={{ fontSize: 11 }}/>}</div>
                               </div>
                             );
                           })}
@@ -2870,34 +2884,149 @@ export const DistrictIntelligence: React.FC = () => {
                 {/* ── Step 2: Message ── */}
                 {bwStep === 2 && (
                   <div className="bw-step-content">
-                    <div className="bw-grid-2">
+
+                    {/* ── Core message card ── */}
+                    <div className="bw-form-card">
+                      <div className="bw-form-card-label">Message Details</div>
+                      <div className="bw-form-card-body">
+                      <div className="bw-grid-2">
+                        {/* Category */}
+                        <div className="bw-field">
+                          <label className="bw-field-label">Category</label>
+                          <div className="bw-ia-select-wrap">
+                            <ImFilterSelect
+                              value={bwCategory}
+                              options={[
+                                { value: 'Operations', label: 'Operations' },
+                                { value: 'Safety', label: 'Safety' },
+                                { value: 'Compliance', label: 'Compliance' },
+                                { value: 'Announcement', label: 'Announcement' },
+                              ]}
+                              onChange={v => v && setBwCategory(v as typeof bwCategory)}
+                              isClearable={false}
+                            />
+                          </div>
+                        </div>
+                        {/* Priority */}
+                        <div className="bw-field">
+                          <label className="bw-field-label">Priority</label>
+                          <div className={`bw-ia-select-wrap bw-priority-wrap bw-priority-wrap--${bwPriority.toLowerCase()}`}>
+                            <span className={`bw-priority-dot bw-priority-dot--${bwPriority.toLowerCase()}`} />
+                            <ImFilterSelect
+                              value={bwPriority}
+                              options={[
+                                { value: 'Normal', label: 'Normal' },
+                                { value: 'Important', label: 'Important' },
+                                { value: 'Urgent', label: 'Urgent' },
+                              ]}
+                              onChange={v => v && setBwPriority(v as typeof bwPriority)}
+                              isClearable={false}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="bw-field">
-                        <label className="bw-field-label">Category</label>
-                        <div className="bw-chip-group">
-                          {(['Operations', 'Safety', 'Compliance', 'Announcement'] as const).map(c => (
-                            <button key={c} className={`bw-chip ${bwCategory === c ? 'active' : ''}`} onClick={() => setBwCategory(c)}>{c}</button>
+                        <label className="bw-field-label">Subject <span className="bw-required">*</span></label>
+                        <input className="bw-input" type="text" placeholder="e.g., Holiday execution standards — action required" value={bwSubject} onChange={e => setBwSubject(e.target.value)} maxLength={120} />
+                        <div className="bw-field-hint">{bwSubject.length}/120</div>
+                      </div>
+
+                      <div className="bw-field">
+                        <label className="bw-field-label">Message <span className="bw-required">*</span></label>
+                        <textarea className="bw-textarea" rows={5} placeholder="Type your broadcast message here…" value={bwMessage} onChange={e => setBwMessage(e.target.value)} maxLength={1000} />
+                        <div className="bw-field-hint">{bwMessage.length}/1000</div>
+                      </div>
+                      </div>{/* /bw-form-card-body */}
+                    </div>
+
+                    {/* ── Optional extras card ── */}
+                    <div className="bw-form-card bw-form-card--optional">
+                      <div className="bw-form-card-label">Optional Extras</div>
+                      <div className="bw-form-card-body">
+
+                      {/* Key Dates */}
+                      <div className="bw-field">
+                        <div className="bw-field-row-header">
+                          <label className="bw-field-label">Key Dates</label>
+                          <button type="button" className="bw-add-btn" onClick={() => setBwKeyDates(prev => [...prev, {label: '', date: ''}])}>+ Add Date</button>
+                        </div>
+                        <div className="bw-dates-list">
+                          {bwKeyDates.map((kd, i) => (
+                            <div key={i} className="bw-date-item-wrap">
+                              <div className="bw-date-row">
+                                <input className="bw-input bw-date-label-input" placeholder="Label (e.g. Deadline)" value={kd.label} onChange={e => setBwKeyDates(prev => prev.map((d, j) => j === i ? {...d, label: e.target.value} : d))} />
+                                <div className="bw-date-sep" />
+                                <input className="bw-input bw-date-input" type="date" value={kd.date} onChange={e => setBwKeyDates(prev => prev.map((d, j) => j === i ? {...d, date: e.target.value} : d))} />
+                              </div>
+                              {bwKeyDates.length > 1 && (
+                                <button type="button" className="bw-remove-btn" onClick={() => setBwKeyDates(prev => prev.filter((_, j) => j !== i))}>
+                                  <CloseOutlined sx={{ fontSize: 13 }}/>
+                                </button>
+                              )}
+                            </div>
                           ))}
                         </div>
                       </div>
+
+                      {/* Required Actions */}
                       <div className="bw-field">
-                        <label className="bw-field-label">Priority</label>
-                        <div className="bw-chip-group">
-                          {(['Normal', 'Important', 'Urgent'] as const).map(p => (
-                            <button key={p} className={`bw-chip bw-chip--${p.toLowerCase()} ${bwPriority === p ? 'active' : ''}`} onClick={() => setBwPriority(p)}>{p}</button>
+                        <div className="bw-field-row-header">
+                          <label className="bw-field-label">Required Actions</label>
+                          <button type="button" className="bw-add-btn" onClick={() => setBwRequiredActions(prev => [...prev, ''])}>+ Add Action</button>
+                        </div>
+                        <div className="bw-actions-list">
+                          {bwRequiredActions.map((action, i) => (
+                            <div key={i} className="bw-action-row">
+                              <div className="bw-action-bullet" />
+                              <input className="bw-input bw-action-input" placeholder={`Action ${i + 1} (e.g. Confirm team availability)`} value={action} onChange={e => setBwRequiredActions(prev => prev.map((a, j) => j === i ? e.target.value : a))} />
+                              {bwRequiredActions.length > 1 && (
+                                <button type="button" className="bw-remove-btn" onClick={() => setBwRequiredActions(prev => prev.filter((_, j) => j !== i))}>
+                                  <CloseOutlined sx={{ fontSize: 13 }}/>
+                                </button>
+                              )}
+                            </div>
                           ))}
                         </div>
                       </div>
+
+                      {/* Attachments */}
+                      <div className="bw-field">
+                        <label className="bw-field-label">Attachments</label>
+                        <label className="bw-attach-zone">
+                          <input type="file" multiple style={{display:'none'}} onChange={e => {
+                            const files = Array.from(e.target.files || []);
+                            setBwAttachments(prev => [...prev, ...files.map(f => ({
+                              name: f.name,
+                              size: f.size > 1024*1024 ? `${(f.size/1024/1024).toFixed(1)} MB` : `${Math.round(f.size/1024)} KB`,
+                              type: f.name.split('.').pop()?.toUpperCase() || 'FILE',
+                            }))]);
+                            e.target.value = '';
+                          }} />
+                          <div className="bw-attach-zone-icon"><AttachFileOutlined sx={{ fontSize: 20 }}/></div>
+                          <span>Click to attach files</span>
+                          <span className="bw-attach-hint">PDF, PNG, XLSX, DOCX · up to 25 MB each</span>
+                        </label>
+                        {bwAttachments.length > 0 && (
+                          <div className="bw-attach-list">
+                            {bwAttachments.map((a, i) => (
+                              <div key={i} className="bw-attach-item">
+                                <span className="bw-attach-type">{a.type}</span>
+                                <div className="bw-attach-info">
+                                  <span className="bw-attach-name">{a.name}</span>
+                                  <span className="bw-attach-size">{a.size}</span>
+                                </div>
+                                <button type="button" className="bw-remove-btn" onClick={() => setBwAttachments(prev => prev.filter((_, j) => j !== i))}>
+                                  <CloseOutlined sx={{ fontSize: 13 }}/>
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      </div>{/* /bw-form-card-body */}
                     </div>
-                    <div className="bw-field">
-                      <label className="bw-field-label">Subject <span className="bw-required">*</span></label>
-                      <input className="bw-input" type="text" placeholder="e.g., Inventory safety-stock reorder — action required" value={bwSubject} onChange={(e) => setBwSubject(e.target.value)} maxLength={120} />
-                      <div className="bw-field-hint">{bwSubject.length}/120</div>
-                    </div>
-                    <div className="bw-field">
-                      <label className="bw-field-label">Message <span className="bw-required">*</span></label>
-                      <textarea className="bw-textarea" rows={6} placeholder="Type your broadcast message..." value={bwMessage} onChange={(e) => setBwMessage(e.target.value)} maxLength={1000} />
-                      <div className="bw-field-hint">{bwMessage.length}/1000</div>
-                    </div>
+
                   </div>
                 )}
 
@@ -2929,6 +3058,45 @@ export const DistrictIntelligence: React.FC = () => {
                         <span className="bw-review-label">Message</span>
                         <div className="bw-review-body">{bwMessage || <em className="bw-review-empty">(not set)</em>}</div>
                       </div>
+                      {bwKeyDates.some(kd => kd.label || kd.date) && (
+                        <div className="bw-review-row bw-review-row--stacked">
+                          <span className="bw-review-label">Key Dates</span>
+                          <div className="bw-review-dates">
+                            {bwKeyDates.filter(kd => kd.label || kd.date).map((kd, i) => (
+                              <div key={i} className="bw-review-date-row">
+                                <span>{kd.label || '—'}</span>
+                                <strong>{kd.date ? new Date(kd.date).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : '—'}</strong>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {bwRequiredActions.some(a => a.trim()) && (
+                        <div className="bw-review-row bw-review-row--stacked">
+                          <span className="bw-review-label">Required Actions ({bwRequiredActions.filter(a => a.trim()).length})</span>
+                          <div className="bw-review-actions">
+                            {bwRequiredActions.filter(a => a.trim()).map((a, i) => (
+                              <div key={i} className="bw-review-action-item">
+                                <div className="bw-review-action-dot" />{a}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {bwAttachments.length > 0 && (
+                        <div className="bw-review-row bw-review-row--stacked">
+                          <span className="bw-review-label">Attachments ({bwAttachments.length})</span>
+                          <div className="bw-review-attachments">
+                            {bwAttachments.map((a, i) => (
+                              <div key={i} className="bw-attach-item bw-attach-item--review">
+                                <span className="bw-attach-type">{a.type}</span>
+                                <span className="bw-attach-name">{a.name}</span>
+                                <span className="bw-attach-size">{a.size}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -2941,7 +3109,7 @@ export const DistrictIntelligence: React.FC = () => {
                 </div>
                 <div className="bw-footer-actions">
                   {bwStep > 1 && (
-                    <Button variant="outlined" color="primary" className="bw-btn bw-btn--ghost" onClick={() => setBwStep((bwStep - 1) as 1 | 2 | 3)} disabled={bwSending}>
+                    <Button variant="outlined" color="primary" size="large" onClick={() => setBwStep((bwStep - 1) as 1 | 2 | 3)} disabled={bwSending}>
                       Back
                     </Button>
                   )}
@@ -2949,7 +3117,7 @@ export const DistrictIntelligence: React.FC = () => {
                     <Button
                       variant="contained"
                       color="primary"
-                      className="bw-btn bw-btn--primary"
+                      size="large"
                       onClick={() => setBwStep((bwStep + 1) as 1 | 2 | 3)}
                       disabled={bwStep === 1 ? !canAdvanceStep1 : !(bwSubject.trim() && bwMessage.trim())}
                       endIcon={<KeyboardArrowRight sx={{ fontSize: 14 }}/>}
@@ -2961,7 +3129,7 @@ export const DistrictIntelligence: React.FC = () => {
                     <Button
                       variant="contained"
                       color="primary"
-                      className="bw-btn bw-btn--primary"
+                      size="large"
                       disabled={!canSend || bwSending}
                       onClick={() => {
                         setBwSending(true);
@@ -3244,15 +3412,15 @@ export const DistrictIntelligence: React.FC = () => {
                     <div className="section-label">Affected SKUs (3)</div>
                     <div className="store-list">
                       <div className="store-item">
-                        <span className="store-name">SKU-4521 - Summer Dress</span>
+                        <span className="store-name">WOM-DRS-008 - Summer Midi Dress</span>
                         <span className="store-metric negative">48h delay</span>
                       </div>
                       <div className="store-item">
-                        <span className="store-name">SKU-4522 - Linen Pants</span>
+                        <span className="store-name">WOM-TOP-014 - Women's V-Neck Basics</span>
                         <span className="store-metric negative">48h delay</span>
                       </div>
                       <div className="store-item">
-                        <span className="store-name">SKU-4523 - Cotton Blouse</span>
+                        <span className="store-name">WOM-BLZ-001 - Women's Classic Blazer</span>
                         <span className="store-metric negative">48h delay</span>
                       </div>
                     </div>

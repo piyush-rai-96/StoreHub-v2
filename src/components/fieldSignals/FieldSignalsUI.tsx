@@ -7,6 +7,7 @@ import AttachFileOutlined from '@mui/icons-material/AttachFileOutlined';
 import BoltOutlined from '@mui/icons-material/BoltOutlined';
 import CalendarTodayOutlined from '@mui/icons-material/CalendarTodayOutlined';
 import StoreOutlined from '@mui/icons-material/StoreOutlined';
+import StorefrontOutlined from '@mui/icons-material/StorefrontOutlined';
 import TrendingUpOutlined from '@mui/icons-material/TrendingUpOutlined';
 import FileDownloadOutlined from '@mui/icons-material/FileDownloadOutlined';
 import Add from '@mui/icons-material/Add';
@@ -22,6 +23,14 @@ import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
 import NotificationsOutlined from '@mui/icons-material/NotificationsOutlined';
 import GroupOutlined from '@mui/icons-material/GroupOutlined';
 import PersonOutlined from '@mui/icons-material/PersonOutlined';
+import SportsSoccerOutlined from '@mui/icons-material/SportsSoccerOutlined';
+import MusicNoteOutlined from '@mui/icons-material/MusicNoteOutlined';
+import FestivalOutlined from '@mui/icons-material/FestivalOutlined';
+import SchoolOutlined from '@mui/icons-material/SchoolOutlined';
+import CloudOutlined from '@mui/icons-material/CloudOutlined';
+import TrafficOutlined from '@mui/icons-material/TrafficOutlined';
+import PersonOffOutlined from '@mui/icons-material/PersonOffOutlined';
+import MoreHorizOutlined from '@mui/icons-material/MoreHorizOutlined';
 import { Button, Badge, EmptyState, Input } from 'impact-ui';
 import type { User, UserRole } from '../../types';
 import type { FieldSignal, LogSignalFormState } from '../../types/fieldSignal';
@@ -38,6 +47,25 @@ import {
   US_STATES,
   STORE_OPTIONS,
 } from '../../constants/fieldSignals';
+
+// ── Signal type icon map ──
+
+export const SignalTypeIcon: React.FC<{ signalType: string; fontSize?: number }> = ({ signalType, fontSize = 16 }) => {
+  const sx = { fontSize };
+  switch (signalType) {
+    case 'major_sports_event':    return <SportsSoccerOutlined sx={sx} />;
+    case 'entertainment_event':   return <MusicNoteOutlined sx={sx} />;
+    case 'instore_event':         return <StorefrontOutlined sx={sx} />;
+    case 'community_gathering':   return <GroupOutlined sx={sx} />;
+    case 'local_event':           return <FestivalOutlined sx={sx} />;
+    case 'weather':               return <CloudOutlined sx={sx} />;
+    case 'competitor_activity':   return <StoreOutlined sx={sx} />;
+    case 'road_closure':          return <TrafficOutlined sx={sx} />;
+    case 'school_community_event':return <SchoolOutlined sx={sx} />;
+    case 'staffing_impact':       return <PersonOffOutlined sx={sx} />;
+    default:                      return <MoreHorizOutlined sx={sx} />;
+  }
+};
 
 // ── Helpers ──
 
@@ -361,6 +389,12 @@ export const LogFieldSignalDrawer: React.FC<LogFieldSignalDrawerProps> = ({
             onChange={v => onChange({ signalType: v as LogSignalFormState['signalType'] })}
             error={errors.signalType}
           />
+          {form.signalType && SIGNAL_TYPE_CONFIG[form.signalType as import('../../types/fieldSignal').SignalType]?.description && (
+            <p className="fs-signal-type-hint">
+              <SignalTypeIcon signalType={form.signalType} fontSize={13} />
+              {SIGNAL_TYPE_CONFIG[form.signalType as import('../../types/fieldSignal').SignalType].description}
+            </p>
+          )}
 
           {/* Event Title */}
           <div className="fs-form-section">
@@ -542,11 +576,9 @@ export const LogFieldSignalDrawer: React.FC<LogFieldSignalDrawerProps> = ({
               value={form.department}
               options={[
                 { value: '', label: '— All Departments' },
-                { value: '__g1', label: 'Food & Beverage', disabled: true },
-                ...DEPARTMENT_OPTIONS.filter(d => d.group === 'Food & Beverage').map(d => ({ value: d.value, label: d.label })),
-                { value: '__g2', label: 'Non-Food & General', disabled: true },
-                ...DEPARTMENT_OPTIONS.filter(d => d.group === 'Non-Food').map(d => ({ value: d.value, label: d.label })),
-                { value: '__g3', label: 'Store Operations', disabled: true },
+                { value: '__g1', label: 'Apparel', disabled: true },
+                ...DEPARTMENT_OPTIONS.filter(d => d.group === 'Apparel').map(d => ({ value: d.value, label: d.label })),
+                { value: '__g2', label: 'Store Operations', disabled: true },
                 ...DEPARTMENT_OPTIONS.filter(d => d.group === 'Store Operations').map(d => ({ value: d.value, label: d.label })),
               ]}
               onChange={v => onChange({ department: v.startsWith('__g') ? form.department : v })}
@@ -654,7 +686,7 @@ export const FieldSignalChatCard: React.FC<FieldSignalChatCardProps> = ({
         onKeyDown={e => { if (e.key === 'Enter') onViewDetails(); }}>
         <div className="fs-chat-card-top">
           <span className="fs-chat-card-label">
-            <SensorsOutlined sx={{ fontSize: 14 }} />
+            <SignalTypeIcon signalType={signal.signalType} fontSize={14} />
             FIELD SIGNAL · {SIGNAL_TYPE_CONFIG[signal.signalType].label}
           </span>
           <Badge label={statusCfg.label} color={statusCfg.color} size="small" className={`fs-status-badge fs-status--${signal.status}`} />
@@ -870,7 +902,10 @@ export const FieldSignalsLogView: React.FC<FieldSignalsLogViewProps> = ({
                       <span><CalendarTodayOutlined sx={{ fontSize: 12 }} /> {formatSignalDate(s.impactStartDate)} – {formatSignalDate(s.impactEndDate)}</span>
                     </div>
                     <div className="fs-inbox-card-row3">
-                      <span className="fs-inbox-card-type">{SIGNAL_TYPE_CONFIG[s.signalType].label}</span>
+                      <span className="fs-inbox-card-type">
+                        <SignalTypeIcon signalType={s.signalType} fontSize={12} />
+                        {SIGNAL_TYPE_CONFIG[s.signalType].label}
+                      </span>
                       <span className="fs-inbox-card-date">{formatSignalDate(s.createdAt)}</span>
                     </div>
                     <p className="fs-inbox-card-desc">{s.description.slice(0, 90)}{s.description.length > 90 ? '…' : ''}</p>
@@ -1379,7 +1414,13 @@ const SignalDetailPane: React.FC<SignalDetailPaneProps> = ({
       <div className="fs-detail-pane-body">
         <div className="fs-detail-meta-grid">
           <div><span className="fs-meta-label">Signal ID</span><span className="fs-meta-mono">{signal.id}</span></div>
-          <div><span className="fs-meta-label">Signal Type</span><span>{SIGNAL_TYPE_CONFIG[signal.signalType].label}</span></div>
+          <div>
+            <span className="fs-meta-label">Signal Type</span>
+            <span className="fs-meta-type-cell">
+              <SignalTypeIcon signalType={signal.signalType} fontSize={14} />
+              {SIGNAL_TYPE_CONFIG[signal.signalType].label}
+            </span>
+          </div>
           <div><span className="fs-meta-label">Status</span><Badge label={st.label} color={st.color} size="small" className={`fs-status--${signal.status}`} /></div>
           <div><span className="fs-meta-label">Store</span><span>{signal.storeName || signal.storeId}</span></div>
           {signal.districtName && <div><span className="fs-meta-label">District</span><span>{signal.districtName}</span></div>}
@@ -1388,6 +1429,30 @@ const SignalDetailPane: React.FC<SignalDetailPaneProps> = ({
           <div><span className="fs-meta-label">Logged By</span><span>{signal.createdByName}</span></div>
           <div><span className="fs-meta-label">Logged Date</span><span>{formatSignalDateTime(signal.createdAt)}</span></div>
         </div>
+
+        {/* Demand Correlation Insight */}
+        {(signal.signalType === 'major_sports_event' || signal.signalType === 'entertainment_event' || signal.signalType === 'instore_event' || signal.signalType === 'community_gathering') && (
+          <div className="fs-demand-insight">
+            <div className="fs-demand-insight-header">
+              <TrendingUpOutlined sx={{ fontSize: 15 }} />
+              <span>Demand Correlation Insight</span>
+            </div>
+            <div className="fs-demand-insight-body">
+              {signal.signalType === 'major_sports_event' && (
+                <p>Major sports events typically drive <strong>15–30% uplift</strong> in fan accessories, casualwear, and snacks. Ensure Seasonal and Activewear sections are fully stocked and face-out in the 48h window before the event.</p>
+              )}
+              {signal.signalType === 'entertainment_event' && (
+                <p>Concert and tour events correlate with <strong>20–35% apparel demand uplift</strong> among 18–40 demographics. Prioritise casualwear, accessories, and tote bags. Consider extended trading hours on event nights.</p>
+              )}
+              {signal.signalType === 'instore_event' && (
+                <p>In-store events bring incremental foot traffic; cross-merchandising adjacent categories drives <strong>10–20% higher basket size</strong>. Confirm staffing levels, ensure relevant planogram compliance, and stock promotional items.</p>
+              )}
+              {signal.signalType === 'community_gathering' && (
+                <p>Community gatherings in adjacent areas drive <strong>10–20% traffic increase</strong> in family-oriented categories. Casual apparel, accessories, and reusable bags see consistent lifts. Monitor sell-through in real time.</p>
+              )}
+            </div>
+          </div>
+        )}
 
         {linkedWorkflows.length > 0 && (
           <div className="fs-linked-tags">
@@ -1635,7 +1700,7 @@ export const FieldSignalSidebarList: React.FC<FieldSignalSidebarListProps> = ({
                 onClick={() => onSelectSignal(s.id)}
               >
                 <div className={`mc-chat-item-avatar fs-signal-avatar fs-signal-avatar--${s.status}`}>
-                  <SensorsOutlined sx={{ fontSize: 18 }} />
+                  <SignalTypeIcon signalType={s.signalType} fontSize={18} />
                 </div>
                 <div className="mc-chat-item-body">
                   <div className="mc-chat-item-row">
@@ -1707,7 +1772,7 @@ export const FieldSignalMainPanel: React.FC<FieldSignalMainPanelProps> = ({
       <div className="mc-chat-header">
         <div className="mc-chat-header-left">
           <div className={`mc-chat-header-avatar fs-signal-avatar fs-signal-avatar--${selectedSignal.status}`}>
-            <SensorsOutlined sx={{ fontSize: 20 }} />
+            <SignalTypeIcon signalType={selectedSignal.signalType} fontSize={20} />
           </div>
           <div className="mc-chat-header-info">
             <h3>{selectedSignal.title}</h3>

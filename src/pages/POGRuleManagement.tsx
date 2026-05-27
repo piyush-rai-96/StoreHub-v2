@@ -166,7 +166,7 @@ const allSKUs = [
 
 const clusterOptions = ['Urban Flagship', 'Family Center', 'Outlet Value', 'Mall Anchor'];
 const fixtureOptions = ['Wall Display', 'Table', 'End Cap', 'Hanging Rail', 'Folding Shelf'];
-const brandOptions = ['C&A Essentials', 'C&A Premium', 'C&A Kids', 'C&A Active', 'Partner Brand', 'Designer Collab'];
+const brandOptions = ['Core Essentials', 'Premium Line', 'Kids Collection', 'Active Collection', 'Partner Brand', 'Designer Collab'];
 
 const initialMockRules: Rule[] = [
   {
@@ -189,7 +189,7 @@ const initialMockRules: Rule[] = [
     lastUpdated: '2026-04-20',
     status: 'Active',
     definition: { 
-      'Brand Blocking': { brand: 'C&A Essentials', blockingType: 'Vertical', minProducts: 3 },
+      'Brand Blocking': { brand: 'Core Essentials', blockingType: 'Vertical', minProducts: 3 },
       'Priority': { target: 'Bestsellers', placement: 'Eye-level', priority: 'High' }
     },
     completedSteps: [1, 2, 3, 4],

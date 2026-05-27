@@ -609,143 +609,143 @@ interface PhantomRow {
 const PHANTOM_ROWS: PhantomRow[] = [
   {
     id: 'ps-001',
-    department: 'Beverages', subDepartment: 'Carbonated Drinks', itemClass: 'Cola',
+    department: "Women's", subDepartment: 'Tops', itemClass: 'Basics',
     phantomSkus: 3, inventoryUnits: 144, bohUnits: 144, shelfQty: 0,
-    lastSaleDate: 'Apr 28, 2026', zeroSalesDays: 27, inventoryValue: 1620,
+    lastSaleDate: 'Apr 28, 2026', zeroSalesDays: 27, inventoryValue: 8640,
     riskLevel: 'High', linkedTasks: 2, status: 'Open',
-    whyFlagged: 'System shows 144 units on-hand across 3 SKUs, but zero sales recorded for 27 consecutive days. Shelf image audit confirms shelf gap — product is not reaching customers.',
-    recommendedAction: 'Immediately move all units from BOH to shelf. Check for backroom blockage. Initiate Inventory Check / Cycle Count task.',
+    whyFlagged: "System shows 144 units on-hand across 3 Women's Tops SKUs, but zero sales for 27 consecutive days. Shelf image audit confirms garments are not displayed on the floor rail.",
+    recommendedAction: "Move all units from BOH Rail C to Women's Tops floor rail. Check for backroom blockage. Initiate Inventory Check / Cycle Count task.",
     skuBreakdown: [
-      { productName: 'Coca-Cola Zero 12pk', sku: 'SKU-884221', bohQty: 48, shelfQty: 0, lastSaleDate: 'Apr 28, 2026', zeroSalesDays: 27, inventoryValue: 576, riskLevel: 'High' },
-      { productName: 'Pepsi Max 6pk', sku: 'SKU-884310', bohQty: 60, shelfQty: 0, lastSaleDate: 'Apr 29, 2026', zeroSalesDays: 26, inventoryValue: 660, riskLevel: 'High' },
-      { productName: 'Diet Coke 2L', sku: 'SKU-884450', bohQty: 36, shelfQty: 0, lastSaleDate: 'Apr 30, 2026', zeroSalesDays: 25, inventoryValue: 384, riskLevel: 'Medium' },
+      { productName: "Women's V-Neck Basics", sku: 'WOM-TOP-014', bohQty: 48, shelfQty: 0, lastSaleDate: 'Apr 28, 2026', zeroSalesDays: 27, inventoryValue: 2880, riskLevel: 'High' },
+      { productName: "Women's Classic Blazer", sku: 'WOM-BLZ-001', bohQty: 60, shelfQty: 0, lastSaleDate: 'Apr 29, 2026', zeroSalesDays: 26, inventoryValue: 3600, riskLevel: 'High' },
+      { productName: 'Athletic Leggings', sku: 'WOM-ACT-002', bohQty: 36, shelfQty: 0, lastSaleDate: 'Apr 30, 2026', zeroSalesDays: 25, inventoryValue: 2160, riskLevel: 'Medium' },
     ],
   },
   {
     id: 'ps-002',
-    department: 'Beverages', subDepartment: 'Energy Drinks', itemClass: 'Energy',
+    department: "Men's", subDepartment: 'Outerwear', itemClass: 'Jackets',
     phantomSkus: 2, inventoryUnits: 96, bohUnits: 96, shelfQty: 0,
-    lastSaleDate: 'May 2, 2026', zeroSalesDays: 23, inventoryValue: 1440,
+    lastSaleDate: 'May 2, 2026', zeroSalesDays: 23, inventoryValue: 9600,
     riskLevel: 'High', linkedTasks: 1, status: 'In Progress',
-    whyFlagged: '96 units of 2 energy drink SKUs confirmed in BOH with zero shelf presence. Sales velocity expected at 12–15 units/week based on cluster average.',
-    recommendedAction: 'Replenish shelf from BOH (Bay 4, Aisle 5). Assign cycle count task to stock associate.',
+    whyFlagged: "96 units of 2 Men's Outerwear SKUs confirmed in BOH with zero floor display. Sales velocity expected at 12–15 units/week based on cluster average.",
+    recommendedAction: "Replenish floor display from BOH Rail M5. Assign cycle count task to stock associate.",
     skuBreakdown: [
-      { productName: 'Red Bull 250ml 4pk', sku: 'SKU-990341', bohQty: 60, shelfQty: 0, lastSaleDate: 'May 2, 2026', zeroSalesDays: 23, inventoryValue: 900, riskLevel: 'High' },
-      { productName: 'Monster Energy 500ml', sku: 'SKU-990422', bohQty: 36, shelfQty: 0, lastSaleDate: 'May 3, 2026', zeroSalesDays: 22, inventoryValue: 540, riskLevel: 'High' },
+      { productName: 'Puffer Jacket', sku: 'MEN-OUT-006', bohQty: 60, shelfQty: 0, lastSaleDate: 'May 2, 2026', zeroSalesDays: 23, inventoryValue: 5400, riskLevel: 'High' },
+      { productName: 'Seasonal Rain Jacket', sku: 'SEA-JKT-004', bohQty: 36, shelfQty: 0, lastSaleDate: 'May 3, 2026', zeroSalesDays: 22, inventoryValue: 4200, riskLevel: 'High' },
     ],
   },
   {
     id: 'ps-003',
-    department: 'Personal Care', subDepartment: 'Body Wash', itemClass: 'Body Care',
+    department: 'Accessories', subDepartment: 'Bags', itemClass: 'Totes',
     phantomSkus: 2, inventoryUnits: 120, bohUnits: 80, shelfQty: 40,
-    lastSaleDate: 'May 3, 2026', zeroSalesDays: 22, inventoryValue: 1080,
+    lastSaleDate: 'May 3, 2026', zeroSalesDays: 22, inventoryValue: 7200,
     riskLevel: 'High', linkedTasks: 1, status: 'Open',
-    whyFlagged: 'System reports 120 units across 2 SKUs. Shelf has 40 units but zero sales for 22 days despite typical velocity of 8 units/week. Possible planogram mismatch hiding product from customers.',
-    recommendedAction: 'Verify shelf position matches active POG. Check if price tags are visible. Confirm product is accessible to shoppers.',
+    whyFlagged: 'System reports 120 units across 2 Bags SKUs. Hook display has 40 units but zero sales for 22 days despite typical velocity of 8 units/week. Possible planogram mismatch hiding product.',
+    recommendedAction: 'Verify hook position matches active Accessories POG. Check if price tags are visible. Confirm product is accessible.',
     skuBreakdown: [
-      { productName: 'Dove Body Wash 400ml', sku: 'SKU-556732', bohQty: 48, shelfQty: 24, lastSaleDate: 'May 3, 2026', zeroSalesDays: 22, inventoryValue: 576, riskLevel: 'High' },
-      { productName: 'Nivea Shower Gel 250ml', sku: 'SKU-556811', bohQty: 32, shelfQty: 16, lastSaleDate: 'May 5, 2026', zeroSalesDays: 20, inventoryValue: 504, riskLevel: 'Medium' },
+      { productName: 'Canvas Tote Bag', sku: 'ACC-BAG-005', bohQty: 48, shelfQty: 24, lastSaleDate: 'May 3, 2026', zeroSalesDays: 22, inventoryValue: 3360, riskLevel: 'High' },
+      { productName: 'Leather Crossbody Bag', sku: 'ACC-BAG-011', bohQty: 32, shelfQty: 16, lastSaleDate: 'May 5, 2026', zeroSalesDays: 20, inventoryValue: 3840, riskLevel: 'Medium' },
     ],
   },
   {
     id: 'ps-004',
-    department: 'Condiments', subDepartment: 'Sauces', itemClass: 'Ketchup',
+    department: 'Seasonal', subDepartment: 'Outerwear', itemClass: 'Jackets',
     phantomSkus: 1, inventoryUnits: 60, bohUnits: 60, shelfQty: 0,
-    lastSaleDate: 'May 3, 2026', zeroSalesDays: 22, inventoryValue: 660,
+    lastSaleDate: 'May 3, 2026', zeroSalesDays: 22, inventoryValue: 5100,
     riskLevel: 'High', linkedTasks: 1, status: 'Open',
-    whyFlagged: '60 units confirmed in BOH with zero shelf presence. Product trapped in backroom since last delivery.',
-    recommendedAction: 'Move 60 units from BOH Aisle 3, Bay 2 to shelf. Verify planogram position.',
+    whyFlagged: '60 units confirmed in BOH with zero floor display presence. Product trapped in backroom since last delivery.',
+    recommendedAction: 'Move 60 units from BOH Rail S3 to Seasonal Promo Table. Verify planogram position.',
     skuBreakdown: [
-      { productName: 'Heinz Ketchup 1L', sku: 'SKU-334512', bohQty: 60, shelfQty: 0, lastSaleDate: 'May 3, 2026', zeroSalesDays: 22, inventoryValue: 660, riskLevel: 'High' },
+      { productName: 'Seasonal Rain Jacket', sku: 'SEA-JKT-004', bohQty: 60, shelfQty: 0, lastSaleDate: 'May 3, 2026', zeroSalesDays: 22, inventoryValue: 5100, riskLevel: 'High' },
     ],
   },
   {
     id: 'ps-005',
     department: "Women's", subDepartment: 'Dresses', itemClass: 'Casual Dresses',
     phantomSkus: 2, inventoryUnits: 48, bohUnits: 32, shelfQty: 16,
-    lastSaleDate: 'May 7, 2026', zeroSalesDays: 18, inventoryValue: 2880,
+    lastSaleDate: 'May 7, 2026', zeroSalesDays: 18, inventoryValue: 5040,
     riskLevel: 'Medium', linkedTasks: 1, status: 'Open',
     whyFlagged: '48 units across 2 casual dress SKUs with 18 days of zero sales. Possible size-run imbalance — system may be miscounting available-to-sell units.',
-    recommendedAction: 'Conduct physical size-run audit. Verify system inventory matches shelf. Check for incorrect size tagging.',
+    recommendedAction: 'Conduct physical size-run audit. Verify system inventory matches rail. Check for incorrect size tagging.',
     skuBreakdown: [
-      { productName: 'Floral Midi Dress — Navy', sku: 'SKU-WOM-DRS-014', bohQty: 18, shelfQty: 10, lastSaleDate: 'May 7, 2026', zeroSalesDays: 18, inventoryValue: 1620, riskLevel: 'Medium' },
-      { productName: 'Linen Wrap Dress — White', sku: 'SKU-WOM-DRS-021', bohQty: 14, shelfQty: 6, lastSaleDate: 'May 8, 2026', zeroSalesDays: 17, inventoryValue: 1260, riskLevel: 'Medium' },
+      { productName: 'Floral Midi Dress — Navy', sku: 'WOM-DRS-014', bohQty: 18, shelfQty: 10, lastSaleDate: 'May 7, 2026', zeroSalesDays: 18, inventoryValue: 2700, riskLevel: 'Medium' },
+      { productName: 'Linen Wrap Dress — White', sku: 'WOM-DRS-021', bohQty: 14, shelfQty: 6, lastSaleDate: 'May 8, 2026', zeroSalesDays: 17, inventoryValue: 2340, riskLevel: 'Medium' },
     ],
   },
   {
     id: 'ps-006',
     department: "Men's", subDepartment: 'Bottoms', itemClass: 'Denim',
     phantomSkus: 2, inventoryUnits: 55, bohUnits: 30, shelfQty: 25,
-    lastSaleDate: 'May 9, 2026', zeroSalesDays: 16, inventoryValue: 2475,
+    lastSaleDate: 'May 9, 2026', zeroSalesDays: 16, inventoryValue: 4125,
     riskLevel: 'Medium', linkedTasks: 1, status: 'In Progress',
-    whyFlagged: 'Denim inventory showing 16 days of zero sales despite 55 units on-hand. Cluster average for this class is 8 units/week. Possible display or placement issue.',
-    recommendedAction: 'Review shelf display and ensure correct size runs are visible. Check fitting room returns are being re-shelved promptly.',
+    whyFlagged: "Denim inventory showing 16 days of zero sales despite 55 units on-hand. Cluster average for this class is 8 units/week. Possible display or placement issue.",
+    recommendedAction: "Review Men's Denim rail display and ensure correct size runs are visible. Check fitting room returns are being re-railed promptly.",
     skuBreakdown: [
-      { productName: 'Slim Fit Denim — Dark Wash', sku: 'SKU-MEN-DNM-003', bohQty: 18, shelfQty: 14, lastSaleDate: 'May 9, 2026', zeroSalesDays: 16, inventoryValue: 1440, riskLevel: 'Medium' },
-      { productName: 'Straight Leg Jeans — Black', sku: 'SKU-MEN-DNM-011', bohQty: 12, shelfQty: 11, lastSaleDate: 'May 10, 2026', zeroSalesDays: 15, inventoryValue: 1035, riskLevel: 'Medium' },
+      { productName: 'Slim Fit Denim — Dark Wash', sku: 'MEN-DNM-003', bohQty: 18, shelfQty: 14, lastSaleDate: 'May 9, 2026', zeroSalesDays: 16, inventoryValue: 2250, riskLevel: 'Medium' },
+      { productName: 'Straight Leg Jeans — Black', sku: 'MEN-DNM-011', bohQty: 12, shelfQty: 11, lastSaleDate: 'May 10, 2026', zeroSalesDays: 15, inventoryValue: 1875, riskLevel: 'Medium' },
     ],
   },
   {
     id: 'ps-007',
-    department: "Women's", subDepartment: 'Tops', itemClass: 'Basics',
+    department: 'Kids', subDepartment: 'Tops', itemClass: 'Tees',
     phantomSkus: 1, inventoryUnits: 36, bohUnits: 12, shelfQty: 24,
-    lastSaleDate: 'May 12, 2026', zeroSalesDays: 13, inventoryValue: 720,
+    lastSaleDate: 'May 12, 2026', zeroSalesDays: 13, inventoryValue: 1080,
     riskLevel: 'Low', linkedTasks: 0, status: 'Open',
     whyFlagged: '36 units on-hand with 13 zero-sales days. Slightly below normal velocity but within acceptable range. May be seasonal slowdown.',
     recommendedAction: 'Monitor for next 7 days. If sales remain zero, initiate cycle count to verify accuracy.',
     skuBreakdown: [
-      { productName: "Women's V-Neck Basic Tee — White", sku: 'SKU-WOM-TOP-014', bohQty: 12, shelfQty: 24, lastSaleDate: 'May 12, 2026', zeroSalesDays: 13, inventoryValue: 720, riskLevel: 'Low' },
+      { productName: 'Kids Color Block Tee', sku: 'KID-TSH-012', bohQty: 12, shelfQty: 24, lastSaleDate: 'May 12, 2026', zeroSalesDays: 13, inventoryValue: 1080, riskLevel: 'Low' },
     ],
   },
   {
     id: 'ps-008',
-    department: 'Beverages', subDepartment: 'Juices', itemClass: 'Juice',
+    department: 'Accessories', subDepartment: 'Scarves', itemClass: 'Scarves',
     phantomSkus: 1, inventoryUnits: 24, bohUnits: 12, shelfQty: 12,
-    lastSaleDate: 'May 14, 2026', zeroSalesDays: 11, inventoryValue: 240,
+    lastSaleDate: 'May 14, 2026', zeroSalesDays: 11, inventoryValue: 1200,
     riskLevel: 'Low', linkedTasks: 0, status: 'Open',
-    whyFlagged: '24 units with 11 days zero sales. Monitor — may be slow-moving seasonal item.',
+    whyFlagged: '24 units with 11 days zero sales. Monitor — may be slow-moving seasonal accessory.',
     recommendedAction: 'Monitor. Initiate cycle count if zero sales continue past 14 days.',
     skuBreakdown: [
-      { productName: 'Tropicana OJ 1L', sku: 'SKU-JCE-001', bohQty: 12, shelfQty: 12, lastSaleDate: 'May 14, 2026', zeroSalesDays: 11, inventoryValue: 240, riskLevel: 'Low' },
+      { productName: 'Silk Blend Scarf', sku: 'ACC-SCF-009', bohQty: 12, shelfQty: 12, lastSaleDate: 'May 14, 2026', zeroSalesDays: 11, inventoryValue: 1200, riskLevel: 'Low' },
     ],
   },
   {
     id: 'ps-009',
-    department: 'Footwear', subDepartment: "Men's Footwear", itemClass: 'Formal',
+    department: 'Footwear', subDepartment: "Men's Formal", itemClass: 'Formal',
     phantomSkus: 1, inventoryUnits: 18, bohUnits: 10, shelfQty: 8,
-    lastSaleDate: 'May 11, 2026', zeroSalesDays: 14, inventoryValue: 1980,
+    lastSaleDate: 'May 11, 2026', zeroSalesDays: 14, inventoryValue: 2700,
     riskLevel: 'Medium', linkedTasks: 1, status: 'Open',
-    whyFlagged: 'Formal footwear SKU showing 14 days zero sales with 18 units on-hand. Higher-value inventory at risk. Sales typically slow in this class but velocity of zero is abnormal.',
-    recommendedAction: 'Verify product is on display and correctly positioned. Check if size range available matches customer demand profile.',
+    whyFlagged: 'Formal footwear SKU showing 14 days zero sales with 18 units on-hand. Higher-value inventory at risk. Velocity of zero is abnormal for this class.',
+    recommendedAction: 'Verify product is on display shelf and correctly positioned. Check if size range available matches customer demand profile.',
     skuBreakdown: [
-      { productName: 'Oxford Leather Shoes — Black', sku: 'SKU-FTW-FRM-002', bohQty: 10, shelfQty: 8, lastSaleDate: 'May 11, 2026', zeroSalesDays: 14, inventoryValue: 1980, riskLevel: 'Medium' },
+      { productName: 'Oxford Leather Shoes — Black', sku: 'FTW-FRM-002', bohQty: 10, shelfQty: 8, lastSaleDate: 'May 11, 2026', zeroSalesDays: 14, inventoryValue: 2700, riskLevel: 'Medium' },
     ],
   },
   {
     id: 'ps-010',
-    department: 'Personal Care', subDepartment: 'Skin Care', itemClass: 'Moisturiser',
+    department: 'Activewear', subDepartment: "Men's Activewear", itemClass: 'Tops',
     phantomSkus: 1, inventoryUnits: 30, bohUnits: 18, shelfQty: 12,
-    lastSaleDate: 'May 15, 2026', zeroSalesDays: 10, inventoryValue: 750,
+    lastSaleDate: 'May 15, 2026', zeroSalesDays: 10, inventoryValue: 1200,
     riskLevel: 'Low', linkedTasks: 0, status: 'Open',
     whyFlagged: '30 units, 10 days zero sales. Below threshold for automatic task creation but flagged for monitoring.',
     recommendedAction: 'Monitor. No action needed unless zero-sales period extends past 14 days.',
     skuBreakdown: [
-      { productName: 'Nivea Daily Moisturiser 200ml', sku: 'SKU-SKN-003', bohQty: 18, shelfQty: 12, lastSaleDate: 'May 15, 2026', zeroSalesDays: 10, inventoryValue: 750, riskLevel: 'Low' },
+      { productName: 'Athletic Compression Tee', sku: 'MEN-ACT-004', bohQty: 18, shelfQty: 12, lastSaleDate: 'May 15, 2026', zeroSalesDays: 10, inventoryValue: 1200, riskLevel: 'Low' },
     ],
   },
 ];
 
 // Heatmap dimensions
-const PS_HEATMAP_DEPTS = ["Women's", "Men's", 'Footwear', 'Beverages', 'Personal Care', 'Condiments'];
-const PS_HEATMAP_CLASSES = ['Basics', 'Denim', 'Dresses', 'Formal', 'Body Care', 'Moisturiser', 'Cola', 'Energy', 'Juice', 'Ketchup'];
+const PS_HEATMAP_DEPTS = ["Women's", "Men's", 'Kids', 'Accessories', 'Seasonal', 'Footwear'];
+const PS_HEATMAP_CLASSES = ['Basics', 'Denim', 'Dresses', 'Outerwear', 'Totes', 'Jackets', 'Tees', 'Formal', 'Scarves', 'Tops'];
 
 const PS_HEATMAP_DATA: Record<string, Record<string, PhantomRisk | null>> = {
-  "Women's": { 'Basics': 'Low', 'Denim': null, 'Dresses': 'Medium', 'Formal': null, 'Body Care': null, 'Moisturiser': null, 'Cola': null, 'Energy': null, 'Juice': null, 'Ketchup': null },
-  "Men's": { 'Basics': null, 'Denim': 'Medium', 'Dresses': null, 'Formal': null, 'Body Care': null, 'Moisturiser': null, 'Cola': null, 'Energy': null, 'Juice': null, 'Ketchup': null },
-  'Footwear': { 'Basics': null, 'Denim': null, 'Dresses': null, 'Formal': 'Medium', 'Body Care': null, 'Moisturiser': null, 'Cola': null, 'Energy': null, 'Juice': null, 'Ketchup': null },
-  'Beverages': { 'Basics': null, 'Denim': null, 'Dresses': null, 'Formal': null, 'Body Care': null, 'Moisturiser': null, 'Cola': 'High', 'Energy': 'High', 'Juice': 'Low', 'Ketchup': null },
-  'Personal Care': { 'Basics': null, 'Denim': null, 'Dresses': null, 'Formal': null, 'Body Care': 'High', 'Moisturiser': 'Low', 'Cola': null, 'Energy': null, 'Juice': null, 'Ketchup': null },
-  'Condiments': { 'Basics': null, 'Denim': null, 'Dresses': null, 'Formal': null, 'Body Care': null, 'Moisturiser': null, 'Cola': null, 'Energy': null, 'Juice': null, 'Ketchup': 'High' },
+  "Women's": { 'Basics': 'High', 'Denim': null, 'Dresses': 'Medium', 'Outerwear': 'Low', 'Totes': null, 'Jackets': null, 'Tees': null, 'Formal': null, 'Scarves': null, 'Tops': 'Low' },
+  "Men's": { 'Basics': null, 'Denim': 'Medium', 'Dresses': null, 'Outerwear': 'High', 'Totes': null, 'Jackets': null, 'Tees': null, 'Formal': null, 'Scarves': null, 'Tops': null },
+  'Kids': { 'Basics': null, 'Denim': null, 'Dresses': null, 'Outerwear': null, 'Totes': null, 'Jackets': null, 'Tees': 'Low', 'Formal': null, 'Scarves': null, 'Tops': null },
+  'Accessories': { 'Basics': null, 'Denim': null, 'Dresses': null, 'Outerwear': null, 'Totes': 'High', 'Jackets': null, 'Tees': null, 'Formal': null, 'Scarves': 'Low', 'Tops': null },
+  'Seasonal': { 'Basics': null, 'Denim': null, 'Dresses': null, 'Outerwear': null, 'Totes': null, 'Jackets': 'High', 'Tees': null, 'Formal': null, 'Scarves': null, 'Tops': null },
+  'Footwear': { 'Basics': null, 'Denim': null, 'Dresses': null, 'Outerwear': null, 'Totes': null, 'Jackets': null, 'Tees': null, 'Formal': 'Medium', 'Scarves': null, 'Tops': null },
 };
 
 export const StoreDeepDive: React.FC = () => {
@@ -1574,7 +1574,7 @@ export const StoreDeepDive: React.FC = () => {
                       </span>
                     </div>
                     <h4 className="sdd-alert-title">Inbound Shipment Delay — OOS Risk</h4>
-                    <p className="sdd-alert-desc">DC shipment delayed by 1 day. 8 SKUs in Beverages & Snacks projected to hit zero stock before arrival. Shelf replenishment plan required.</p>
+                    <p className="sdd-alert-desc">DC shipment delayed by 1 day. 8 SKUs in Women's &amp; Men's projected to hit zero stock before arrival. Shelf replenishment plan required.</p>
                     <div className="sdd-alert-impact-row">
                       <span className="sdd-alert-impact-item">
                         <AttachMoneyOutlined sx={{ fontSize: 12 }}/>
@@ -2141,7 +2141,7 @@ export const StoreDeepDive: React.FC = () => {
               const highestRiskDept = (() => {
                 const counts: Record<string, number> = {};
                 PHANTOM_ROWS.filter(r => r.riskLevel === 'High').forEach(r => { counts[r.department] = (counts[r.department] || 0) + r.phantomSkus; });
-                return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'Beverages';
+                return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "Women's";
               })();
               const openCycleTasks = PHANTOM_ROWS.filter(r => r.linkedTasks > 0 && r.status !== 'Resolved').reduce((s, r) => s + r.linkedTasks, 0);
 

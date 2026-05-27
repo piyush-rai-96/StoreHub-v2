@@ -292,11 +292,11 @@ const analyticsResponses: Record<string, { answer: string; kpiCards: { label: st
       { label: 'Current GM%', value: '31.2%', delta: '+2.8pp', direction: 'up' },
       { label: 'vs District', value: '+2.4pp', delta: 'above avg', direction: 'up' },
       { label: 'Shrink Rate', value: '1.6%', delta: '-1.2pp', direction: 'up' },
-      { label: 'Fresh Waste', value: '-34%', delta: 'improved', direction: 'up' },
+      { label: 'Shrink Reduction', value: '-34%', delta: 'improved', direction: 'up' },
     ],
     chartData: [
       { type: 'line', title: 'Gross Margin % Trend (13 Weeks)', labels: ['Jan 27', 'Feb 3', 'Feb 10', 'Feb 17', 'Feb 24', 'Mar 3', 'Mar 10', 'Mar 17', 'Mar 24', 'Mar 31', 'Apr 7', 'Apr 14', 'Apr 21'], values: [28.4, 28.6, 28.9, 29.1, 29.3, 29.6, 29.8, 30.0, 30.2, 30.5, 30.8, 31.0, 31.2], color: 'var(--ia-color-success)', secondaryValues: [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30], secondaryLabel: 'Target' },
-      { type: 'horizontal-bar', title: 'GM% by Department', labels: ['Health & Beauty', 'Fresh & Produce', 'Beverages', 'Household', 'Grocery'], values: [38.2, 34.8, 29.4, 26.8, 24.6], color: 'var(--ia-color-primary)' },
+      { type: 'horizontal-bar', title: "GM% by Department", labels: ["Women's", "Men's", 'Accessories', 'Footwear', 'Kids', 'Seasonal'], values: [38.2, 34.8, 32.1, 29.4, 26.8, 24.6], color: 'var(--ia-color-primary)' },
     ],
     followUpQuestions: [
       'What is the shrink rate trend for bottom 3 stores?',
@@ -305,7 +305,7 @@ const analyticsResponses: Record<string, { answer: string; kpiCards: { label: st
     ],
   },
   'out of stock': {
-    answer: '## 🔮 Predictive OOS Risk — 7-Day Forecast\n\n**Report Period:** Next 7 Days · **Model:** AI Demand Forecasting v3.2 · **Confidence:** 87%\n\n---\n\n### Executive Summary\n\nBased on current inventory levels, sales velocity, replenishment schedules, and seasonal demand patterns, **18 SKUs** across 5 stores are predicted to go **out of stock within the next 7 days** if no intervention is taken. Estimated revenue at risk: **$42K**.\n\n### High-Risk SKUs — Immediate Action Required\n\n| Risk | SKU | Product | Store | Days to OOS | Current Stock | Daily Velocity | Revenue at Risk |\n|------|-----|---------|-------|-------------|---------------|----------------|----------------|\n| 🔴 | SKU-4821 | Organic Whole Milk 1gal | Pine Grove #5678 | **1.2 days** | 8 units | 6.5/day | $980 |\n| 🔴 | SKU-3392 | Pampers Swaddlers Size 3 | Maple Heights #9012 | **1.5 days** | 12 units | 8.2/day | $1,440 |\n| 🔴 | SKU-7156 | Tide Original 92oz | Oak Street #1234 | **1.8 days** | 6 units | 3.4/day | $720 |\n| 🔴 | SKU-2084 | Banana Bunch Organic | Pine Grove #5678 | **2.0 days** | 24 units | 12.1/day | $540 |\n| 🟡 | SKU-5531 | Colgate Total Whitening | Harbor View #4532 | **3.2 days** | 15 units | 4.7/day | $620 |\n| 🟡 | SKU-8943 | Coca-Cola 12pk Cans | Maple Heights #9012 | **3.5 days** | 18 units | 5.2/day | $890 |\n| 🟡 | SKU-1267 | Bounty Paper Towels 8ct | Oak Street #1234 | **3.8 days** | 9 units | 2.4/day | $480 |\n| 🟡 | SKU-6674 | Greek Yogurt Variety 12pk | Central Station #3421 | **4.1 days** | 22 units | 5.4/day | $660 |\n\n### Store-Level Risk Summary\n\n| Store | SKUs at Risk | Revenue at Risk | Avg Days to OOS | Primary Category |\n|-------|-------------|-----------------|-----------------|------------------|\n| Pine Grove #5678 | 6 SKUs | $14.2K | 2.4 days | Fresh & Dairy |\n| Maple Heights #9012 | 5 SKUs | $11.8K | 3.1 days | Baby & Household |\n| Oak Street #1234 | 4 SKUs | $8.4K | 3.6 days | Household & Cleaning |\n| Harbor View #4532 | 2 SKUs | $4.8K | 4.2 days | Health & Beauty |\n| Central Station #3421 | 1 SKU | $2.8K | 4.1 days | Dairy |\n\n### Root Cause Analysis\n\n| Factor | Affected SKUs | Detail |\n|--------|--------------|--------|\n| **Delayed DC shipment** | 8 SKUs | Distribution center backlog — next scheduled delivery pushed 2 days |\n| **Demand spike (seasonal)** | 5 SKUs | Summer demand uplift on beverages and fresh not reflected in auto-replenishment model |\n| **Vendor supply constraint** | 3 SKUs | Supplier allocation reduced 20% due to raw material shortage |\n| **Safety stock too low** | 2 SKUs | Safety stock parameters not updated after last demand review |\n\n> ⚠️ **Revenue Impact:** If all 18 SKUs go OOS for their predicted duration, estimated lost sales total **$42K** across 5 stores. Early intervention can prevent 80%+ of this loss.',
+    answer: "## 🔮 Predictive OOS Risk — 7-Day Forecast\n\n**Report Period:** Next 7 Days · **Model:** AI Demand Forecasting v3.2 · **Confidence:** 87%\n\n---\n\n### Executive Summary\n\nBased on current inventory levels, sales velocity, replenishment schedules, and seasonal demand patterns, **18 SKUs** across 5 stores are predicted to go **out of stock within the next 7 days** if no intervention is taken. Estimated revenue at risk: **$42K**.\n\n### High-Risk SKUs — Immediate Action Required\n\n| Risk | SKU | Product | Store | Days to OOS | Current Stock | Daily Velocity | Revenue at Risk |\n|------|-----|---------|-------|-------------|---------------|----------------|----------------|\n| 🔴 | WOM-TOP-014 | Women's V-Neck Basics | Pine Grove #5678 | **1.2 days** | 8 units | 6.5/day | $980 |\n| 🔴 | WOM-DRS-014 | Floral Midi Dress — Navy | Maple Heights #9012 | **1.5 days** | 12 units | 8.2/day | $1,440 |\n| 🔴 | MEN-DNM-003 | Slim Fit Denim — Dark Wash | Oak Street #1234 | **1.8 days** | 6 units | 3.4/day | $720 |\n| 🔴 | SEA-JKT-004 | Seasonal Rain Jacket | Pine Grove #5678 | **2.0 days** | 24 units | 12.1/day | $540 |\n| 🟡 | ACC-BAG-005 | Canvas Tote Bag | Harbor View #4532 | **3.2 days** | 15 units | 4.7/day | $620 |\n| 🟡 | KID-TSH-012 | Kids Color Block Tee | Maple Heights #9012 | **3.5 days** | 18 units | 5.2/day | $890 |\n| 🟡 | MEN-OUT-006 | Puffer Jacket | Oak Street #1234 | **3.8 days** | 9 units | 2.4/day | $480 |\n| 🟡 | WOM-ACT-002 | Athletic Leggings | Central Station #3421 | **4.1 days** | 22 units | 5.4/day | $660 |\n\n### Store-Level Risk Summary\n\n| Store | SKUs at Risk | Revenue at Risk | Avg Days to OOS | Primary Category |\n|-------|-------------|-----------------|-----------------|------------------|\n| Pine Grove #5678 | 6 SKUs | $14.2K | 2.4 days | Women's Apparel |\n| Maple Heights #9012 | 5 SKUs | $11.8K | 3.1 days | Women's & Kids |\n| Oak Street #1234 | 4 SKUs | $8.4K | 3.6 days | Men's Apparel |\n| Harbor View #4532 | 2 SKUs | $4.8K | 4.2 days | Accessories |\n| Central Station #3421 | 1 SKU | $2.8K | 4.1 days | Activewear |\n\n### Root Cause Analysis\n\n| Factor | Affected SKUs | Detail |\n|--------|--------------|--------|\n| **Delayed DC shipment** | 8 SKUs | Distribution center backlog — next scheduled delivery pushed 2 days |\n| **Demand spike (seasonal)** | 5 SKUs | Summer fashion uplift on Dresses and Outerwear not reflected in auto-replenishment model |\n| **Vendor supply constraint** | 3 SKUs | Supplier allocation reduced 20% due to fabric shortage |\n| **Safety stock too low** | 2 SKUs | Safety stock parameters not updated after last demand review |\n\n> ⚠️ **Revenue Impact:** If all 18 SKUs go OOS for their predicted duration, estimated lost sales total **$42K** across 5 stores. Early intervention can prevent 80%+ of this loss.",
     kpiCards: [
       { label: 'At-Risk SKUs', value: '18', delta: '+5 vs LW', direction: 'down' },
       { label: 'Revenue at Risk', value: '$42K', delta: '7-day', direction: 'down' },
@@ -314,7 +314,7 @@ const analyticsResponses: Record<string, { answer: string; kpiCards: { label: st
     ],
     chartData: [
       { type: 'horizontal-bar', title: 'Revenue at Risk by Store ($K)', labels: ['Pine Grove', 'Maple Heights', 'Oak Street', 'Harbor View', 'Central Stn'], values: [14.2, 11.8, 8.4, 4.8, 2.8], color: 'var(--ia-color-error)' },
-      { type: 'bar', title: 'At-Risk SKUs by Category', labels: ['Fresh', 'Baby', 'Household', 'Health', 'Dairy', 'Beverages'], values: [5, 3, 3, 2, 2, 3], color: 'var(--ia-color-warning)' },
+      { type: 'bar', title: 'At-Risk SKUs by Category', labels: ['Denim', 'Tops', 'Dresses', 'Outerwear', 'Accessories', 'Activewear', 'Kids', 'Footwear'], values: [4, 3, 3, 2, 2, 1, 2, 1], color: 'var(--ia-color-warning)' },
     ],
     followUpQuestions: [
       'Show total sales impact of OOS items last week',
@@ -865,14 +865,14 @@ export const AICopilot: React.FC = () => {
           timestamp: new Date(),
           skill: 'pog',
           pogPlanogramList: [
-            { name: 'C&A Accessories Endcap — Localized v2.1', store: 'Downtown Plaza #2034', lastAudit: '5 days ago', score: 76, status: 'warning' },
+            { name: 'Accessories Endcap — Localized v2.1', store: 'Downtown Plaza #2034', lastAudit: '5 days ago', score: 76, status: 'warning' },
             { name: 'Seasonal Display — Summer Collection v1.3', store: 'Harbor View #3021', lastAudit: '12 days ago', score: 84, status: 'pass' },
             { name: 'Checkout Impulse Bay — Standard v4.0', store: 'Riverside Mall #1876', lastAudit: '3 days ago', score: 91, status: 'pass' },
             { name: 'Beverage Cooler Endcap — Promo Q2', store: 'Oak Street #1234', lastAudit: '8 days ago', score: 68, status: 'fail' },
-            { name: 'Health & Beauty Aisle — Reset v2.0', store: 'Central Station #3421', lastAudit: '1 day ago', score: 88, status: 'pass' },
-            { name: 'Fresh Produce Wall — Localized v3.1', store: 'Maple Heights #9012', lastAudit: '14 days ago', score: 72, status: 'warning' },
+            { name: "Women's Wall — Spring Reset v2.0",  store: 'Central Station #3421', lastAudit: '1 day ago', score: 88, status: 'pass' },
+            { name: "Men's Denim Wall — Localized v3.1", store: 'Maple Heights #9012', lastAudit: '14 days ago', score: 72, status: 'warning' },
           ],
-          suggestedQueries: ['Audit C&A Accessories Endcap', 'Audit Beverage Cooler Endcap', 'Detect OOS items', 'Check compliance'],
+          suggestedQueries: ['Audit Accessories Endcap', 'Audit Seasonal Promo Table', 'Detect OOS items', 'Check compliance'],
         };
         setMessages(prev => {
           if (prev.pog.some(m => m.id === 'msg-pog-list')) return prev;
@@ -1170,11 +1170,11 @@ export const AICopilot: React.FC = () => {
       ];
 
       const ruleCategory = q.includes('apparel') ? 'Apparel'
-        : q.includes('grocery') ? 'Grocery'
+        : q.includes('denim') ? 'Denim'
         : q.includes('electronics') ? 'Electronics'
-        : q.includes('beauty') ? 'Health & Beauty'
-        : q.includes('dairy') ? 'Dairy'
-        : q.includes('beverage') ? 'Beverages'
+        : q.includes('women') ? "Women's"
+        : q.includes('men') ? "Men's"
+        : q.includes('accessori') ? 'Accessories'
         : 'Apparel';
 
       const finalMsg: ChatMessage = {
@@ -1246,7 +1246,7 @@ export const AICopilot: React.FC = () => {
       { step: 'Generating OOS detection report...', status: 'pending' },
     ] : [
       { step: 'Receiving store shelf capture...', status: 'active' },
-      { step: 'Loading reference planogram (C&A Accessories Endcap)...', status: 'pending' },
+      { step: 'Loading reference planogram (Accessories Endcap)...', status: 'pending' },
       { step: 'AI Vision analyzing product positions...', status: 'pending' },
       { step: 'Comparing facings and placement accuracy...', status: 'pending' },
       { step: 'Evaluating category adjacency rules...', status: 'pending' },
@@ -1369,7 +1369,7 @@ export const AICopilot: React.FC = () => {
     } else {
       const complianceSources = enrichSources([
         { doc: 'Planogram Compliance SOP v3.1', section: 'Section 3.1 — Audit Scoring & Tolerances', page: 'Pages 12–16' },
-        { doc: 'C&A Accessories Endcap — Localized v2.1', section: 'Reference Planogram', page: 'Page 1' },
+        { doc: 'Accessories Endcap — Localized v2.1', section: 'Reference Planogram', page: 'Page 1' },
         { doc: 'Visual Merchandising Standards', section: 'Section 1.4 — Implementation Timelines', page: 'Pages 5–8' },
         { doc: 'Category Management Guidelines', section: 'Section 2.3 — Adjacency & Eye-Level Rules', page: 'Page 22' },
       ]);
@@ -1385,7 +1385,7 @@ export const AICopilot: React.FC = () => {
       const complianceContent = [
         '## Compliance Audit — Grade C (76.4%)',
         '',
-        `**Planogram:** C&A Accessories Endcap — Localized v2.1  `,
+        `**Planogram:** Accessories Endcap — Localized v2.1  `,
         `**Store:** Downtown Plaza #2034 — Urban Flagship Cluster  `,
         `**Audit date:** ${auditDate}`,
         '',

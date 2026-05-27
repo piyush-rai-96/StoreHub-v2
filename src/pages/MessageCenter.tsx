@@ -19,6 +19,9 @@ import PushPinOutlined from '@mui/icons-material/PushPinOutlined';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import ArrowBackOutlined from '@mui/icons-material/ArrowBackOutlined';
 import OpenInNewOutlined from '@mui/icons-material/OpenInNewOutlined';
+import LockOutlined from '@mui/icons-material/LockOutlined';
+import EditOutlined from '@mui/icons-material/EditOutlined';
+import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import AssignmentOutlined from '@mui/icons-material/AssignmentOutlined';
 import PlaceOutlined from '@mui/icons-material/PlaceOutlined';
 import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined';
@@ -51,7 +54,7 @@ import './MessageCenter.css';
 // ── Types ──
 type ChatType = 'direct' | 'group' | 'broadcast';
 type MessageStatus = 'sent' | 'delivered' | 'read';
-type Tab = 'all' | 'direct' | 'groups' | 'broadcast';
+type Tab = 'all' | 'direct' | 'groups' | 'broadcast' | 'unread';
 type CommSection = 'messages' | 'broadcasts' | 'field_signals';
 type UserRole = 'ADMIN' | 'DM' | 'SM' | 'HQ' | 'OPS' | 'LP' | 'INV' | 'POG';
 
@@ -95,6 +98,8 @@ interface Chat {
   pinned: boolean;
   lastActivity: Date;
   description?: string;
+  // broadcast-specific: IDs of people who received individual copies
+  broadcastRecipientIds?: string[];
 }
 
 // ── Mock Data ──
@@ -221,6 +226,19 @@ const R = {
 };
 
 const DM_CHATS: Chat[] = [
+  // ── Pinned Field Signal thread — always at top ──
+  {
+    id: 'c-fs-pinned', type: 'group', name: 'Field Signals — District 14', avatar: 'FS',
+    description: 'Live local demand signals and hyperlocal event alerts for District 14',
+    participants: [contacts[0], contacts[2], contacts[5], contacts[4]], unread: 3, pinned: true,
+    lastActivity: new Date(Date.now() - 2 * 60000),
+    messages: [
+      { id: 'fspm-1', senderId: 'u3', content: 'Just logged a new signal — Coldplay World Tour at Nissan Stadium next week. Two sold-out nights, 50k capacity each. Expect big casualwear and accessories demand around Downtown Plaza #2034.', timestamp: new Date(Date.now() - 60 * 60000), status: 'read', fieldSignalId: 'FS-2408' },
+      { id: 'fspm-2', senderId: 'u6', content: 'Also flagging the Tennessee Titans autograph signing this Saturday at Store #2341. Already reviewed and a task is linked.', timestamp: new Date(Date.now() - 30 * 60000), status: 'read', fieldSignalId: 'FS-2409' },
+      { id: 'fspm-3', senderId: 'u1', content: 'Both signals confirmed. FIFA group stage matches near #2341 next month too — please ensure Seasonal and Activewear sections are fully stocked before those windows.', timestamp: new Date(Date.now() - 10 * 60000), status: 'delivered', context: { label: 'View all Field Signals', route: '/command-center/communications', kind: 'task' } },
+      { id: 'fspm-4', senderId: 'u5', content: 'On it. Inventory check for Activewear scheduled for tomorrow AM. Will log any gaps as a signal.', timestamp: new Date(Date.now() - 2 * 60000), status: 'delivered' },
+    ],
+  },
   {
     id: 'c1', type: 'direct', name: 'Sarah Chen', avatar: 'SC',
     participants: [contacts[0]], unread: 2, pinned: true,
@@ -908,12 +926,22 @@ export const MessageCenter: React.FC = () => {
   };
 
 
+  const totalUnread = useMemo(
+    () => chats.filter(c => c.unread > 0).length,
+    [chats],
+  );
+
+  const markAllRead = useCallback(() => {
+    setChats(prev => prev.map(c => ({ ...c, unread: 0 })));
+  }, []);
+
   const filteredChats = chats
     .filter(c => {
       if (section === 'broadcasts') return c.type === 'broadcast';
       if (section === 'messages') {
         if (activeTab === 'direct') return c.type === 'direct';
         if (activeTab === 'groups') return c.type === 'group';
+        if (activeTab === 'unread')  return c.unread > 0;
         return true;
       }
       return true;
@@ -970,41 +998,93 @@ export const MessageCenter: React.FC = () => {
   };
 
   const createBroadcast = () => {
-    if (!selectedMembers.length) return;
+    if (!selectedMembers.length || !broadcastMessage.trim()) return;
     const members = contacts.filter(c => selectedMembers.includes(c.id));
-    const name = newChatName.trim() || `Broadcast (${members.map(m => m.name.split(' ')[0]).join(', ')})`;
-    const initialMessages: Message[] = broadcastMessage.trim() ? [{
-      id: `msg-${Date.now()}`,
-      senderId: 'me',
-      content: broadcastMessage.trim(),
-      timestamp: new Date(),
-      status: 'sent' as MessageStatus,
-    }] : [];
-    const newChat: Chat = {
-      id: `c-${Date.now()}`, type: 'broadcast', name, avatar: '📢',
-      description: `Broadcast to ${members.length} recipients`,
-      participants: members, messages: initialMessages, unread: 0, pinned: false, lastActivity: new Date(),
-    };
+    const bcEventId = `bc-${Date.now()}`;
+    const now = new Date();
+    const messageContent = broadcastMessage.trim();
+
+    // Fan-out: create / update an individual direct thread for every recipient
+    setChats(prev => {
+      let updated = [...prev];
+      members.forEach(member => {
+        const existingIdx = updated.findIndex(c => c.type === 'direct' && c.participants[0]?.id === member.id);
+        const bcMsg: Message = {
+          id: `msg-${bcEventId}-${member.id}`,
+          senderId: 'me',
+          content: messageContent,
+          timestamp: now,
+          status: 'delivered' as MessageStatus,
+        };
+        if (existingIdx >= 0) {
+          updated[existingIdx] = {
+            ...updated[existingIdx],
+            messages: [...updated[existingIdx].messages, bcMsg],
+            unread: 0,
+            lastActivity: now,
+          };
+        } else {
+          const newDm: Chat = {
+            id: `c-dm-${member.id}-${Date.now()}`,
+            type: 'direct',
+            name: member.name,
+            avatar: member.avatar,
+            participants: [member],
+            messages: [bcMsg],
+            unread: 0,
+            pinned: false,
+            lastActivity: now,
+          };
+          updated = [newDm, ...updated];
+        }
+      });
+
+      // Outbox entry — type broadcast, only visible to sender
+      const outboxName = newChatName.trim() || `Announcement · ${members.length} people`;
+      const outboxChat: Chat = {
+        id: bcEventId,
+        type: 'broadcast',
+        name: outboxName,
+        avatar: '📢',
+        description: `Sent privately to ${members.length} ${members.length === 1 ? 'person' : 'people'}`,
+        participants: members,
+        broadcastRecipientIds: members.map(m => m.id),
+        messages: [{
+          id: `msg-${bcEventId}-outbox`,
+          senderId: 'me',
+          content: messageContent,
+          timestamp: now,
+          status: 'delivered' as MessageStatus,
+        }],
+        unread: 0,
+        pinned: false,
+        lastActivity: now,
+      };
+      return [outboxChat, ...updated];
+    });
+
     if (prefillBroadcastFromSignal) {
-      const bcId = `bc-fs-${Date.now().toString().slice(-6)}`;
       updateSignal(prefillBroadcastFromSignal.id, s => ({
         ...s,
-        linkedBroadcastId: bcId,
+        linkedBroadcastId: bcEventId,
         updatedAt: new Date().toISOString(),
         activityLog: [...s.activityLog, {
           id: `fsa-${Date.now()}`,
           fieldSignalId: s.id,
-          action: 'Broadcast created from signal',
+          action: 'Broadcast sent from signal',
           actorUserId: user?.id || 'me',
           actorName: user?.name || 'You',
           timestamp: new Date().toISOString(),
-          notes: `Broadcast #${bcId}`,
+          notes: `Broadcast #${bcEventId} · ${members.length} recipients`,
         }],
       }));
       setPrefillBroadcastFromSignal(null);
-      showToast('Broadcast Draft Created — Review And Confirm Before Sending', 'success');
     }
-    setChats(prev => [newChat, ...prev]); setActiveChat(newChat.id); setActiveTab('broadcast'); closeModal();
+
+    setActiveChat(bcEventId);
+    setActiveTab('broadcast');
+    closeModal();
+    showToast(`Sent privately to ${members.length} ${members.length === 1 ? 'person' : 'people'}`, 'success');
   };
 
   const startDirectMessage = (contact: Contact) => {
@@ -1110,21 +1190,6 @@ export const MessageCenter: React.FC = () => {
                   type="button"
                   className="mc-add-menu-item"
                   role="menuitem"
-                  onClick={() => { setShowHeaderMenu(false); setShowNewChat(true); setModalStep('broadcast'); }}
-                >
-                  <span className="mc-add-menu-icon mc-add-menu-icon--broadcast">
-                    <CampaignOutlined sx={{ fontSize: 18 }} />
-                  </span>
-                  <span className="mc-add-menu-copy">
-                    <span className="mc-add-menu-title">New Broadcast</span>
-                    <span className="mc-add-menu-desc">Send to multiple stores or roles</span>
-                  </span>
-                </button>
-                <div className="mc-add-menu-divider" />
-                <button
-                  type="button"
-                  className="mc-add-menu-item"
-                  role="menuitem"
                   onClick={() => { setShowHeaderMenu(false); openLogSignalDrawer(); }}
                 >
                   <span className="mc-add-menu-icon mc-add-menu-icon--signal">
@@ -1140,21 +1205,20 @@ export const MessageCenter: React.FC = () => {
           </div>
         </div>
 
-        {/* Section tabs — identical across all sections */}
+        {/* Section tabs */}
         <div className="mc-section-tabs">
-          {(['messages', 'broadcasts', 'field_signals'] as CommSection[]).map(sec => (
+          {(['messages', 'field_signals'] as CommSection[]).map(sec => (
             <button
               key={sec}
               type="button"
               className={`mc-section-tab ${section === sec ? 'mc-section-tab--active' : ''}`}
               onClick={() => {
                 setSection(sec);
-                if (sec === 'broadcasts') { setActiveTab('broadcast'); setActiveSignalId(null); }
                 if (sec === 'messages') { setActiveTab('all'); setActiveSignalId(null); }
                 if (sec === 'field_signals') { setActiveChat(null); }
               }}
             >
-              {sec === 'messages' ? 'Messages' : sec === 'broadcasts' ? 'Broadcasts' : 'Field Signals'}
+              {sec === 'messages' ? 'Messages' : 'Field Signals'}
             </button>
           ))}
         </div>
@@ -1186,27 +1250,59 @@ export const MessageCenter: React.FC = () => {
               )}
             </div>
 
-            {/* Conversation filter tabs (messages only) */}
+            {/* Conversation filter: segment + unread toggle (messages only) */}
             {section === 'messages' && (
-              <div className="mc-filter-tabs-wrap" role="tablist">
-                {([
-                  { value: 'all',    label: 'All',    icon: null },
-                  { value: 'direct', label: 'Direct', icon: <ChatOutlined sx={{ fontSize: 14 }} /> },
-                  { value: 'groups', label: 'Groups', icon: <GroupOutlined sx={{ fontSize: 14 }} /> },
-                ] as { value: Tab; label: string; icon: React.ReactNode }[]).map(t => (
+              <>
+                <div className="mc-filter-tabs-wrap">
+                  {/* Segment control: All / Direct / Groups */}
+                  <div className="mc-filter-segment" role="tablist">
+                    {([
+                      { value: 'all',    label: 'All'    },
+                      { value: 'direct', label: 'Direct', icon: <ChatOutlined sx={{ fontSize: 13 }} /> },
+                      { value: 'groups', label: 'Groups', icon: <GroupOutlined sx={{ fontSize: 13 }} /> },
+                    ] as { value: Tab; label: string; icon?: React.ReactNode }[]).map(t => (
+                      <button
+                        key={t.value}
+                        type="button"
+                        role="tab"
+                        aria-selected={activeTab === t.value && activeTab !== 'unread'}
+                        className={`mc-filter-tab${(activeTab === t.value && activeTab !== 'unread') ? ' mc-filter-tab--active' : ''}`}
+                        onClick={() => setActiveTab(t.value)}
+                      >
+                        {t.icon}
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Unread toggle pill */}
                   <button
-                    key={t.value}
                     type="button"
-                    role="tab"
-                    aria-selected={activeTab === t.value}
-                    className={`mc-filter-tab${activeTab === t.value ? ' mc-filter-tab--active' : ''}`}
-                    onClick={() => setActiveTab(t.value)}
+                    className={`mc-unread-toggle${activeTab === 'unread' ? ' mc-unread-toggle--on' : ''}`}
+                    onClick={() => setActiveTab(activeTab === 'unread' ? 'all' : 'unread')}
+                    title={activeTab === 'unread' ? 'Show all' : 'Show only unread'}
                   >
-                    {t.icon}
-                    {t.label}
+                    <span className="mc-unread-toggle-dot" />
+                    Unread
+                    {totalUnread > 0 && (
+                      <span className="mc-unread-toggle-count">{totalUnread}</span>
+                    )}
                   </button>
-                ))}
-              </div>
+                </div>
+
+                {/* Mark all read bar — only when there are unreads */}
+                {totalUnread > 0 && (
+                  <div className="mc-mark-all-bar">
+                    <span className="mc-mark-all-label">
+                      <span className="mc-mark-all-dot" />
+                      {totalUnread} unread conversation{totalUnread !== 1 ? 's' : ''}
+                    </span>
+                    <button type="button" className="mc-mark-all-btn" onClick={markAllRead}>
+                      Mark all read
+                    </button>
+                  </div>
+                )}
+              </>
             )}
 
             {/* Chat list */}
@@ -1222,20 +1318,26 @@ export const MessageCenter: React.FC = () => {
                 const hasUnread = chat.unread > 0;
                 const lastMsg = chat.messages[chat.messages.length - 1];
                 const isOnline = chat.type === 'direct' && chat.participants[0]?.online;
+                const isBroadcastOutbox = chat.type === 'broadcast';
                 return (
                   <button
                     key={chat.id}
-                    className={`mc-chat-item ${activeChat === chat.id ? 'mc-chat-item--active' : ''} ${hasUnread ? 'mc-chat-item--unread' : ''}`}
+                    className={`mc-chat-item ${activeChat === chat.id ? 'mc-chat-item--active' : ''} ${hasUnread ? 'mc-chat-item--unread' : ''} ${isBroadcastOutbox ? 'mc-chat-item--broadcast' : ''}`}
                     onClick={() => { setActiveChat(chat.id); setChats(prev => prev.map(c => c.id === chat.id ? { ...c, unread: 0 } : c)); }}
                   >
                     <div className="mc-chat-item-avatar"
-                      style={{ background: av.bg, borderRadius: chat.type === 'broadcast' ? '50%' : undefined }}>
-                      <span style={{ color: av.ink }}>{chat.avatar}</span>
+                      style={{ background: isBroadcastOutbox ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' : av.bg, borderRadius: '50%' }}>
+                      {isBroadcastOutbox
+                        ? <CampaignOutlined sx={{ fontSize: 16, color: '#fff' }} />
+                        : <span style={{ color: av.ink }}>{chat.avatar}</span>}
                       {isOnline && <span className="mc-chat-item-online-dot" />}
                     </div>
                     <div className="mc-chat-item-body">
                       <div className="mc-chat-item-row">
-                        <span className="mc-chat-name">{chat.name}</span>
+                        <span className="mc-chat-name">
+                          {chat.name}
+                          {isBroadcastOutbox && <span className="mc-chat-bc-tag"><CampaignOutlined sx={{ fontSize: 9 }} />Announcement</span>}
+                        </span>
                         <div className="mc-chat-meta">
                           {chat.pinned && <PushPinOutlined sx={{ fontSize: 10 }} className="mc-pin-icon" />}
                           {hasUnread
@@ -1244,7 +1346,13 @@ export const MessageCenter: React.FC = () => {
                           <span className="mc-chat-time">{formatTime(chat.lastActivity)}</span>
                         </div>
                       </div>
-                      {lastMsg && (
+                      {isBroadcastOutbox && chat.participants.length > 0 && (
+                        <p className="mc-chat-preview mc-chat-preview--bc">
+                          <CheckCircleOutlined sx={{ fontSize: 11 }} style={{ color: '#22c55e', marginRight: 3, verticalAlign: 'middle' }} />
+                          Delivered to {chat.participants.length} {chat.participants.length === 1 ? 'person' : 'people'}
+                        </p>
+                      )}
+                      {!isBroadcastOutbox && lastMsg && (
                         <p className="mc-chat-preview">
                           {lastMsg.senderId === 'me' ? 'You: ' : ''}
                           {lastMsg.content.slice(0, 55)}{lastMsg.content.length > 55 ? '…' : ''}
@@ -1290,13 +1398,13 @@ export const MessageCenter: React.FC = () => {
                   <h3>{selectedChat.name}</h3>
                   <span className="mc-chat-header-sub">
                     {selectedChat.type === 'direct'
-                      ? (selectedChat.participants[0]?.online
-                          ? <><span className="mc-online-indicator" />Online</>
-                          : `Last seen ${selectedChat.participants[0]?.lastSeen || 'recently'}`)
-                      : selectedChat.type === 'broadcast'
-                      ? <><span className="mc-broadcast-pill"><CampaignOutlined sx={{ fontSize: 10 }} />Broadcast</span><span>{selectedChat.participants.length} recipients</span></>
-                      : `${selectedChat.participants.length} members`
-                    }
+                        ? (selectedChat.participants[0]?.online
+                            ? <><span className="mc-online-indicator" />Online</>
+                            : `Last seen ${selectedChat.participants[0]?.lastSeen || 'recently'}`)
+                        : selectedChat.type === 'broadcast'
+                        ? <><span className="mc-broadcast-pill"><LockOutlined sx={{ fontSize: 10 }} />Announcement</span><span>Sent to {selectedChat.participants.length} {selectedChat.participants.length === 1 ? 'person' : 'people'} individually</span></>
+                        : `${selectedChat.participants.length} members`
+                      }
                   </span>
                 </div>
               </div>
@@ -1422,17 +1530,40 @@ export const MessageCenter: React.FC = () => {
             {/* Composer */}
             {selectedChat.type === 'broadcast' ? (
               <div className="mc-broadcast-composer">
-                <div className="mc-broadcast-banner">
-                  <CampaignOutlined sx={{ fontSize: 13 }} />
-                  <span>Broadcast · message will be sent to {selectedChat.participants.length} recipients</span>
+                <div className="mc-bc-outbox-bar">
+                  <LockOutlined sx={{ fontSize: 12 }} />
+                  <span>This message was delivered privately to each person — recipients cannot see each other.</span>
+                </div>
+                {/* Delivery receipt grid */}
+                {selectedChat.participants.length > 0 && (
+                  <div className="mc-bc-delivery-grid">
+                    <div className="mc-bc-delivery-title">Delivered to</div>
+                    <div className="mc-bc-delivery-list">
+                      {selectedChat.participants.map(p => {
+                        const av = getAvatarGradient(p.avatar);
+                        return (
+                          <div key={p.id} className="mc-bc-delivery-item">
+                            <div className="mc-bc-delivery-avatar" style={{ background: av.bg, color: av.ink }}>{p.avatar}</div>
+                            <div className="mc-bc-delivery-info">
+                              <span className="mc-bc-delivery-name">{p.name}</span>
+                              <span className="mc-bc-delivery-role">{p.role}{p.store ? ` · ${p.store}` : ''}</span>
+                            </div>
+                            <CheckCircleOutlined sx={{ fontSize: 15 }} className="mc-bc-delivery-check" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {/* Follow-up composer */}
+                <div className="mc-bc-followup-label">
+                  <CampaignOutlined sx={{ fontSize: 12 }} />
+                  <span>Send another announcement to all recipients</span>
                 </div>
                 <div className="mc-input-row mc-input-row--broadcast">
-                  <Button variant="text" size="small" className="mc-input-action" aria-label="Attach">
-                    <AttachFileOutlined sx={{ fontSize: 20 }} />
-                  </Button>
                   <textarea
                     ref={inputRef} className="mc-input"
-                    placeholder="Write a broadcast announcement..."
+                    placeholder="Write a follow-up broadcast..."
                     value={inputValue}
                     onChange={e => setInputValue(e.target.value)}
                     onKeyDown={handleKeyDown} rows={1}
@@ -1517,7 +1648,7 @@ export const MessageCenter: React.FC = () => {
               <h3>
                 {modalStep === 'main' && 'New Conversation'}
                 {modalStep === 'group' && 'New Group'}
-                {modalStep === 'broadcast' && 'New Broadcast'}
+                {modalStep === 'broadcast' && <><span>Announcements</span><span className="mc-modal-h3-private"><LockOutlined sx={{ fontSize: 12 }} />Private</span></>}
               </h3>
               <button className="mc-modal-nav-btn mc-modal-nav-btn--close" onClick={closeModal} aria-label="Close">
                 <CloseOutlined sx={{ fontSize: 18 }} />
@@ -1546,8 +1677,8 @@ export const MessageCenter: React.FC = () => {
                   <button className="mc-modal-action-btn" onClick={() => setModalStep('broadcast')}>
                     <span className="mc-modal-action-icon mc-modal-action-icon--broadcast"><CampaignOutlined sx={{ fontSize: 18 }} /></span>
                     <div>
-                      <span className="mc-modal-action-title">New Broadcast</span>
-                      <span className="mc-modal-action-desc">Send announcements to multiple people</span>
+                      <span className="mc-modal-action-title">Announcements</span>
+                      <span className="mc-modal-action-desc">Send a private message to multiple people individually</span>
                     </div>
                   </button>
                 </div>
@@ -1570,33 +1701,11 @@ export const MessageCenter: React.FC = () => {
               </>
             )}
 
-            {(modalStep === 'group' || modalStep === 'broadcast') && (
+            {modalStep === 'group' && (
               <>
                 <div className="mc-modal-name-input">
-                  <input type="text" placeholder={modalStep === 'group' ? 'Group name...' : 'Broadcast name...'} value={newChatName} onChange={e => setNewChatName(e.target.value)} autoFocus />
+                  <input type="text" placeholder="Group name..." value={newChatName} onChange={e => setNewChatName(e.target.value)} autoFocus />
                 </div>
-
-                {/* Message field — broadcast only */}
-                {modalStep === 'broadcast' && prefillBroadcastFromSignal && (
-                  <p className="mc-modal-prefill-hint">
-                    Prefilled from Field Signal {prefillBroadcastFromSignal.id}. Select recipients and confirm before sending.
-                  </p>
-                )}
-                {modalStep === 'broadcast' && (
-                  <div className="mc-modal-message-input">
-                    <div className="mc-modal-message-label">
-                      <CampaignOutlined sx={{ fontSize: 13 }} />
-                      <span>Announcement message</span>
-                    </div>
-                    <textarea
-                      className="mc-modal-message-textarea"
-                      placeholder="Write your broadcast announcement here..."
-                      value={broadcastMessage}
-                      onChange={e => setBroadcastMessage(e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-                )}
                 {selectedMembers.length > 0 && (
                   <div className="mc-selected-chips">
                     {selectedMembers.map(id => {
@@ -1610,11 +1719,9 @@ export const MessageCenter: React.FC = () => {
                 )}
                 <div className="mc-modal-search">
                   <SearchOutlined sx={{ fontSize: 15 }} />
-                  <input type="text" placeholder={modalStep === 'group' ? 'Add members...' : 'Add recipients...'} value={contactSearch} onChange={e => setContactSearch(e.target.value)} />
+                  <input type="text" placeholder="Add members..." value={contactSearch} onChange={e => setContactSearch(e.target.value)} />
                 </div>
-                <div className="mc-modal-contacts-label">
-                  {modalStep === 'group' ? 'Select Members' : 'Select Recipients'} ({selectedMembers.length})
-                </div>
+                <div className="mc-modal-contacts-label">Select Members ({selectedMembers.length})</div>
                 <div className="mc-modal-contacts">
                   {filteredContacts.map(c => {
                     const isSelected = selectedMembers.includes(c.id);
@@ -1634,13 +1741,132 @@ export const MessageCenter: React.FC = () => {
                   })}
                 </div>
                 <div className="mc-modal-footer">
+                  <Button variant="contained" color="primary" size="large" className="mc-create-btn" disabled={!selectedMembers.length}
+                    onClick={createGroupChat} startIcon={<GroupOutlined sx={{ fontSize: 16 }} />}>
+                    Create Group
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {modalStep === 'broadcast' && (
+              <>
+                {/* Privacy callout */}
+                <div className="mc-bc-privacy-banner">
+                  <div className="mc-bc-privacy-icon"><LockOutlined sx={{ fontSize: 15 }} /></div>
+                  <div className="mc-bc-privacy-text">
+                    <span className="mc-bc-privacy-title">Private delivery</span>
+                    <span className="mc-bc-privacy-sub">Each person receives your message as a private conversation — they won't see other recipients.</span>
+                  </div>
+                </div>
+
+                {prefillBroadcastFromSignal && (
+                  <div className="mc-bc-signal-pill">
+                    <SensorsOutlined sx={{ fontSize: 12 }} />
+                    <span>Pre-filled from Field Signal {prefillBroadcastFromSignal.id}</span>
+                  </div>
+                )}
+
+                {/* Message composer */}
+                <div className={`mc-bc-message-wrap${broadcastMessage.length > 0 ? ' mc-bc-message-wrap--has-content' : ''}`}>
+                  <div className="mc-bc-message-label">
+                    <EditOutlined sx={{ fontSize: 12 }} />
+                    <span>Your message</span>
+                    {broadcastMessage.length > 0 && (
+                      <span className="mc-bc-char-count-inline">{broadcastMessage.length}</span>
+                    )}
+                  </div>
+                  <textarea
+                    className="mc-bc-message-textarea"
+                    placeholder="Write your announcement — each recipient receives it as a private message..."
+                    value={broadcastMessage}
+                    onChange={e => setBroadcastMessage(e.target.value)}
+                    rows={6}
+                    autoFocus
+                  />
+                  {/* Attachment toolbar */}
+                  <div className="mc-bc-toolbar">
+                    <div className="mc-bc-toolbar-left">
+                      <label className="mc-bc-tool-btn" title="Attach file">
+                        <input type="file" style={{ display: 'none' }} multiple />
+                        <AttachFileOutlined sx={{ fontSize: 16 }} />
+                        <span>Attach</span>
+                      </label>
+                      <button type="button" className="mc-bc-tool-btn" title="Add emoji">
+                        <SentimentSatisfiedOutlined sx={{ fontSize: 16 }} />
+                      </button>
+                    </div>
+                    <div className="mc-bc-toolbar-right">
+                      {broadcastMessage.length > 0 && (
+                        <span className="mc-bc-toolbar-chars">{broadcastMessage.length} / 500</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Optional name */}
+                <div className="mc-bc-name-row">
+                  <input className="mc-bc-name-input" type="text" placeholder="Label this broadcast (optional)..." value={newChatName} onChange={e => setNewChatName(e.target.value)} />
+                </div>
+
+                {/* Recipient chips */}
+                {selectedMembers.length > 0 && (
+                  <div className="mc-bc-recipients-row">
+                    <span className="mc-bc-recipients-label">To</span>
+                    <div className="mc-bc-chips">
+                      {selectedMembers.map(id => {
+                        const c = contacts.find(ct => ct.id === id);
+                        if (!c) return null;
+                        return (
+                          <Chips key={id} label={c.name.split(' ')[0]} size="small" variant="solid" isRemovable onDelete={() => toggleMember(id)} />
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Search */}
+                <div className="mc-modal-search">
+                  <SearchOutlined sx={{ fontSize: 15 }} />
+                  <input type="text" placeholder="Add recipients..." value={contactSearch} onChange={e => setContactSearch(e.target.value)} />
+                </div>
+                <div className="mc-modal-contacts-label">Select Recipients ({selectedMembers.length})</div>
+                <div className="mc-modal-contacts">
+                  {filteredContacts.map(c => {
+                    const isSelected = selectedMembers.includes(c.id);
+                    const av = getAvatarGradient(c.avatar);
+                    return (
+                      <button key={c.id} className={`mc-modal-contact ${isSelected ? 'mc-modal-contact--selected' : ''}`} onClick={() => toggleMember(c.id)}>
+                        <div className="mc-modal-contact-avatar" style={{ background: av.bg, color: av.ink }}>{c.avatar}</div>
+                        <div className="mc-modal-contact-info">
+                          <span className="mc-modal-contact-name">{c.name}</span>
+                          <span className="mc-modal-contact-role">{c.role}{c.store ? ` · ${c.store}` : ''}</span>
+                        </div>
+                        <span className={`mc-checkbox ${isSelected ? 'mc-checkbox--checked' : ''}`}>
+                          {isSelected && <Check sx={{ fontSize: 12 }} />}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Send footer */}
+                <div className="mc-modal-footer mc-bc-footer">
+                  <div className="mc-bc-footer-hint">
+                    {selectedMembers.length > 0 && broadcastMessage.trim()
+                      ? <><LockOutlined sx={{ fontSize: 11 }} /> Sending to {selectedMembers.length} {selectedMembers.length === 1 ? 'person' : 'people'} privately</>
+                      : selectedMembers.length > 0
+                      ? 'Add a message to send'
+                      : 'Select at least one recipient'}
+                  </div>
                   <Button
                     variant="contained" color="primary" size="large"
-                    className="mc-create-btn" disabled={!selectedMembers.length}
-                    onClick={modalStep === 'group' ? createGroupChat : createBroadcast}
-                    startIcon={modalStep === 'group' ? <GroupOutlined sx={{ fontSize: 16 }} /> : <CampaignOutlined sx={{ fontSize: 16 }} />}
+                    className="mc-create-btn mc-bc-send-btn"
+                    disabled={!selectedMembers.length || !broadcastMessage.trim()}
+                    onClick={createBroadcast}
+                    startIcon={<CampaignOutlined sx={{ fontSize: 16 }} />}
                   >
-                    {modalStep === 'group' ? 'Create Group' : 'Create Broadcast'}
+                    Send Announcement
                   </Button>
                 </div>
               </>

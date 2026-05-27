@@ -260,7 +260,7 @@ interface ActionItemV2 extends EnhancedActionItem {
 const generateMockActionItems = (): ActionItemV2[] => [
   {
     id: '2',
-    title: 'Approve C&A Women\'s Wall planogram reset',
+    title: "Approve Women's Wall planogram reset",
     type: 'ASSIGNED',
     source_module: 'Planogram',
     priority_score: 98,
@@ -332,11 +332,11 @@ const generateMockActionItems = (): ActionItemV2[] => [
       poNumber: 'PO-2024-0892',
     },
     shipmentItems: [
-      { id: 'si1', sku: 'SKU-1122', name: 'Paper Towels (6pk)', ordered: 40, received: 40, status: 'complete' },
-      { id: 'si2', sku: 'SKU-3344', name: 'Hand Sanitizer 500ml', ordered: 30, received: 28, status: 'short', variance: -2 },
-      { id: 'si3', sku: 'SKU-5566', name: 'Trash Bags (50ct)', ordered: 25, received: 25, status: 'complete' },
-      { id: 'si4', sku: 'SKU-7788', name: 'Cleaning Spray', ordered: 15, received: 15, status: 'complete' },
-      { id: 'si5', sku: 'SKU-9900', name: 'Disposable Gloves (Box)', ordered: 10, received: 12, status: 'over', variance: 2 },
+      { id: 'si1', sku: 'WOM-DRS-014', name: 'New Season Dresses — Navy',    ordered: 40, received: 40, status: 'complete' },
+      { id: 'si2', sku: 'MEN-DNM-003', name: 'Denim Restock — Dark Wash',    ordered: 30, received: 28, status: 'short', variance: -2 },
+      { id: 'si3', sku: 'KID-TSH-012', name: 'Kids Tees Summer Range',       ordered: 25, received: 25, status: 'complete' },
+      { id: 'si4', sku: 'ACC-BAG-005', name: 'Canvas Tote Bags — New Colour',ordered: 15, received: 15, status: 'complete' },
+      { id: 'si5', sku: 'SEA-JKT-004', name: 'Seasonal Jackets Restock',     ordered: 10, received: 12, status: 'over', variance: 2 },
     ],
     deep_link: {
       target_module: 'receiving',
@@ -577,9 +577,9 @@ const DM_EAC_GROUPS = [
     taskTotal: 18, taskOpen: 8, taskProg: 7, taskSub: 3, taskOver: 2,
     lastDetected: '4 min ago',
     stores: [
-      { name: 'Nashville Flagship #2034',    detail: '7 SKUs · Personal Care · 3 open tasks',          status: 'critical'  as const, tasks: 3, manager: 'Sarah Johnson' },
-      { name: 'Memphis Central #1876',       detail: '5 SKUs · Household · In progress',               status: 'progress'  as const, tasks: 4, manager: 'Marcus Reed' },
-      { name: 'Franklin Town Center #1234',  detail: '4 SKUs · Baby Care · In progress',               status: 'progress'  as const, tasks: 3, manager: 'Lisa Chen' },
+      { name: 'Nashville Flagship #2034',    detail: "7 SKUs · Women's Apparel · 3 open tasks",        status: 'critical'  as const, tasks: 3, manager: 'Sarah Johnson' },
+      { name: 'Memphis Central #1876',       detail: "5 SKUs · Men's Apparel · In progress",           status: 'progress'  as const, tasks: 4, manager: 'Marcus Reed' },
+      { name: 'Franklin Town Center #1234',  detail: '4 SKUs · Kids Apparel · In progress',            status: 'progress'  as const, tasks: 3, manager: 'Lisa Chen' },
       { name: 'Murfreesboro Plaza #4532',    detail: '4 SKUs · Nutrition · 4 open tasks',              status: 'critical'  as const, tasks: 4, manager: 'Kevin Patel' },
       { name: 'Chattanooga Riverside #2198', detail: '3 SKUs · Snacks · Submitted for review',         status: 'submitted' as const, tasks: 4, manager: 'Rachel Torres' },
     ],
@@ -609,10 +609,10 @@ const DM_EAC_GROUPS = [
     taskTotal: 9, taskOpen: 4, taskProg: 3, taskSub: 2, taskOver: 1,
     lastDetected: '8 min ago',
     stores: [
-      { name: 'Nashville Flagship #2034',   detail: 'Beverage Aisle 3A · 3 POG deviations · 2 open tasks', status: 'critical'  as const, tasks: 2, manager: 'Sarah Johnson' },
+      { name: 'Nashville Flagship #2034',   detail: "Women's Wall 3A · 3 POG deviations · 2 open tasks",  status: 'critical'  as const, tasks: 2, manager: 'Sarah Johnson' },
       { name: 'Memphis Central #1876',      detail: 'Snacks End Cap 7B · Correction in progress',           status: 'progress'  as const, tasks: 3, manager: 'Marcus Reed' },
-      { name: 'Franklin Town Center #1234', detail: 'Dairy Section 2C · 2 open tasks',                      status: 'critical'  as const, tasks: 2, manager: 'Lisa Chen' },
-      { name: 'Knoxville East #3421',       detail: 'HBA Section 4D · Submitted for review',                status: 'submitted' as const, tasks: 2, manager: 'David Park' },
+      { name: 'Franklin Town Center #1234', detail: 'Kids Section 2C · 2 open tasks',                       status: 'critical'  as const, tasks: 2, manager: 'Lisa Chen' },
+      { name: 'Knoxville East #3421',       detail: 'Accessories End Cap 4D · Submitted for review',         status: 'submitted' as const, tasks: 2, manager: 'David Park' },
     ],
   },
 ];
@@ -712,20 +712,20 @@ export const StoreOpsHome: React.FC = () => {
 
   const atRiskSkus = [
     // Franklin Town Center #1234 — 5 SKUs
-    { sku: 'SKU-12345', name: 'Premium Coffee Blend 12oz', currentStock: 2, safetyStock: 15, reorderQty: 50, supplier: 'Coffee Co.', leadTime: '3 days', store: 'Franklin Town Center #1234' },
-    { sku: 'SKU-23456', name: 'Organic Milk 1 Gallon', currentStock: 5, safetyStock: 20, reorderQty: 40, supplier: 'Dairy Fresh', leadTime: '1 day', store: 'Franklin Town Center #1234' },
-    { sku: 'SKU-11001', name: 'Almond Butter 16oz', currentStock: 1, safetyStock: 10, reorderQty: 25, supplier: 'NutHouse', leadTime: '4 days', store: 'Franklin Town Center #1234' },
-    { sku: 'SKU-11002', name: 'Sparkling Water 12pk', currentStock: 6, safetyStock: 30, reorderQty: 80, supplier: 'AquaPure', leadTime: '2 days', store: 'Franklin Town Center #1234' },
-    { sku: 'SKU-11003', name: 'Baby Spinach 5oz', currentStock: 3, safetyStock: 18, reorderQty: 35, supplier: 'GreenLeaf', leadTime: '1 day', store: 'Franklin Town Center #1234' },
+    { sku: 'WOM-DRS-014', name: 'Floral Midi Dress — Navy',       currentStock: 2,  safetyStock: 15, reorderQty: 50, supplier: 'DC-Central', leadTime: '3 days', store: 'Franklin Town Center #1234' },
+    { sku: 'WOM-TOP-014', name: "Women's V-Neck Basics",          currentStock: 5,  safetyStock: 20, reorderQty: 40, supplier: 'DC-Central', leadTime: '2 days', store: 'Franklin Town Center #1234' },
+    { sku: 'WOM-DNM-005', name: 'High-Rise Skinny Jeans',         currentStock: 1,  safetyStock: 10, reorderQty: 25, supplier: 'DC-South',   leadTime: '4 days', store: 'Franklin Town Center #1234' },
+    { sku: 'WOM-ACT-002', name: 'Athletic Leggings',              currentStock: 6,  safetyStock: 30, reorderQty: 80, supplier: 'DC-Central', leadTime: '2 days', store: 'Franklin Town Center #1234' },
+    { sku: 'KID-DRS-008', name: 'Kids Party Dress',               currentStock: 3,  safetyStock: 18, reorderQty: 35, supplier: 'DC-Central', leadTime: '3 days', store: 'Franklin Town Center #1234' },
     // Clarksville Crossing #5678 — 4 SKUs
-    { sku: 'SKU-34567', name: 'Whole Wheat Bread', currentStock: 3, safetyStock: 12, reorderQty: 30, supplier: 'Baker Bros', leadTime: '2 days', store: 'Clarksville Crossing #5678' },
-    { sku: 'SKU-45678', name: 'Free Range Eggs 12ct', currentStock: 8, safetyStock: 25, reorderQty: 60, supplier: 'Farm Direct', leadTime: '2 days', store: 'Clarksville Crossing #5678' },
-    { sku: 'SKU-22001', name: 'Oat Milk 64oz', currentStock: 2, safetyStock: 14, reorderQty: 35, supplier: 'Dairy Fresh', leadTime: '1 day', store: 'Clarksville Crossing #5678' },
-    { sku: 'SKU-22002', name: 'Avocado Oil 500ml', currentStock: 4, safetyStock: 16, reorderQty: 20, supplier: 'OliveTree', leadTime: '5 days', store: 'Clarksville Crossing #5678' },
+    { sku: 'MEN-DNM-003', name: 'Slim Fit Denim — Dark Wash',     currentStock: 3,  safetyStock: 12, reorderQty: 30, supplier: 'DC-South',   leadTime: '2 days', store: 'Clarksville Crossing #5678' },
+    { sku: 'MEN-CHN-007', name: "Men's Stretch Chino",            currentStock: 8,  safetyStock: 25, reorderQty: 60, supplier: 'DC-Central', leadTime: '2 days', store: 'Clarksville Crossing #5678' },
+    { sku: 'MEN-OUT-006', name: 'Puffer Jacket',                  currentStock: 2,  safetyStock: 14, reorderQty: 35, supplier: 'DC-Central', leadTime: '3 days', store: 'Clarksville Crossing #5678' },
+    { sku: 'ACC-BAG-005', name: 'Canvas Tote Bag',                currentStock: 4,  safetyStock: 16, reorderQty: 20, supplier: 'DC-North',   leadTime: '5 days', store: 'Clarksville Crossing #5678' },
     // Johnson City Mall #9012 — 3 SKUs
-    { sku: 'SKU-56789', name: 'Greek Yogurt 32oz', currentStock: 4, safetyStock: 18, reorderQty: 45, supplier: 'Dairy Fresh', leadTime: '1 day', store: 'Johnson City Mall #9012' },
-    { sku: 'SKU-33001', name: 'Protein Bar Variety 12pk', currentStock: 1, safetyStock: 12, reorderQty: 30, supplier: 'FitFoods', leadTime: '3 days', store: 'Johnson City Mall #9012' },
-    { sku: 'SKU-33002', name: 'Cold Brew Coffee 32oz', currentStock: 3, safetyStock: 15, reorderQty: 40, supplier: 'Coffee Co.', leadTime: '3 days', store: 'Johnson City Mall #9012' },
+    { sku: 'SEA-JKT-004', name: 'Seasonal Rain Jacket',           currentStock: 4,  safetyStock: 18, reorderQty: 45, supplier: 'DC-Central', leadTime: '3 days', store: 'Johnson City Mall #9012' },
+    { sku: 'KID-TSH-012', name: 'Kids Color Block Tee',           currentStock: 1,  safetyStock: 12, reorderQty: 30, supplier: 'DC-Central', leadTime: '3 days', store: 'Johnson City Mall #9012' },
+    { sku: 'ACC-SCF-009', name: 'Silk Blend Scarf',               currentStock: 3,  safetyStock: 15, reorderQty: 40, supplier: 'DC-North',   leadTime: '4 days', store: 'Johnson City Mall #9012' },
   ];
 
   const teamMembers = [
@@ -1001,8 +1001,8 @@ export const StoreOpsHome: React.FC = () => {
           data: {
             id: 'alert-recall',
             severity: 'critical',
-            title: 'Product Recall — Organic Baby Lotion Batch #7742',
-            description: 'Organic Baby Lotion Batch #7742 must be removed immediately. FDA safety alert issued 2 hours ago.',
+            title: "Product Recall — Children's Pajamas Drawstring Safety Batch #7742",
+            description: "Children's Pajamas — Drawstring Safety Recall Batch #7742 must be removed immediately. Safety alert issued 2 hours ago.",
             impactSummary: '3 stores impacted · Immediate removal required',
             stores: impactedStores.map(s => ({
               id: s.id,
@@ -1979,7 +1979,7 @@ export const StoreOpsHome: React.FC = () => {
                 </div>
                 <div>
                   <h2>Product Recall — Impacted Stores</h2>
-                  <span className="recall-header-sub">Organic Baby Lotion Batch #7742 · FDA Safety Alert</span>
+                  <span className="recall-header-sub">Children's Pajamas Drawstring Recall Batch #7742 · Safety Alert</span>
                 </div>
               </div>
               <button className="action-modal-close" onClick={() => setShowViewStoresModal(false)}>

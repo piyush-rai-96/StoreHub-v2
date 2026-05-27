@@ -182,7 +182,7 @@ export const Portal: React.FC = () => {
   return (
     <div className="portal-wrap">
       <HomePage
-        clientName="C&A"
+        clientName="StoreHub"
         userName={user?.name?.split(' ')[0] || 'there'}
         toolKitItems={toolKitItems}
         smartAiItems={smartAiItems}

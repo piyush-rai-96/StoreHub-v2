@@ -1,5 +1,9 @@
 export type SignalType =
   | 'local_event'
+  | 'major_sports_event'
+  | 'entertainment_event'
+  | 'instore_event'
+  | 'community_gathering'
   | 'weather'
   | 'competitor_activity'
   | 'road_closure'
