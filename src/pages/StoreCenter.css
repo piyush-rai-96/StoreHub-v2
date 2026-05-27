@@ -3164,7 +3164,7 @@ table.wow-table.sc-inv-table tbody tr.sc-inv-row--watch:hover td {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  margin: 20px 0 8px 0;
+  margin: 20px 0 20px 0;
 }
 
 .sc-sm-broadcast-card.hq-broadcasts-card {
