@@ -217,11 +217,22 @@ const getStoreBrief = (store: StoreMeta): AIDailyBriefData => {
   const convYoY = store.dpi >= 88 ? '+1.8pp' : store.dpi >= 78 ? 'flat' : store.dpi >= 65 ? '–2.1pp' : '–5.8pp';
   const basketSize = store.dpi >= 88 ? '$62.40 (+4.2% YoY)' : store.dpi >= 78 ? '$56.10 (+3.5% YoY)' : store.dpi >= 65 ? '$52.40 (flat YoY)' : '$48.20 (–15.3% over 4 wks)';
   const transactions = store.dpi >= 88 ? '3,820' : store.dpi >= 78 ? '2,810' : store.dpi >= 65 ? '1,940' : '1,420';
-  const gmRate = store.dpi >= 88 ? '38.2% (+0.8pp vs plan)' : store.dpi >= 78 ? '35.1% (–0.7pp vs plan)' : store.dpi >= 65 ? '32.1% (–3.7pp vs plan)' : '28.6% (–9.2pp vs plan)';
+  const gmRate = store.dpi >= 88 ? '38.2% (+0.8pp vs plan)' : store.dpi >= 78 ? '35.1% (–0.7pp vs plan)' : store.dpi >= 60 ? '32.1% (–3.7pp vs plan)' : '28.6% (–9.2pp vs plan)';
+  const revenueContrib = (['17.8%', '15.7%', '13.6%', '12.5%', '11.6%', '10.6%', '9.6%', '8.3%'])[store.rank - 1] || '11%';
+  const districtRankLabel = store.rank === 1
+    ? 'the district benchmark — #1 of 8'
+    : store.rank <= 3 ? `top-3 performer — #${store.rank} of ${store.totalStores}`
+    : store.rank <= 5 ? `mid-pack — #${store.rank} of ${store.totalStores}`
+    : `below district average — #${store.rank} of ${store.totalStores}`;
+  const districtGapNote = store.rank === 1
+    ? 'You are the district anchor — no gap to close.'
+    : store.rank === 2
+    ? 'A few points separate you from the #1 position.'
+    : `Gap to top-3 is approximately ${store.dpi >= 78 ? 6 : store.dpi >= 60 ? 14 : 24} SPI points.`;
 
   if (isExcellent) {
     return {
-      greeting: `${store.name} (#${store.number}) delivered a standout week — SPI ${store.dpi}, #${store.rank} of ${store.totalStores} in the district. Net sales beat plan by +8.4% driven by Summer 2 floorset execution and favorable weekend weather. Here is your full weekly business recap.`,
+      greeting: `${store.name} (#${store.number}) delivered a standout week — SPI ${store.dpi}, ${districtRankLabel}. Net sales beat plan by ${vsPlan} driven by Summer 2 floorset execution and favorable weekend weather. Here is your full weekly business recap.`,
       sections: [
         {
           title: 'Weekly Scorecard — vs Plan, LY, Forecast & Comp Week',
@@ -287,9 +298,9 @@ const getStoreBrief = (store: StoreMeta): AIDailyBriefData => {
           title: 'District Context — Your Store vs the District',
           icon: 'district',
           bullets: [
-            `This store is <strong>#${store.rank} of ${store.totalStores} in the district</strong> this week. SPI ${store.dpi} is well above the district average. Momentum is <strong>${store.momentum}</strong> — sustained performance over 6 consecutive weeks.`,
-            'You contributed 17.8% of total district weekly revenue. Indexed productivity per sq ft: +24% above district average.',
-            'District DPI this week: <strong>87 (Excellence)</strong>. Your store anchors this ranking. All 4 active HQ broadcasts acknowledged — full compliance.',
+            `This store is <strong>${districtRankLabel}</strong>. SPI ${store.dpi} is well above the district average of 79. Momentum: <strong>${store.momentum}</strong> — sustained for 6 consecutive weeks.`,
+            `You contributed <strong>${revenueContrib}</strong> of total District 14 weekly revenue ($1.26M). Indexed productivity per sq ft: +${store.rank === 1 ? '24' : '18'}% above district average.`,
+            `District 14 DPI this week: <strong>87 (Excellence tier, #2 nationally)</strong>. Your store is a key driver of this ranking. All 4 active HQ broadcasts acknowledged — full compliance.`,
           ],
         },
         {
@@ -303,7 +314,7 @@ const getStoreBrief = (store: StoreMeta): AIDailyBriefData => {
           ],
         },
       ],
-      closing: `${store.name} is the district benchmark this week. The only open action is the Accessories facing correction — a 20-minute fix. Maintain execution, document the playbook, and start positioning for Fall.`,
+      closing: `${store.name} is ${store.rank === 1 ? 'the district benchmark' : 'a top district performer'} this week. The only open action is the Accessories facing correction — a 20-minute fix. Maintain execution, document the playbook, and start positioning for Fall.`,
     };
   }
 
@@ -374,9 +385,9 @@ const getStoreBrief = (store: StoreMeta): AIDailyBriefData => {
           title: 'District Context — Your Store vs the District',
           icon: 'district',
           bullets: [
-            `Ranked <strong>#${store.rank} of ${store.totalStores}</strong> in the district. SPI ${store.dpi} — the gap to top-3 is approximately 4–6 SPI points, achievable within 2 weeks with the Denim, Accessories, and checkout fixes.`,
-            'Traffic is below district median for comparable store sizes. The –2.1% YoY trend warrants a trade area competitive review.',
-            '<strong>Broadcast status:</strong> Review the "Visual Merchandising — Summer 2" HQ broadcast — it contains the Accessories Endcap reset spec, the #1 priority action this week.',
+            `Ranked <strong>${districtRankLabel}</strong>. SPI ${store.dpi} — ${districtGapNote} Momentum is <strong>${store.momentum}</strong>.`,
+            `This store contributes <strong>${revenueContrib}</strong> of total District 14 weekly revenue. District 14 is ranked #2 of 22 nationally at DPI 87 — your store's execution directly supports this standing.`,
+            '<strong>Broadcast action:</strong> Review the "Visual Merchandising — Summer 2" HQ broadcast — it contains the Accessories Endcap reset spec, which is the #1 priority action this week.',
           ],
         },
         {
@@ -796,14 +807,14 @@ const scCategorySkill: Record<string, { skill: string; logic: string }> = {
 
 // ── Mock Data ──────────────────────────────────────────
 const storesData: StoreMeta[] = [
-  { id: 's1', name: 'Nashville Flagship',    number: '2034', cluster: 'Metro North', format: 'Flagship',  dpi: 94, dpiDelta:  3.2, momentum: 'rising',   rank: 1, totalStores: 8, risk: 'low',      lastRefresh: '5 min ago',  tier: 'Excellence',      manager: 'Sarah Johnson' },
-  { id: 's2', name: 'Memphis Central',       number: '1876', cluster: 'Metro North', format: 'Full-Line', dpi: 91, dpiDelta:  2.1, momentum: 'rising',   rank: 2, totalStores: 8, risk: 'low',      lastRefresh: '8 min ago',  tier: 'Excellence',      manager: 'Marcus Reed' },
-  { id: 's3', name: 'Knoxville East',        number: '3421', cluster: 'Metro West',  format: 'Full-Line', dpi: 85, dpiDelta:  0.5, momentum: 'stable',   rank: 3, totalStores: 8, risk: 'low',      lastRefresh: '12 min ago', tier: 'Excellence',      manager: 'David Park' },
-  { id: 's4', name: 'Chattanooga Riverside', number: '2198', cluster: 'Metro West',  format: 'Compact',   dpi: 82, dpiDelta: -1.2, momentum: 'stable',   rank: 4, totalStores: 8, risk: 'moderate', lastRefresh: '10 min ago', tier: 'Performing',      manager: 'Rachel Torres' },
-  { id: 's5', name: 'Murfreesboro Plaza',    number: '4532', cluster: 'South Bay',   format: 'Full-Line', dpi: 78, dpiDelta: -3.5, momentum: 'declining', rank: 5, totalStores: 8, risk: 'moderate', lastRefresh: '15 min ago', tier: 'Performing',      manager: 'Kevin Patel' },
-  { id: 's6', name: 'Franklin Town Center',  number: '1234', cluster: 'East Region', format: 'Compact',   dpi: 72, dpiDelta: -6.8, momentum: 'declining', rank: 6, totalStores: 8, risk: 'high',     lastRefresh: '9 min ago',  tier: 'Needs Attention', manager: 'Lisa Chen' },
-  { id: 's7', name: 'Clarksville Crossing',  number: '5678', cluster: 'South Bay',   format: 'Compact',   dpi: 65, dpiDelta: -9.2, momentum: 'declining', rank: 7, totalStores: 8, risk: 'high',     lastRefresh: '20 min ago', tier: 'Needs Attention', manager: 'James Williams' },
-  { id: 's8', name: 'Johnson City Mall',     number: '9012', cluster: 'East Region', format: 'Compact',   dpi: 58, dpiDelta:-12.4, momentum: 'declining', rank: 8, totalStores: 8, risk: 'high',     lastRefresh: '14 min ago', tier: 'Needs Attention', manager: 'Priya Sharma' },
+  { id: 's1', name: 'Nashville Flagship',   number: '2034', cluster: 'Metro North', format: 'Flagship',  dpi: 94, dpiDelta:  3.2, momentum: 'rising',   rank: 1, totalStores: 8, risk: 'low',      lastRefresh: '5 min ago',  tier: 'Excellence',  manager: 'Sarah Johnson' },
+  { id: 's2', name: 'Memphis Central',      number: '1876', cluster: 'Metro North', format: 'Full-Line', dpi: 88, dpiDelta:  1.4, momentum: 'stable',   rank: 2, totalStores: 8, risk: 'low',      lastRefresh: '8 min ago',  tier: 'Excellence',  manager: 'Marcus Reed' },
+  { id: 's3', name: 'Franklin Town Center', number: '1234', cluster: 'East Region', format: 'Compact',   dpi: 82, dpiDelta:  0.8, momentum: 'stable',   rank: 3, totalStores: 8, risk: 'low',      lastRefresh: '9 min ago',  tier: 'Performing',  manager: 'Lisa Chen' },
+  { id: 's4', name: 'Murfreesboro Plaza',   number: '4532', cluster: 'South Bay',   format: 'Full-Line', dpi: 78, dpiDelta: -1.8, momentum: 'declining', rank: 4, totalStores: 8, risk: 'moderate', lastRefresh: '15 min ago', tier: 'Performing',  manager: 'Kevin Patel' },
+  { id: 's5', name: 'Knoxville Centre',     number: '3421', cluster: 'Metro West',  format: 'Full-Line', dpi: 74, dpiDelta: -2.4, momentum: 'declining', rank: 5, totalStores: 8, risk: 'moderate', lastRefresh: '12 min ago', tier: 'Performing',  manager: 'David Park' },
+  { id: 's6', name: 'Clarksville Crossing', number: '5678', cluster: 'South Bay',   format: 'Compact',   dpi: 68, dpiDelta: -4.6, momentum: 'declining', rank: 6, totalStores: 8, risk: 'high',     lastRefresh: '20 min ago', tier: 'At-Risk',     manager: 'James Williams' },
+  { id: 's7', name: 'Chattanooga Square',   number: '2198', cluster: 'Metro West',  format: 'Compact',   dpi: 62, dpiDelta: -6.8, momentum: 'declining', rank: 7, totalStores: 8, risk: 'high',     lastRefresh: '10 min ago', tier: 'At-Risk',     manager: 'Rachel Torres' },
+  { id: 's8', name: 'Johnson City Mall',    number: '9012', cluster: 'East Region', format: 'Compact',   dpi: 58, dpiDelta:-12.4, momentum: 'declining', rank: 8, totalStores: 8, risk: 'high',     lastRefresh: '14 min ago', tier: 'Crisis',      manager: 'Priya Sharma' },
 ];
 
 const getAuditData = (store: StoreMeta): AuditWeek[] => {

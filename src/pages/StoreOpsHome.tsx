@@ -599,7 +599,7 @@ const DM_EAC_GROUPS = [
       { name: 'Memphis Central #1876',       detail: "5 SKUs · Men's Apparel · In progress",           status: 'progress'  as const, tasks: 4, manager: 'Marcus Reed' },
       { name: 'Franklin Town Center #1234',  detail: '4 SKUs · Kids Apparel · In progress',            status: 'progress'  as const, tasks: 3, manager: 'Lisa Chen' },
       { name: 'Murfreesboro Plaza #4532',    detail: '4 SKUs · Nutrition · 4 open tasks',              status: 'critical'  as const, tasks: 4, manager: 'Kevin Patel' },
-      { name: 'Chattanooga Riverside #2198', detail: '3 SKUs · Snacks · Submitted for review',         status: 'submitted' as const, tasks: 4, manager: 'Rachel Torres' },
+      { name: 'Chattanooga Square #2198',    detail: '3 SKUs · Snacks · Submitted for review',         status: 'submitted' as const, tasks: 4, manager: 'Rachel Torres' },
     ],
   },
   {
@@ -630,7 +630,7 @@ const DM_EAC_GROUPS = [
       { name: 'Nashville Flagship #2034',   detail: "Women's Wall 3A · 3 POG deviations · 2 open tasks",  status: 'critical'  as const, tasks: 2, manager: 'Sarah Johnson' },
       { name: 'Memphis Central #1876',      detail: 'Snacks End Cap 7B · Correction in progress',           status: 'progress'  as const, tasks: 3, manager: 'Marcus Reed' },
       { name: 'Franklin Town Center #1234', detail: 'Kids Section 2C · 2 open tasks',                       status: 'critical'  as const, tasks: 2, manager: 'Lisa Chen' },
-      { name: 'Knoxville East #3421',       detail: 'Accessories End Cap 4D · Submitted for review',         status: 'submitted' as const, tasks: 2, manager: 'David Park' },
+      { name: 'Knoxville Centre #3421',       detail: 'Accessories End Cap 4D · Submitted for review',         status: 'submitted' as const, tasks: 2, manager: 'David Park' },
     ],
   },
 ];
@@ -1088,8 +1088,8 @@ export const StoreOpsHome: React.FC = () => {
             impactSummary: '3 stores affected · VoC Score impact risk',
             stores: [
               { id: '4532', name: 'Murfreesboro Plaza #4532', status: 'warning', detail: '+22% mentions · SEA Cleanliness score dropped 8pts', manager: 'Marcus Hill' },
-              { id: '2198', name: 'Chattanooga Riverside #2198', status: 'warning', detail: '+18% mentions · 2 failed cleanliness audits', manager: 'Brandon Cole' },
-              { id: '3421', name: 'Knoxville East #3421', status: 'info', detail: '+12% mentions · Cleaning hours reduced last month', manager: 'Megan Davis' },
+              { id: '2198', name: 'Chattanooga Square #2198', status: 'warning', detail: '+18% mentions · 2 failed cleanliness audits', manager: 'Brandon Cole' },
+              { id: '3421', name: 'Knoxville Centre #3421', status: 'info', detail: '+12% mentions · Cleaning hours reduced last month', manager: 'Megan Davis' },
             ],
             ctas: [
               { label: 'Ask Alan', icon: 'sparkles', action: 'copilot', kind: 'navigate' as const },

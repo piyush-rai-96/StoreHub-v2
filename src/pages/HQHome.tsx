@@ -76,11 +76,11 @@ interface BroadcastItem {
 
 // ─── Mock Data ───
 const MOCK_DISTRICTS: DistrictRow[] = [
-  { id: 'd14', name: 'District 14 — Tennessee', dpi: 82, compliance: 91, riskLevel: 'low', trend: 'up', dm: 'John Doe', dmEmail: 'john.doe.dm@impactanalytics.co' },
-  { id: 'd08', name: 'District 08 — Georgia', dpi: 76, compliance: 87, riskLevel: 'medium', trend: 'up', dm: 'Sarah Kim', dmEmail: 'sarah.kim@impactanalytics.co' },
-  { id: 'd22', name: 'District 22 — Carolina', dpi: 71, compliance: 83, riskLevel: 'medium', trend: 'down', dm: 'Marcus Reed', dmEmail: 'marcus.reed@impactanalytics.co' },
-  { id: 'd11', name: 'District 11 — Florida', dpi: 65, compliance: 78, riskLevel: 'high', trend: 'down', dm: 'Lisa Nguyen', dmEmail: 'lisa.nguyen@impactanalytics.co' },
-  { id: 'd19', name: 'District 19 — Alabama', dpi: 73, compliance: 85, riskLevel: 'medium', trend: 'flat', dm: 'David Park', dmEmail: 'david.park@impactanalytics.co' },
+  { id: 'd14', name: 'District 14 — Tennessee', dpi: 87, compliance: 96, riskLevel: 'low', trend: 'up', dm: 'John Doe', dmEmail: 'john.doe.dm@impactanalytics.co' },
+  { id: 'd19', name: 'District 19 — Alabama', dpi: 88, compliance: 94, riskLevel: 'low', trend: 'up', dm: 'David Park', dmEmail: 'david.park@impactanalytics.co' },
+  { id: 'd08', name: 'District 08 — Georgia', dpi: 84, compliance: 87, riskLevel: 'low', trend: 'up', dm: 'Sarah Kim', dmEmail: 'sarah.kim@impactanalytics.co' },
+  { id: 'd22', name: 'District 22 — Carolina', dpi: 82, compliance: 83, riskLevel: 'medium', trend: 'down', dm: 'Marcus Reed', dmEmail: 'marcus.reed@impactanalytics.co' },
+  { id: 'd11', name: 'District 11 — Florida', dpi: 79, compliance: 78, riskLevel: 'medium', trend: 'down', dm: 'Lisa Nguyen', dmEmail: 'lisa.nguyen@impactanalytics.co' },
 ];
 
 // HQ Broadcast tracking — overview KPIs + effectiveness list of HQ broadcasts to track
@@ -107,11 +107,11 @@ interface HQDistrictComplianceRow { district: string; districtId: string; ackRat
 interface HQBroadcastInsight { pattern: string; recommendation: string }
 // Network-level district compliance baseline (sorted high → low ack rate)
 const HQ_DISTRICT_COMPLIANCE_BASE: HQDistrictComplianceRow[] = [
-  { district: 'District 14 — Tennessee', districtId: 'd14', ackRate: 98, avgTime: '52m',  tier: 'top',       missedCount: 0 },
-  { district: 'District 08 — Georgia',   districtId: 'd08', ackRate: 92, avgTime: '1h 18m', tier: 'top',     missedCount: 1 },
-  { district: 'District 19 — Alabama',   districtId: 'd19', ackRate: 84, avgTime: '2h 30m', tier: 'at-risk', missedCount: 2 },
-  { district: 'District 22 — Carolina',  districtId: 'd22', ackRate: 72, avgTime: '3h 45m', tier: 'at-risk', missedCount: 4 },
-  { district: 'District 11 — Florida',   districtId: 'd11', ackRate: 60, avgTime: '5h 20m', tier: 'defaulter', missedCount: 6 },
+  { district: 'District 14 — Tennessee', districtId: 'd14', ackRate: 98, avgTime: '52m',    tier: 'top',        missedCount: 0 },
+  { district: 'District 19 — Alabama',   districtId: 'd19', ackRate: 96, avgTime: '58m',    tier: 'top',        missedCount: 0 },
+  { district: 'District 08 — Georgia',   districtId: 'd08', ackRate: 92, avgTime: '1h 18m', tier: 'top',        missedCount: 1 },
+  { district: 'District 22 — Carolina',  districtId: 'd22', ackRate: 72, avgTime: '3h 45m', tier: 'at-risk',    missedCount: 4 },
+  { district: 'District 11 — Florida',   districtId: 'd11', ackRate: 60, avgTime: '5h 20m', tier: 'defaulter',  missedCount: 6 },
 ];
 const HQ_BROADCAST_INSIGHTS: HQBroadcastInsight[] = [
   { pattern: 'Action Required broadcasts (signage kits, floorset shifts, test store compliance) achieve 94%+ ack within 2h network-wide — significantly faster than informational sends (avg 4h 50m).', recommendation: 'Continue tagging time-sensitive merchandising and transfer broadcasts as "Action Required" to drive urgency and reduce compliance gaps.' },
@@ -315,9 +315,9 @@ export const HQHome: React.FC = () => {
         impactSummary: 'District 14 +4% · District 08 +2% · District 22 –3%',
         entityLabel: 'Districts',
         entities: [
-          { id: 'd11', name: 'District 11 — Florida', status: 'critical', detail: 'DPI 65 · Compliance 78% · Trend declining', manager: 'Lisa Nguyen' },
-          { id: 'd22', name: 'District 22 — Carolina', status: 'warning', detail: 'DPI 71 · Compliance 83% · Trend declining', manager: 'Marcus Reed' },
-          { id: 'd14', name: 'District 14 — Tennessee', status: 'info', detail: 'DPI 82 · Compliance 91% · Trend improving (+4%)', manager: 'John Doe' },
+          { id: 'd11', name: 'District 11 — Florida', status: 'critical', detail: 'DPI 79 · Compliance 78% · Trend declining', manager: 'Lisa Nguyen' },
+          { id: 'd22', name: 'District 22 — Carolina', status: 'warning', detail: 'DPI 82 · Compliance 83% · Trend declining', manager: 'Marcus Reed' },
+          { id: 'd14', name: 'District 14 — Tennessee', status: 'info', detail: 'DPI 87 · Compliance 96% · Trend improving (+4%)', manager: 'John Doe' },
         ],
         ctas: [
           { label: 'Ask Alan', action: 'ai-copilot' },
