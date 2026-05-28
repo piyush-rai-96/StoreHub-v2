@@ -12,7 +12,7 @@ import RefreshOutlined from '@mui/icons-material/RefreshOutlined';
 import CalendarTodayOutlined from '@mui/icons-material/CalendarTodayOutlined';
 import BarChartOutlined from '@mui/icons-material/BarChartOutlined';
 import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined';
-import NotificationsOutlined from '@mui/icons-material/NotificationsOutlined';
+// NotificationsOutlined removed — no longer used in brief
 import StoreOutlined from '@mui/icons-material/StoreOutlined';
 import GroupOutlined from '@mui/icons-material/GroupOutlined';
 import StarBorderOutlined from '@mui/icons-material/StarBorderOutlined';
@@ -27,6 +27,11 @@ import Check from '@mui/icons-material/Check';
 import LanguageOutlined from '@mui/icons-material/LanguageOutlined';
 import DarkModeOutlined from '@mui/icons-material/DarkModeOutlined';
 import ShowChartOutlined from '@mui/icons-material/ShowChartOutlined';
+import WbSunnyOutlined from '@mui/icons-material/WbSunnyOutlined';
+import DirectionsWalkOutlined from '@mui/icons-material/DirectionsWalkOutlined';
+import CategoryOutlined from '@mui/icons-material/CategoryOutlined';
+import BusinessOutlined from '@mui/icons-material/BusinessOutlined';
+import CompareArrowsOutlined from '@mui/icons-material/CompareArrowsOutlined';
 import AssignmentTurnedInOutlined from '@mui/icons-material/AssignmentTurnedInOutlined';
 import HeadphonesOutlined from '@mui/icons-material/HeadphonesOutlined';
 import SyncOutlined from '@mui/icons-material/SyncOutlined';
@@ -438,58 +443,107 @@ export const HQHome: React.FC = () => {
   const aiBriefContent = (
     <div className="ai-brief-summary">
       <p className="ai-brief-paragraph">
-        Good {greetingPart}, {user?.name || 'Elena'}. The network delivered <strong>$5.2M in weekly revenue</strong> at <strong>+3.1% vs plan</strong> — steady at the enterprise level, but the picture is uneven across regions. Two districts need escalation calls today. One district is setting a new benchmark worth codifying across the chain.
+        Good {greetingPart}, {user?.name || 'Elena'}. The network delivered <strong>$5.2M in weekly revenue</strong> at <strong>+3.1% vs plan</strong> this week. The enterprise headline is solid, but the underlying picture is deeply uneven — District 14 is the network benchmark while two districts are in structural decline. This brief covers the full picture: network scorecard vs all benchmarks, regional and district breakdown, product division performance, traffic and conversion trends, external context, what drove the week, and HQ strategic priorities.
       </p>
 
       <div className="ai-brief-section">
-        <h3 className="ai-brief-section-title"><TrendingUpOutlined sx={{ fontSize: 14 }}/> Enterprise Financial Snapshot</h3>
+        <h3 className="ai-brief-section-title"><BarChartOutlined sx={{ fontSize: 14 }}/> Network Weekly Scorecard — vs Plan, LY, Forecast &amp; Comp Week</h3>
         <ul className="ai-brief-bullets">
-          <li>Network revenue: <strong>$5.2M</strong> (+3.1% vs plan, +2.0% WoW). Gross margin at <strong>38.4%</strong> — flat vs last week, +0.6pp vs Q1 plan. Full-price sell-through strong in Apparel (+4.2pp vs plan); markdowns contained at 11.2% of total revenue.</li>
-          <li>Regional split: Southeast leads at +6.2% vs plan. Central is flat at –0.3%. <strong>Pacific Northwest softened to –2.1%</strong> — the only region below plan, driven by District 11 (Florida) compliance drag and slower store traffic in Gainesville, Jacksonville clusters.</li>
-          <li>Summer 2 Floorset contribution: <strong>+$340K incremental above baseline</strong> in the 12 stores that completed full floorset by Sunday. Stores with partial sets averaged +$82K — a $258K execution gap that represents the addressable opportunity this week.</li>
+          <li><strong>vs Plan:</strong> Network revenue <strong>$5.2M (+3.1% vs plan)</strong>. 18 of 22 districts beat plan. Gross margin at <strong>34.1%</strong> — +0.6pp vs Q1 plan. Units sold: +2.8% vs plan. Markdown rate at 11.4% — within the 12% plan cap. Full-price sell-through strong in Apparel (+4.2pp vs plan).</li>
+          <li><strong>vs Last Year (LY):</strong> Network revenue <strong>+2.4% vs LY</strong>. Total transactions up +1.8% YoY. Conversion improved from 23.2% → <strong>23.8%</strong> (+0.6pp YoY). Average basket size up from $55.80 → $57.90 (+3.8% YoY). Network-level basket growth is consistent with the apparel premiumization strategy — the mix shift toward full-price Blazers, Dresses, and premium Denim is working.</li>
+          <li><strong>vs AI Forecast:</strong> +1.2% above AI network-level demand forecast. The model had flagged Semi Annual Sale upside at the top 10 revenue stores — this materialized. The model had also flagged execution risk at the bottom 4 stores — this also materialized. AI forecast accuracy improving: 87% of store-level predictions within ±5% this week.</li>
+          <li><strong>vs Comparable Week (52-wk prior):</strong> <strong>+2.9% net-comp</strong> — consistent like-for-like growth for the 3rd consecutive week. The network has not had 3 consecutive positive net-comp weeks since Q3 last year.</li>
         </ul>
       </div>
 
       <div className="ai-brief-section">
-        <h3 className="ai-brief-section-title"><BarChartOutlined sx={{ fontSize: 14 }}/> District Performance — Divergence Alert</h3>
+        <h3 className="ai-brief-section-title"><DirectionsWalkOutlined sx={{ fontSize: 14 }}/> Network Traffic &amp; Conversion Trends</h3>
         <ul className="ai-brief-bullets">
-          <li><strong>District 14 (Tennessee) — Excellence Tier:</strong> DPI 87, top 10% nationally. POG adherence at 97% — the highest sustained score in the network for 6 consecutive weeks. This district's execution model should be considered for chain-wide rollout. <em>Action: Codify the playbook this quarter.</em></li>
-          <li><strong>District 11 (Florida) — Watch:</strong> DPI 79, down 3 pts WoW. Revenue is highest in region ($1.52M) but execution quality is deteriorating — compliance dropped to 78%, spoilage losses are 3× chain average. The revenue vs execution divergence is widening and signals structural risk if left unaddressed.</li>
-          <li><strong>District 22 (Carolina) — Declining for 3rd week:</strong> DPI 82, –2 pts WoW. Root cause is 18% quarterly staff turnover creating onboarding gaps that flow directly into audit score declines. Needs an HQ-level retention policy intervention — district-level fixes have not reversed the trend.</li>
+          <li>Network total transactions: <strong>92,400 this week</strong> (+1.8% YoY). Peak day was Saturday (+16% vs Monday baseline) — driven by warm weather in the Southeast/Central regions and Semi Annual Sale awareness.</li>
+          <li>Network conversion rate: <strong>23.8%</strong> (+0.6pp YoY). However, the distribution is bifurcated: stores with complete Summer 2 floorsets averaged <strong>26.1% conversion</strong> vs <strong>19.4%</strong> in stores with partial sets. The <strong>6.7pp conversion gap</strong> between complete and incomplete floorsets is the single largest performance lever in the network this week.</li>
+          <li>Fitting room conversion (try-on → purchase): <strong>46% network average</strong>. District 14 leads at 52%. District 11 lags at 38%. The fitting room service gap is the #1 conversion driver at the store level and it is manageable with scheduling changes alone.</li>
+          <li>Checkout speed: <strong>VoC "Checkout Speed" complaints up +12% WoW</strong> across the network — concentrated in 8 stores in Districts 8 and 22. Root cause is consistent: single-register operation during 12–2 PM and 5–7 PM peak windows. This is a staffing instruction problem, not a structural one.</li>
         </ul>
       </div>
 
       <div className="ai-brief-section">
-        <h3 className="ai-brief-section-title"><TaskAltOutlined sx={{ fontSize: 14 }}/> Network Compliance &amp; Escalations</h3>
+        <h3 className="ai-brief-section-title"><WbSunnyOutlined sx={{ fontSize: 14 }}/> External Context — Weather, Events &amp; Macro Factors</h3>
         <ul className="ai-brief-bullets">
-          <li>Network-wide POG adherence: <strong>84.8%</strong> (–0.4pp WoW). The decline is concentrated in Districts 11 (78%) and 22 (83%). The remaining 3 districts averaged 94.2% — demonstrating that high adherence is achievable at scale.</li>
-          <li><strong>Safety escalation:</strong> Fire exit obstruction at Johnson City Mall (District 14) auto-flagged 2 hours ago. Store Manager acknowledgment still pending. This is a zero-tolerance regulatory exposure — escalate to Regional if not resolved by EOD.</li>
-          <li><strong>Product recall:</strong> Children's Pajamas Drawstring Safety Recall (Batch #7742) — 2 open critical items across impacted stores. Recall protocol compliance at 94% chain-wide. 6 stores still need confirmation of stock pull.</li>
-          <li>Overdue action backlog: <strong>12%</strong> of total (vs 8% target). Average resolution time held at 4.2h — within SLA. Primary contributors to backlog: Districts 11 and 22 at 19% and 16% overdue respectively.</li>
+          <li><strong>Weather — Southeast (Tennessee, Georgia, Carolina, Florida):</strong> Warm and sunny weekend across the Southeast (3–4°F above seasonal average). This drove measurable lifts in Dresses (+18% vs national baseline), Swimwear-adjacent categories, and light Outerwear. Estimated weather uplift to network revenue: <strong>+$180K above baseline weather scenario</strong>. Southeast stores with complete Summer 2 floorsets captured this uplift; partial-set stores did not — amplifying the execution gap.</li>
+          <li><strong>Weather — Pacific Northwest (Washington, Oregon):</strong> Cooler and wetter than seasonal average (–3°F). This suppressed Dress and summer category demand at 6 PNW stores. Estimated weather drag: –$42K vs baseline. Pacific Northwest is the only region where weather was a negative factor this week.</li>
+          <li><strong>Semi Annual Sale:</strong> Sale activation contributed an estimated <strong>+$620K incremental network revenue</strong> (AI attribution model vs non-sale baseline). High-traffic stores with clearance endcaps in optimal positions (high-traffic junction, not mid-aisle) generated 14–16% of transactions through clearance while maintaining full-price velocity — exactly the intended balance.</li>
+          <li><strong>Local Events — Graduation season:</strong> Graduation ceremonies across multiple metro markets (Vanderbilt, UT, Rhodes, Emory, UNC) drove premium-adjacent traffic Saturday AM in 14 cities. Formal-adjacent purchases (Blazer, Midi Dress, statement accessories) up +26% Saturday vs Tuesday average across the affected markets. This was not in the AI demand forecast — it is an upside driver that partially explains the +1.2% vs forecast beat.</li>
+          <li><strong>Macro consumer sentiment:</strong> No significant macro shifts this week. Consumer confidence index stable. Credit card spend data (external feed) shows apparel spending up +2.1% vs the same week last year, consistent with the network's +2.4% LY performance.</li>
         </ul>
       </div>
 
       <div className="ai-brief-section">
-        <h3 className="ai-brief-section-title"><NotificationsOutlined sx={{ fontSize: 14 }}/> Broadcast Reach &amp; Field Communication</h3>
+        <h3 className="ai-brief-section-title"><CategoryOutlined sx={{ fontSize: 14 }}/> Product Division Performance — Network View</h3>
         <ul className="ai-brief-bullets">
-          <li>4 active HQ broadcasts this week. Overall reach: <strong>94.1%</strong> (+1.8pp WoW) — highest in 8 weeks. But acknowledgement rate diverges sharply: Districts 14 and 19 at 98%+ vs Districts 11 and 22 at <strong>below 70%</strong>. Low ack strongly correlates with compliance score declines (r = 0.81).</li>
-          <li><strong>"Summer 2 Floorset — Overnight Shift Scheduling"</strong> issued 2h ago: 19 of 32 stores acknowledged. 13-store gap remains. Recommend a DM-level nudge to non-acknowledged stores before 6 PM to protect weekend execution.</li>
-          <li>Average HQ broadcast response time improved from 4.8h → <strong>3.4h</strong> WoW, driven by the Semi Annual Sale urgency. Districts with weekly DM huddles averaged 2.1h response — 38% faster than those without.</li>
+          <li><strong>Women's Division (+9.4% vs plan — network leader):</strong> Dresses: +17% driven by weather and Summer 2 execution at top stores. Basics: +8.2%. Blazers: +11% in stores with complete floorsets, –4% in partial-set stores. Accessories: –2.8% — an Endcap facing compliance issue at 5+ stores in 3 districts. Accessories facing correction is an estimated <strong>+$28K/week network revenue opportunity</strong>.</li>
+          <li><strong>Men's Division (+3.8% vs plan):</strong> Polo Classic and Compression Tee strong across all regions. Denim: +4.2% nationally — the new Slim Fit washes are performing. Oxford Button-Down: flat. Men's is the most regionally consistent division — least variance district-to-district.</li>
+          <li><strong>Kids (+2.1% vs plan):</strong> Color Block Tee and Cargo Shorts leading. Kids Party Dress is the consistent laggard — a supply chain-level size-run gap (XS, 4T) is limiting conversion in 14 of 22 districts. <strong>A national DC assortment correction for Kids Party Dress XS/4T is recommended as a priority supply chain action this week.</strong></li>
+          <li><strong>Accessories (–2.8% vs plan — network miss):</strong> Endcap execution is inconsistent across 18 of 22 districts. Average Accessories Endcap at 4.3 facings vs the 6-facing POG spec — a systemic execution gap. A network-wide broadcast requiring Accessories Endcap facing correction to 6-spec would recover an estimated $28K/week immediately.</li>
+          <li><strong>Footwear (+7.2% vs plan — consistent outperformer):</strong> Running Shoes Elite and Canvas Sneakers both strong in every region. The self-service format makes footwear resilient to staffing and fitting room variance — a structural advantage during execution challenges.</li>
+        </ul>
+      </div>
+
+      <div className="ai-brief-section">
+        <h3 className="ai-brief-section-title"><ShowChartOutlined sx={{ fontSize: 14 }}/> Seasonal vs. NOS / Core — Network Performance</h3>
+        <ul className="ai-brief-bullets">
+          <li><strong>Seasonal (Summer 2): 56% of network revenue</strong> (vs 58% plan mix). Under-indexed because 20 of 32 stores have incomplete floorsets — the two-thirds of the network that is completely set is averaging 62% seasonal mix (above plan); the one-third that is partially set is at only 44%. The seasonal revenue gap is entirely execution-driven.</li>
+          <li><strong>NOS / Core: 44% of network revenue.</strong> Core items (V-Neck Basics, Classic Tee, Polo, Slim Fit Denim) are healthy and above plan across all regions. The NOS base provides revenue floor stability — even in the worst-performing stores, core items are performing.</li>
+          <li><strong>Full-price sell-through on Summer 2 hero items:</strong> Network average <strong>86%</strong> — above the 84% plan target. Strong full-price sell-through signals no early markdown pressure on Summer 2 for at least 3 more weeks. The exceptions are Johnson City Mall (29% seasonal mix) and 2 Pacific Northwest stores where weather has suppressed summer category demand.</li>
+          <li><strong>Clearance:</strong> Network-wide markdown rate 11.4% — within the 12% plan cap. Semi Annual Sale clearance velocity is healthy. No network-wide over-stocked clearance risk. The 3 Crisis-tier stores have higher-than-planned clearance rates (18–24%) which is compressing their GMs below plan.</li>
+        </ul>
+      </div>
+
+      <div className="ai-brief-section">
+        <h3 className="ai-brief-section-title"><BusinessOutlined sx={{ fontSize: 14 }}/> Regional &amp; District Performance Matrix</h3>
+        <ul className="ai-brief-bullets">
+          <li><strong>Southeast Region (Districts 8, 11, 14, 19, 22) — DPI 83 avg:</strong> District 14 (Tennessee, DPI 87) and District 19 (Alabama, DPI 88) are Excellence Tier — the two strongest districts in the network. District 11 (Florida) and District 22 (Carolina) are declining and require HQ-level structural intervention. Southeast is the highest-revenue region at <strong>$1.84M combined</strong> (+5.6% vs plan).</li>
+          <li><strong>Central Region — DPI 81 avg:</strong> Stable. 6 of 7 districts at or above plan. No triage items this week. Revenue: <strong>$1.62M</strong> (+1.8% vs plan). The Central region is reliable but not growing — traffic is flat YoY across all 7 districts.</li>
+          <li><strong>Northeast Region — DPI 79 avg:</strong> Revenue: <strong>$1.14M</strong> (+0.8% vs plan). Below-network conversion average (21.4% vs 23.8% network). Fitting room staffing gap is a consistent theme. 3 stores are below plan by more than 5%.</li>
+          <li><strong>Pacific Northwest Region — DPI 76 avg:</strong> Revenue: <strong>$620K</strong> (–1.4% vs plan) — the only region below plan. Weather drag (–$42K) explains half the miss; execution gaps in 4 stores explain the other half. No triage items, but trend requires monitoring.</li>
+          <li><strong>Top 5 performing stores nationally:</strong> (1) Nashville Flagship ($224K, SPI 94), (2) Miami Central ($308K, SPI 91), (3) Memphis Central ($198K, SPI 88), (4) Franklin Town Center ($171K, SPI 82), (5) Tampa Bay Mall ($264K, SPI 87). These 5 stores generated <strong>$1.165M — 22.4% of total network revenue</strong>.</li>
+        </ul>
+      </div>
+
+      <div className="ai-brief-section">
+        <h3 className="ai-brief-section-title"><CompareArrowsOutlined sx={{ fontSize: 14 }}/> What Drove the Network — AI Business Analysis</h3>
+        <ul className="ai-brief-bullets">
+          <li><strong>The execution gap is the story:</strong> The single biggest driver of the performance distribution this week is Summer 2 floorset completion. Stores with complete floorsets averaged +$258K more revenue than stores with partial sets. There are 20 stores still with incomplete sets — this is the largest addressable revenue opportunity in the network right now, estimated at <strong>$5.1M in annualized incremental revenue</strong> if brought to completion status.</li>
+          <li><strong>Semi Annual Sale amplified the execution gap:</strong> Sale-driven traffic gave every store the same opportunity. Fully-set stores converted it at 26.1%; partial-set stores at 19.4%. The promotional amplification means that each day of incomplete execution during the sale window costs more than a typical week. The urgency is proportional to the sale duration remaining.</li>
+          <li><strong>Weather was a Southeast tailwind and PNW headwind:</strong> The Southeast weather uplift (+$180K estimated) is entirely captured by the Southeast stores with complete floorsets. The PNW weather drag (–$42K) is a real headwind but not the primary driver of PNW underperformance — execution gaps at 4 stores account for the larger portion of the miss.</li>
+          <li><strong>Graduation season was an underforecasted upside driver:</strong> The +26% Saturday AM spike in formal-adjacent categories across 14 graduation-market cities was not in the AI forecast model. This +$64K estimated uplift is a recurring signal (graduation season runs through mid-June) — build this into the demand model and brief DMs in graduation markets to staff fitting rooms more heavily during Saturday mornings for the next 3 weeks.</li>
+          <li><strong>Accessories is the systemic miss:</strong> The –2.8% vs plan in Accessories is not store-specific — 18 of 22 districts have the same Endcap facing compliance gap (4.3 vs 6-facing spec). This is a network execution failure that a single HQ broadcast can address. No inventory change required; no capital required. Estimated weekly revenue recovery: $28K/week.</li>
+        </ul>
+      </div>
+
+      <div className="ai-brief-section">
+        <h3 className="ai-brief-section-title"><TaskAltOutlined sx={{ fontSize: 14 }}/> Network Compliance &amp; Safety Escalations</h3>
+        <ul className="ai-brief-bullets">
+          <li>Network-wide POG adherence: <strong>84.8%</strong> (–0.4pp WoW). Decline concentrated in Districts 11 (78%) and 22 (83%). Districts 14 and 19 averaged 96.4% — demonstrating high adherence is achievable at scale.</li>
+          <li><strong>🚨 Safety escalation — Johnson City Mall (District 14):</strong> Fire exit obstruction (Exit B) auto-flagged 2 hours ago. Zero-tolerance regulatory exposure. SM acknowledgement pending. Escalate to Regional if not resolved by noon. District DM Clarke Johnson has been notified.</li>
+          <li><strong>Product recall:</strong> Children's Pajamas Drawstring Safety Recall (Batch #7742) — recall protocol compliance at 94% chain-wide. 6 stores still need confirmation of stock pull. These 6 stores need a direct call from HQ compliance today.</li>
+          <li>Overdue action backlog: <strong>12%</strong> of total (vs 8% target). Primary contributors: Districts 11 and 22. Resolution time held at 4.2h avg — within SLA. Broadcast acknowledgement rate: 94.1% overall; Districts 11 and 22 below 70%.</li>
         </ul>
       </div>
 
       <div className="ai-brief-section ai-brief-suggestions">
         <h3 className="ai-brief-section-title"><AutoAwesomeOutlined sx={{ fontSize: 14 }}/> HQ Strategic Priorities This Week</h3>
         <ul className="ai-brief-bullets">
-          <li><strong>Escalate District 22 retention:</strong> Three consecutive weeks of declining DPI mapped to staff turnover is a systemic pattern — not a one-time event. Draft a retention incentive policy proposal for Regional review. Short-term DM fixes will not solve this.</li>
-          <li><strong>Codify District 14 playbook:</strong> 6-week streak of top-decile performance with measurable results (POG 97%, DPI 87, VoC 72+) makes this the right moment to document and templatize for underperforming districts.</li>
-          <li><strong>Address Summer 2 execution gap:</strong> $258K incremental opportunity is sitting in the 20 stores with partial floorsets. A same-day broadcast with specific store-level accountability could recover a meaningful portion by weekend.</li>
-          <li><strong>Broadcast ack intervention:</strong> Reinstate the weekly DM huddle as a required cadence for districts below 80% ack rate. Data shows it reduces response time by 38% and improves compliance by 5–7pp.</li>
+          <li><strong>Accessories Endcap broadcast (today — $28K/week recovery):</strong> Issue a network-wide broadcast: "Accessories Endcap — 6-Facing Reset Required by EOD Wednesday." This is a 20-minute fix at every store. No inventory change, no capital. Highest ROI action available at HQ level right now.</li>
+          <li><strong>Kids Party Dress supply chain correction (this week):</strong> The XS and 4T size-run gap is suppressing conversion in 14 of 22 districts. Submit a national DC assortment request for these two sizes — store-by-store requests will take 3× longer to resolve than a coordinated national action.</li>
+          <li><strong>District 22 retention policy (HQ-level intervention needed):</strong> Three consecutive weeks of declining DPI mapped to 18% quarterly staff turnover is a systemic pattern. Draft a retention incentive policy proposal for Regional review. District-level fixes have not reversed the trend — this requires an HQ policy change.</li>
+          <li><strong>Codify District 14 execution playbook (this quarter):</strong> 6-week streak at DPI 87+, POG 96.4%, VoC 72+ is the clearest best-practice signal in the network. Document the playbook (floorset process, fitting room staffing, cleaning schedule, broadcast cadence) and assign one HQ lead to convert it into a deployable training asset for underperforming districts.</li>
+          <li><strong>Graduation market fitting room brief (this week):</strong> Brief DMs in the 14 graduation-market cities to increase fitting room staffing on Saturday mornings for the next 3 weeks. The graduation customer has an above-average ATV ($72 vs $58 network avg). This is a short-window, high-ROI staffing instruction.</li>
+          <li><strong>District 11 structural review (30-day action):</strong> The coastal-vs-inland bimodal performance (SPI 91 coastal vs SPI 57 inland average) cannot be resolved without structural changes to how the district is managed. Assign an HQ field operations lead to conduct a 30-day review and recommend a district management restructure proposal for the half-year review.</li>
         </ul>
       </div>
 
       <p className="ai-brief-closing">
-        The network is financially healthy but operationally uneven. The execution gap between Districts 14 and 11/22 is widening — this week's window is to prevent it from becoming structural. Highest-leverage actions: the floorset broadcast nudge (short-term revenue), the District 22 retention policy (structural fix), and the fire exit escalation (zero-tolerance safety).
+        The network is financially healthy and on a positive net-comp trajectory for the 3rd consecutive week — a meaningful milestone. The execution opportunity is large: the 20 incomplete floorsets, the Accessories facing gap, and the Kids Party Dress size-run issue collectively represent an estimated <strong>$6.2M in annualized incremental revenue</strong> if resolved. The safety escalation at Johnson City Mall is the only zero-tolerance item. This week's highest-leverage HQ actions are the Accessories broadcast, the Kids DC correction, and the District 22 retention policy — all three are systemic actions that no individual DM can solve alone.
       </p>
     </div>
   );
@@ -560,7 +614,7 @@ export const HQHome: React.FC = () => {
         {showBriefAudio && (
           <div className="di-brief-audio-bar">
             <AudioPlayer
-              text="Good afternoon, Elena. The network delivered 5.2 million in weekly revenue at plus 3.1 percent versus plan. Gross margin at 38.4 percent, stable. Summer 2 floorset is contributing 340 thousand incremental in stores that completed the full set — a 258 thousand execution gap remains addressable this week. District 14 Tennessee leads the network at DPI 87, Excellence Tier, 6 consecutive weeks at top decile performance. District 11 Florida needs attention — DPI down 3 points, compliance at 78 percent, spoilage losses 3 times chain average. District 22 Carolina declining for the third consecutive week due to 18 percent staff turnover. Broadcast reach at 94 percent but Districts 11 and 22 are below 70 percent acknowledgement. Safety escalation: fire exit obstruction at Johnson City Mall requires EOD resolution. Top priority this week: nudge the Summer 2 floorset broadcast to 13 non-acknowledged stores, escalate District 22 retention to a policy-level intervention, and codify the District 14 execution playbook."
+              text="Good morning, Elena. The network delivered 5.2 million in weekly revenue this week at plus 3.1 percent versus plan, plus 2.4 percent versus last year, and plus 2.9 percent on a net-comp basis — the third consecutive positive net-comp week, the best run since Q3 last year. Network gross margin at 34.1 percent, 0.6 points above the Q1 plan target. Network conversion improved to 23.8 percent, up 0.6 points year over year. Average basket size up 3.8 percent to 57.90. The Southeast drove the outperformance, led by District 14 Tennessee at DPI 87 national rank number 2, and District 19 Alabama at DPI 88 national number 1. Warm weather across the Southeast and graduation season in 14 metro markets contributed an estimated 180 thousand in weather uplift and 64 thousand from graduation traffic — the latter was not in the AI forecast model. Women's Division leads at plus 9.4 percent versus plan, driven by Dresses up 17 percent and Blazers up 11 percent in stores with complete floorsets. Accessories is the one network miss at minus 2.8 percent versus plan — an Endcap facing compliance issue at 18 of 22 districts. A single broadcast requiring the 6-facing reset would recover an estimated 28 thousand per week. Kids Party Dress has a national size-run gap in XS and 4T affecting 14 of 22 districts — a national DC assortment request is the right fix, not store-by-store escalations. Safety: fire exit obstruction at Johnson City Mall is a zero-tolerance regulatory exposure — escalate to Regional if not resolved by noon. Top HQ priorities this week: issue the Accessories Endcap broadcast today, submit the Kids DC assortment correction, draft the District 22 staff retention policy for Regional review, and begin codifying the District 14 execution playbook. The network is in the best financial position in 3 quarters — the execution gap is the only thing standing between here and a top-quartile result."
               title="AI Daily Brief"
               variant="bar"
               onClose={() => setShowBriefAudio(false)}
@@ -1950,7 +2004,7 @@ export const HQHome: React.FC = () => {
             {showBriefAudio && (
               <div className="di-brief-modal-audio">
                 <AudioPlayer
-                  text="Good afternoon, Elena. The network delivered 5.2 million in weekly revenue at plus 3.1 percent versus plan. Gross margin at 38.4 percent, stable. Summer 2 floorset is contributing 340 thousand incremental in stores that completed the full set — a 258 thousand execution gap remains addressable this week. District 14 Tennessee leads the network at DPI 87, Excellence Tier, 6 consecutive weeks at top decile performance. District 11 Florida needs attention — DPI down 3 points, compliance at 78 percent, spoilage losses 3 times chain average. District 22 Carolina declining for the third consecutive week due to 18 percent staff turnover. Broadcast reach at 94 percent but Districts 11 and 22 are below 70 percent acknowledgement. Safety escalation: fire exit obstruction at Johnson City Mall requires EOD resolution. Top priority this week: nudge the Summer 2 floorset broadcast to 13 non-acknowledged stores, escalate District 22 retention to a policy-level intervention, and codify the District 14 execution playbook."
+                  text="Good morning, Elena. The network delivered 5.2 million in weekly revenue this week at plus 3.1 percent versus plan, plus 2.4 percent versus last year, and plus 2.9 percent on a net-comp basis — the third consecutive positive net-comp week, the best run since Q3 last year. Network gross margin at 34.1 percent, 0.6 points above the Q1 plan target. Network conversion improved to 23.8 percent, up 0.6 points year over year. Average basket size up 3.8 percent to 57.90. The Southeast drove the outperformance, led by District 14 Tennessee at DPI 87 national rank number 2, and District 19 Alabama at DPI 88 national number 1. Warm weather across the Southeast and graduation season in 14 metro markets contributed an estimated 180 thousand in weather uplift and 64 thousand from graduation traffic — the latter was not in the AI forecast model. Women's Division leads at plus 9.4 percent versus plan, driven by Dresses up 17 percent and Blazers up 11 percent in stores with complete floorsets. Accessories is the one network miss at minus 2.8 percent versus plan — an Endcap facing compliance issue at 18 of 22 districts. A single broadcast requiring the 6-facing reset would recover an estimated 28 thousand per week. Kids Party Dress has a national size-run gap in XS and 4T affecting 14 of 22 districts — a national DC assortment request is the right fix, not store-by-store escalations. Safety: fire exit obstruction at Johnson City Mall is a zero-tolerance regulatory exposure — escalate to Regional if not resolved by noon. Top HQ priorities this week: issue the Accessories Endcap broadcast today, submit the Kids DC assortment correction, draft the District 22 staff retention policy for Regional review, and begin codifying the District 14 execution playbook. The network is in the best financial position in 3 quarters — the execution gap is the only thing standing between here and a top-quartile result."
                   title="AI Daily Brief"
                   variant="card"
                   onClose={() => setShowBriefAudio(false)}

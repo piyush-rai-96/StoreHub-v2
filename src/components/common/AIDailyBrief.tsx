@@ -8,10 +8,27 @@ import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined';
 import StarBorderOutlined from '@mui/icons-material/StarBorderOutlined';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import HeadphonesOutlined from '@mui/icons-material/HeadphonesOutlined';
+import DirectionsWalkOutlined from '@mui/icons-material/DirectionsWalkOutlined';
+import CategoryOutlined from '@mui/icons-material/CategoryOutlined';
+import WbSunnyOutlined from '@mui/icons-material/WbSunnyOutlined';
+import BusinessOutlined from '@mui/icons-material/BusinessOutlined';
+import BarChartOutlined from '@mui/icons-material/BarChart';
+import CompareArrowsOutlined from '@mui/icons-material/CompareArrowsOutlined';
 import { AudioPlayer } from './AudioPlayer';
 import './AudioPlayer.css';
 
-export type BriefSectionIcon = 'triage' | 'performance' | 'ops' | 'customer' | 'recommendations';
+export type BriefSectionIcon =
+  | 'triage'
+  | 'performance'
+  | 'ops'
+  | 'customer'
+  | 'recommendations'
+  | 'traffic'
+  | 'product'
+  | 'external'
+  | 'district'
+  | 'scorecard'
+  | 'drivers';
 
 export interface BriefSection {
   title: string;
@@ -35,18 +52,18 @@ interface AIDailyBriefProps {
 
 const renderIcon = (icon: BriefSectionIcon) => {
   switch (icon) {
-    case 'triage':
-      return <WarningAmberOutlined sx={{ fontSize: 14 }} />;
-    case 'performance':
-      return <TrendingUpOutlined sx={{ fontSize: 14 }} />;
-    case 'ops':
-      return <TaskAltOutlined sx={{ fontSize: 14 }} />;
-    case 'customer':
-      return <StarBorderOutlined sx={{ fontSize: 14 }} />;
-    case 'recommendations':
-      return <AutoAwesomeOutlined sx={{ fontSize: 14 }} />;
-    default:
-      return null;
+    case 'triage':      return <WarningAmberOutlined sx={{ fontSize: 14 }} />;
+    case 'performance': return <TrendingUpOutlined sx={{ fontSize: 14 }} />;
+    case 'ops':         return <TaskAltOutlined sx={{ fontSize: 14 }} />;
+    case 'customer':    return <StarBorderOutlined sx={{ fontSize: 14 }} />;
+    case 'recommendations': return <AutoAwesomeOutlined sx={{ fontSize: 14 }} />;
+    case 'traffic':     return <DirectionsWalkOutlined sx={{ fontSize: 14 }} />;
+    case 'product':     return <CategoryOutlined sx={{ fontSize: 14 }} />;
+    case 'external':    return <WbSunnyOutlined sx={{ fontSize: 14 }} />;
+    case 'district':    return <BusinessOutlined sx={{ fontSize: 14 }} />;
+    case 'scorecard':   return <BarChartOutlined sx={{ fontSize: 14 }} />;
+    case 'drivers':     return <CompareArrowsOutlined sx={{ fontSize: 14 }} />;
+    default:            return null;
   }
 };
 
