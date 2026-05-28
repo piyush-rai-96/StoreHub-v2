@@ -38,6 +38,14 @@ export interface PexAuditEntry {
   user: string;
 }
 
+export type InventorySmartActionStatus = 'completed' | 'pending' | 'active' | 'ready';
+
+export interface InventorySmartAction {
+  action: string;
+  status: InventorySmartActionStatus;
+  detail: string;
+}
+
 export interface PexWeeklySales {
   week: string;
   store: number;
@@ -78,6 +86,11 @@ export interface PexTask {
   // Findings
   findings: PexFindings;
   auditTrail: PexAuditEntry[];
+  // InventorySmart automated actions — shown as a panel on the task
+  inventorySmartActions?: InventorySmartAction[];
+  // Quick context numbers for the hero story
+  bohUnits?: number;         // units confirmed in back-of-house
+  daysSinceLastSale?: number;
 }
 
 export const PEX_SOURCE_LABELS: Record<PexSource, string> = {
@@ -127,6 +140,7 @@ export const PEX_ISSUE_TYPES = [
 // SKU-keyed product images — matched to actual product category and name
 const SKU_IMAGES: Record<string, string> = {
   'FTW-RUN-002': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=120&h=120&fit=crop',   // Running Shoes Elite
+  'FTW-SNK-007': 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=120&h=120&fit=crop', // Summer Running Sneaker
   'WOM-TOP-014': 'https://images.unsplash.com/photo-1624484631620-9e53e4aed980?w=120&h=120&fit=crop', // Women's V-Neck Basics
   'MEN-DNM-003': 'https://images.unsplash.com/photo-1714143164072-7646ef5cb24d?w=120&h=120&fit=crop', // Slim Fit Denim — Dark Wash
   'ACC-BAG-005': 'https://images.unsplash.com/photo-1572966059657-6e8910c8c3c0?w=120&h=120&fit=crop', // Canvas Tote Bag
@@ -182,27 +196,35 @@ export const PEX_TASKS: PexTask[] = [
     itemClass: 'Running',
     productImage: SKU_IMAGES['FTW-RUN-002'],
     storeId: 'STR-001',
-    storeName: 'Downtown Flagship',
+    storeName: 'Nashville Flagship',
     priority: 'High',
     status: 'open',
     owner: 'Sarah Johnson',
     ownerId: 'user-2',
-    dueDate: 'May 25, 2026',
-    createdAt: '2026-05-23T08:00:00Z',
-    updatedAt: '2026-05-23T08:00:00Z',
+    dueDate: 'May 30, 2026',
+    createdAt: '2026-05-26T08:00:00Z',
+    updatedAt: '2026-05-26T08:00:00Z',
     opportunityValue: 4200,
-    confidenceScore: 92,
+    confidenceScore: 94,
     storeWeeklySales: 38,
     clusterAvgSales: 24,
     chainAvgSales: 21,
     performanceGap: +14,
     salesTrend: makeSalesTrend(38, 24, 21),
-    recommendedAction: 'Increase shelf allocation by 3 facings. Move from Aisle 4 Bay 2 to end-cap position to capitalize on top-performer momentum.',
-    opportunityExplanation: 'This store is outselling the cluster average by 58% for this SKU. Increasing shelf visibility and allocation will unlock additional sell-through before end of season.',
+    recommendedAction: 'Move from Aisle 4, Bay 2 to the Footwear End Cap (W4). End Cap placement drives +31% higher conversion for this SKU category in peer stores. Request +24 units from DC before this weekend — current stock is 18 units at a 38-unit/week sell rate. InventorySmart has pre-staged the DC allocation request. Approve in 1 click to prevent stockout within 8 days.',
+    opportunityExplanation: 'Running Shoes Elite is the #1 Footwear SKU in the district this week — outselling the cluster average by 58% and accelerating 4 weeks in a row. At the current sell rate of 38 units/week with only 18 units in stock, InventorySmart projects a stockout in 8–10 days. Increasing shelf visibility to End Cap and securing the +24 unit DC allocation now captures the full sell-through window before stockout.',
     findings: emptyFindings(),
     auditTrail: [
-      { timestamp: '2026-05-23T08:00:00Z', action: 'Task auto-created by system from Top Performing Product signal', user: 'System' },
-      { timestamp: '2026-05-23T08:01:00Z', action: 'Owner assigned: Sarah Johnson', user: 'System' },
+      { timestamp: '2026-05-26T08:00:00Z', action: 'InventorySmart: Top Performing signal triggered — 4-week velocity acceleration detected', user: 'System (InventorySmart)' },
+      { timestamp: '2026-05-26T08:01:00Z', action: 'Stockout risk identified: 18 units on-hand, 38 units/week sell rate — stockout in 8–10 days', user: 'System (InventorySmart)' },
+      { timestamp: '2026-05-26T08:02:00Z', action: 'DC allocation request pre-staged: +24 units FTW-RUN-002 (awaiting SM approval)', user: 'System (InventorySmart)' },
+      { timestamp: '2026-05-26T08:03:00Z', action: 'Task auto-created — owner assigned: Sarah Johnson', user: 'System' },
+    ],
+    inventorySmartActions: [
+      { action: 'DC allocation request pre-staged: +24 units FTW-RUN-002', status: 'ready', detail: 'SM approval required — 1 click to submit to DC' },
+      { action: 'End Cap position W4 reserved in active planogram', status: 'active', detail: 'Footwear End Cap available after Wednesday floorset reset' },
+      { action: 'Stockout alert scheduled at Day 8 if sell rate continues', status: 'active', detail: 'InventorySmart monitoring daily velocity' },
+      { action: 'Peer store best practice: Knoxville Centre ran same SKU at End Cap — +31% conversion vs Aisle position', status: 'active', detail: 'Benchmark data from district performance feed' },
     ],
   },
   {
@@ -242,46 +264,67 @@ export const PEX_TASKS: PexTask[] = [
     ],
   },
   {
+    // ── HERO STORY: Inventory mismatch discovered and corrected in real time ──
+    // Digital says 72 units on-hand. Floor says 0. Associate finds them in BOH
+    // Bay S3 (misrouted from receiving), moves 36 to floor in 8 min.
+    // InventorySmart handles the rest — no cycle count needed.
     id: 'PEX-003',
     linkedTaskId: 'OQ-PEX-003',
     source: 'phantom_stock',
-    productName: 'Slim Fit Denim — Dark Wash',
-    sku: 'MEN-DNM-003',
-    department: "Men's",
-    subDepartment: 'Bottoms',
-    itemClass: 'Denim',
-    productImage: SKU_IMAGES['MEN-DNM-003'],
+    productName: 'Summer Running Sneaker',
+    sku: 'FTW-SNK-007',
+    department: 'Footwear',
+    subDepartment: "Men's Athletic",
+    itemClass: 'Running / Casual',
+    productImage: SKU_IMAGES['FTW-SNK-007'],
     storeId: 'STR-001',
-    storeName: 'Downtown Flagship',
-    priority: 'Medium',
+    storeName: 'Nashville Flagship',
+    priority: 'High',
     status: 'in_progress',
-    owner: 'M. Chen',
+    owner: 'A. Thompson',
     ownerId: 'user-3',
-    dueDate: 'May 26, 2026',
-    createdAt: '2026-05-25T06:30:00Z',
-    updatedAt: '2026-05-25T14:22:00Z',
-    riskValue: 535,
-    confidenceScore: 81,
+    dueDate: 'May 28, 2026 · 12:00 PM',
+    createdAt: '2026-05-26T09:00:00Z',
+    updatedAt: '2026-05-28T10:28:00Z',
+    riskValue: 1550,
+    confidenceScore: 88,
     storeWeeklySales: 0,
-    clusterAvgSales: 22,
-    chainAvgSales: 18,
-    performanceGap: -22,
-    salesTrend: makeDecliningTrend(20, 22, 18),
-    recommendedAction: "Conduct physical count on Men's Denim wall. Verify garments are accessible on correct hanging rail. Clear any backroom blockage on Rail D.",
-    opportunityExplanation: "System shows 60 units on-hand but zero sales for 22 consecutive days. Units likely misplaced in backroom or behind seasonal display on Men's Denim wall.",
+    clusterAvgSales: 31,
+    chainAvgSales: 27,
+    performanceGap: -31,
+    bohUnits: 72,
+    daysSinceLastSale: 18,
+    salesTrend: makeDecliningTrend(29, 31, 27),
+    recommendedAction: 'Go to Shoe Storage Bay S3 (rear of stockroom). InventorySmart has pinpointed 72 units from the May 18 shipment misrouted during receiving. Move 36 pairs to Footwear Wall W4, Bay 2 — eye level, size-run XS to XL. Scan to confirm shelf transfer in the app. InventorySmart will handle all inventory record corrections, replenishment recalibration, and follow-up tasks automatically.',
+    opportunityExplanation: 'Digital inventory: 72 units on-hand. Physical floor: 0 units. Zero sales for 18 days. The cluster is selling 31 units/week of this SKU — this store is losing an estimated $1,550/week in footwear revenue. InventorySmart traced the discrepancy to a receiving misroute on May 18 — units went to Shoe Storage Bay S3 instead of the Footwear floor. This is an 8-minute fix. No cycle count needed. Fix it now and InventorySmart recalibrates everything automatically.',
     findings: {
       ...emptyFindings(),
       stockReceived: true,
       inBackroom: true,
       onShelf: false,
-      notes: "Checked Men's Denim wall — product not visible. Backroom confirmed 60 units on Rail D. Possible blockage at storeroom door.",
+      rackNumber: 'Bay S3',
+      shelfPosition: 'Shoe Storage — Rear stockroom',
+      notes: 'Located 72 units in Shoe Storage Bay S3. Confirmed misrouted from May 18 receiving — should have gone to Footwear Wall W4. Moving 36 pairs to floor now. Remaining 36 staying in BOH as buffer stock.',
     },
     auditTrail: [
-      { timestamp: '2026-05-25T06:30:00Z', action: 'Task auto-created from Phantom Stock alert — 60 units on-hand, 0 sales for 22 days', user: 'System' },
-      { timestamp: '2026-05-25T06:31:00Z', action: 'Owner assigned: M. Chen', user: 'System' },
-      { timestamp: '2026-05-25T06:45:00Z', action: 'Alert notification sent to M. Chen via app', user: 'System' },
-      { timestamp: '2026-05-25T14:22:00Z', action: 'Task opened — findings in progress', user: 'M. Chen' },
-      { timestamp: '2026-05-25T14:35:00Z', action: 'Findings updated: Stock received=Yes, In backroom=Yes, On shelf=No', user: 'M. Chen' },
+      { timestamp: '2026-05-18T14:10:00Z', action: 'InventorySmart: 72 units received (FTW-SNK-007) — shipment logged to on-hand inventory', user: 'System (InventorySmart)' },
+      { timestamp: '2026-05-20T07:00:00Z', action: 'InventorySmart: Phantom stock signal triggered — 72 units on-hand, 0 sales detected for 2 days post-receive', user: 'System (InventorySmart)' },
+      { timestamp: '2026-05-20T07:01:00Z', action: 'InventorySmart: Opportunity cost estimate — $1,550/week in lost footwear revenue vs cluster velocity', user: 'System (InventorySmart)' },
+      { timestamp: '2026-05-20T07:02:00Z', action: 'InventorySmart: Receiving route analysis — 72 units likely in Shoe Storage Bay S3 (misrouted May 18 shipment)', user: 'System (InventorySmart)' },
+      { timestamp: '2026-05-20T07:03:00Z', action: 'Task auto-created and assigned to A. Thompson — High priority, SLA 48h', user: 'System' },
+      { timestamp: '2026-05-20T07:04:00Z', action: 'Push notification sent to A. Thompson: "Inventory mismatch — $1,550/wk at risk. Tap to investigate."', user: 'System (InventorySmart)' },
+      { timestamp: '2026-05-28T10:15:00Z', action: 'Task opened — A. Thompson proceeding to Shoe Storage to physically locate units', user: 'A. Thompson' },
+      { timestamp: '2026-05-28T10:22:00Z', action: 'Physical investigation complete: 72 units confirmed in Shoe Storage Bay S3. Mismatch cause: receiving misroute on May 18. Units never reached the Footwear floor.', user: 'A. Thompson' },
+      { timestamp: '2026-05-28T10:24:00Z', action: 'Moving 36 pairs to Footwear Wall W4, Bay 2 (eye level). Remaining 36 units designated as BOH buffer.', user: 'A. Thompson' },
+      { timestamp: '2026-05-28T10:28:00Z', action: 'Findings saved: In BOH=Yes, On shelf=No, Location=Bay S3. 36 units now in transit to floor.', user: 'A. Thompson' },
+    ],
+    inventorySmartActions: [
+      { action: 'Phantom stock alert cleared for FTW-SNK-007', status: 'pending', detail: 'Auto-clears when task is marked Resolved' },
+      { action: 'Shelf count corrected: 0 → 36 units (Footwear Wall W4, Bay 2)', status: 'pending', detail: 'Inventory record updated automatically on resolution' },
+      { action: 'Replenishment model recalibrated — phantom inflation removed from forecast', status: 'pending', detail: 'DC will no longer see 72 phantom units as "in stock" — correct reorder triggered' },
+      { action: 'BOH-to-Shelf follow-up task created for remaining 36 units', status: 'pending', detail: 'Scheduled for tomorrow AM — A. Thompson assigned' },
+      { action: 'Receiving process flag raised: Bay S3 misroute pattern (2nd occurrence in 30 days)', status: 'pending', detail: 'Ops alert sent to store manager for receiving SOP review' },
+      { action: 'SKU accuracy recount scheduled: Jun 27, 2026', status: 'pending', detail: '30-day automated recount to verify inventory accuracy post-correction' },
     ],
   },
   {
