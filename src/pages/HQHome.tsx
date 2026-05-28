@@ -524,7 +524,7 @@ export const HQHome: React.FC = () => {
         <h3 className="ai-brief-section-title"><TaskAltOutlined sx={{ fontSize: 14 }}/> Network Compliance &amp; Safety Escalations</h3>
         <ul className="ai-brief-bullets">
           <li>Network-wide POG adherence: <strong>84.8%</strong> (–0.4pp WoW). Decline concentrated in Districts 11 (78%) and 22 (83%). Districts 14 and 19 averaged 96.4% — demonstrating high adherence is achievable at scale.</li>
-          <li><strong>🚨 Safety escalation — Johnson City Mall (District 14):</strong> Fire exit obstruction (Exit B) auto-flagged 2 hours ago. Zero-tolerance regulatory exposure. SM acknowledgement pending. Escalate to Regional if not resolved by noon. District DM Clarke Johnson has been notified.</li>
+          <li><strong>Safety escalation — Johnson City Mall (District 14):</strong> Fire exit obstruction (Exit B) auto-flagged 2 hours ago. Zero-tolerance regulatory exposure. SM acknowledgement pending. Escalate to Regional if not resolved by noon. District DM Clarke Johnson has been notified.</li>
           <li><strong>Product recall:</strong> Children's Pajamas Drawstring Safety Recall (Batch #7742) — recall protocol compliance at 94% chain-wide. 6 stores still need confirmation of stock pull. These 6 stores need a direct call from HQ compliance today.</li>
           <li>Overdue action backlog: <strong>12%</strong> of total (vs 8% target). Primary contributors: Districts 11 and 22. Resolution time held at 4.2h avg — within SLA. Broadcast acknowledgement rate: 94.1% overall; Districts 11 and 22 below 70%.</li>
         </ul>

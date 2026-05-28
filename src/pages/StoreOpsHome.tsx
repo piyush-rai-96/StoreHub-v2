@@ -1364,7 +1364,7 @@ export const StoreOpsHome: React.FC = () => {
                   <li><strong>Knoxville Centre (SPI 74 — #5):</strong> $146K, –0.6% vs plan. Accessories Endcap at 4 facings vs 6 spec — highest-priority correction at this store. VoC stable at 82%.</li>
                   <li><strong>Clarksville Crossing (SPI 68 — #6):</strong> $134K, –2.8% vs plan. OOS: 3 Summer 2 SKUs delayed 48h (adaptation plan awaiting your approval — $2,400 at risk). VoC "Messy Aisles" +38% WoW — cleaning hours need restoration (+2hrs/day).</li>
                   <li><strong>Chattanooga Square (SPI 62 — #7):</strong> $121K, –4.2% vs plan. Floorset at 74%. 2 HQ broadcasts unacknowledged. Needs DM check-in this week — trending toward At-Risk.</li>
-                  <li><strong>Johnson City Mall (SPI 58 — #8, Crisis):</strong> $104K, –12.4% vs plan. Conv 17.4%. Floorset 34%. 14 OOS SKUs. 🚨 Fire exit SEA auto-fail unresolved. On-site visit required today.</li>
+                  <li><strong>Johnson City Mall (SPI 58 — #8, Crisis):</strong> $104K, –12.4% vs plan. Conv 17.4%. Floorset 34%. 14 OOS SKUs. Fire exit SEA auto-fail unresolved. On-site visit required today.</li>
                 </ul>
               </div>
 
@@ -1391,10 +1391,10 @@ export const StoreOpsHome: React.FC = () => {
               <div className="ai-brief-section">
                 <h3 className="ai-brief-section-title"><WarningAmberOutlined sx={{ fontSize: 14 }}/> Critical Triage — Act on These Today</h3>
                 <ul className="ai-brief-bullets">
-                  <li><strong>🚨 Johnson City Mall — Fire Exit [call before noon]:</strong> SEA auto-fail for blocked emergency Exit B. Call SM directly; confirm clearance before noon. Regional VP escalation if unresolved. Zero-tolerance item.</li>
-                  <li><strong>📦 Clarksville Crossing — OOS Adaptation Plan [5-min action in queue]:</strong> Approve the 3-SKU OOS adaptation plan. Protects an estimated $2,400 in at-risk Semi Annual Sale revenue.</li>
-                  <li><strong>⚠ Murfreesboro Plaza — Early fitting room intervention:</strong> "Fitting Room Wait" VoC +19% WoW. Call the SM today and confirm fitting room staffing 11am–3pm. Early-stage signal — identical to the Johnson City Mall pattern 6 weeks ago.</li>
-                  <li><strong>🧹 Clarksville Crossing — Restore cleaning hours:</strong> Add +2hrs/day cleaning. VoC model: "Messy Aisles" trend reverses within 10 days of restoring hours. Root cause was a cost-cutting decision made 4 weeks ago.</li>
+                  <li><strong>Johnson City Mall — Fire Exit [call before noon]:</strong> SEA auto-fail for blocked emergency Exit B. Call SM directly; confirm clearance before noon. Regional VP escalation if unresolved. Zero-tolerance item.</li>
+                  <li><strong>Clarksville Crossing — OOS Adaptation Plan [5-min action in queue]:</strong> Approve the 3-SKU OOS adaptation plan. Protects an estimated $2,400 in at-risk Semi Annual Sale revenue.</li>
+                  <li><strong>Murfreesboro Plaza — Early fitting room intervention:</strong> "Fitting Room Wait" VoC +19% WoW. Call the SM today and confirm fitting room staffing 11am–3pm. Early-stage signal — identical to the Johnson City Mall pattern 6 weeks ago.</li>
+                  <li><strong>Clarksville Crossing — Restore cleaning hours:</strong> Add +2hrs/day cleaning. VoC model: "Messy Aisles" trend reverses within 10 days of restoring hours. Root cause was a cost-cutting decision made 4 weeks ago.</li>
                 </ul>
               </div>
 
@@ -1639,7 +1639,7 @@ export const StoreOpsHome: React.FC = () => {
                             <span className="action-micro">• {item.microContext}</span>
                           )}
                           <span className={`action-time-v2 ${item.status === 'overdue' ? 'overdue' : ''}`}>
-                            {item.status === 'overdue' ? '⚠️ ' : ''}
+                            {item.status === 'overdue' ? '️ ' : ''}
                             {formatDueTime(item.due_time)}
                           </span>
                         </div>
@@ -2093,7 +2093,7 @@ export const StoreOpsHome: React.FC = () => {
                     <li><strong>Knoxville Centre (SPI 74 — #5):</strong> $146K, –0.6% vs plan. Accessories Endcap at 4 facings vs 6 spec. VoC stable 82%.</li>
                     <li><strong>Clarksville Crossing (SPI 68 — #6):</strong> $134K, –2.8% vs plan. OOS 3 SKUs (adaptation plan in your queue). VoC "Messy Aisles" +38% — restore cleaning hours today.</li>
                     <li><strong>Chattanooga Square (SPI 62 — #7):</strong> $121K, –4.2% vs plan. Floorset 74%. 2 HQ broadcasts unacknowledged. Needs DM check-in this week — trending At-Risk.</li>
-                    <li><strong>Johnson City Mall (SPI 58 — #8, Crisis):</strong> $104K, –12.4% vs plan. Conv 17.4%. Floorset 34%. 14 OOS SKUs. 🚨 Fire exit violation. On-site visit today — non-negotiable.</li>
+                    <li><strong>Johnson City Mall (SPI 58 — #8, Crisis):</strong> $104K, –12.4% vs plan. Conv 17.4%. Floorset 34%. 14 OOS SKUs. Fire exit violation. On-site visit today — non-negotiable.</li>
                   </ul>
                 </div>
 
@@ -2119,10 +2119,10 @@ export const StoreOpsHome: React.FC = () => {
                 <div className="ai-brief-section">
                   <h3 className="ai-brief-section-title"><WarningAmberOutlined sx={{ fontSize: 14 }}/> Critical Triage — Act on These Today</h3>
                   <ul className="ai-brief-bullets">
-                    <li><strong>🚨 Johnson City Mall — Fire Exit [call before noon]:</strong> SEA auto-fail for blocked Exit B. Call SM directly; confirm clearance before noon. Regional VP escalation if unresolved.</li>
-                    <li><strong>📦 Clarksville Crossing — OOS Adaptation Plan [5-min approval]:</strong> In your queue. Protects $2,400 in at-risk Semi Annual Sale revenue.</li>
-                    <li><strong>⚠ Murfreesboro Plaza — Fitting Room Intervention [call SM today]:</strong> VoC +19% WoW. Confirm fitting room staffing 11am–3pm before this becomes the next triage store.</li>
-                    <li><strong>🧹 Clarksville Crossing — Restore cleaning hours:</strong> Add +2hrs/day. VoC model: "Messy Aisles" trend reverses within 10 days of restoration.</li>
+                    <li><strong>Johnson City Mall — Fire Exit [call before noon]:</strong> SEA auto-fail for blocked Exit B. Call SM directly; confirm clearance before noon. Regional VP escalation if unresolved.</li>
+                    <li><strong>Clarksville Crossing — OOS Adaptation Plan [5-min approval]:</strong> In your queue. Protects $2,400 in at-risk Semi Annual Sale revenue.</li>
+                    <li><strong>Murfreesboro Plaza — Fitting Room Intervention [call SM today]:</strong> VoC +19% WoW. Confirm fitting room staffing 11am–3pm before this becomes the next triage store.</li>
+                    <li><strong>Clarksville Crossing — Restore cleaning hours:</strong> Add +2hrs/day. VoC model: "Messy Aisles" trend reverses within 10 days of restoration.</li>
                   </ul>
                 </div>
 
@@ -2460,7 +2460,7 @@ export const StoreOpsHome: React.FC = () => {
                   <span>Action Sent to Store Owners</span>
                 </div>
                 <div className="message-preview-content">
-                  <strong>📦 Inventory Reorder Required</strong>
+                  <strong>Inventory Reorder Required</strong>
                   <p>{reorderedSkus.length} SKU{reorderedSkus.length > 1 ? 's' : ''} below safety stock. Please review and confirm reorder quantities with suppliers. Expected lead time: 1-3 days.</p>
                 </div>
               </div>
@@ -2924,7 +2924,7 @@ export const StoreOpsHome: React.FC = () => {
                 onClick={() => {
                   const failed = Object.values(checklistProgress).filter(s => s === 'failed').length;
                   if (failed > 0) {
-                    showToast(`⚠️ Checklist submitted with ${failed} failed items`);
+                    showToast(`️ Checklist submitted with ${failed} failed items`);
                   } else {
                     showToast('✓ Safety checklist completed successfully');
                   }

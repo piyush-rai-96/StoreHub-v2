@@ -687,10 +687,10 @@ const getStoreBrief = (store: DistrictStore): AIDailyBriefData => {
         title: 'Critical Issues — Zero-Tolerance First',
         icon: 'triage',
         bullets: [
-          '<strong>🚨 SEA Auto-Fail — Fire Exit Blocked:</strong> Display fixture obstructing emergency Exit B in Zone B. <strong>Zero-tolerance regulatory violation.</strong> Store must not open until cleared and photo-documented. DM confirmation required before 9 AM. Risk: mandatory closure and penalties up to $25K.',
-          '<strong>⚠ VoC Emergency — "Messy Aisles" + "Staff Unavailable":</strong> Combined complaints up <strong>+38% in 2 weeks</strong>. VoC Score dropped 14 pts. 3 new 1-star Google Reviews in 7 days referencing store condition — each with an estimated 8× amplification on potential customers.',
-          '<strong>📦 OOS Surge — 14 SKUs across Basics, Blazers, Denim, and Kids:</strong> 4 DC shipments delayed. Backroom not fully audited in 5 days — actual stock position unknown. A full backroom count is required today before any DC requests can be accurately submitted.',
-          '<strong>🏗 Summer 2 Floorset — Only 34% Complete:</strong> Women\'s Tops zone is the only complete zone. Women\'s Wall (Dresses), Denim Wall, and Accessories Endcap all in Spring configuration. Estimated revenue suppression: <strong>$4,200/week</strong>.',
+          '<strong>SEA Auto-Fail — Fire Exit Blocked:</strong> Display fixture obstructing emergency Exit B in Zone B. <strong>Zero-tolerance regulatory violation.</strong> Store must not open until cleared and photo-documented. DM confirmation required before 9 AM. Risk: mandatory closure and penalties up to $25K.',
+          '<strong>VoC Emergency — "Messy Aisles" + "Staff Unavailable":</strong> Combined complaints up <strong>+38% in 2 weeks</strong>. VoC Score dropped 14 pts. 3 new 1-star Google Reviews in 7 days referencing store condition — each with an estimated 8× amplification on potential customers.',
+          '<strong>OOS Surge — 14 SKUs across Basics, Blazers, Denim, and Kids:</strong> 4 DC shipments delayed. Backroom not fully audited in 5 days — actual stock position unknown. A full backroom count is required today before any DC requests can be accurately submitted.',
+          '<strong>Summer 2 Floorset — Only 34% Complete:</strong> Women\'s Tops zone is the only complete zone. Women\'s Wall (Dresses), Denim Wall, and Accessories Endcap all in Spring configuration. Estimated revenue suppression: <strong>$4,200/week</strong>.',
         ],
       },
       {
