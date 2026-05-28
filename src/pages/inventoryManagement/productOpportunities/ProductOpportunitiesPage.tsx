@@ -8,17 +8,14 @@ import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
 import ChevronLeftOutlined from '@mui/icons-material/ChevronLeftOutlined';
 import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined';
 import StoreOutlined from '@mui/icons-material/StoreOutlined';
-import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
 import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined';
 import CalendarTodayOutlined from '@mui/icons-material/CalendarTodayOutlined';
-import Check from '@mui/icons-material/Check';
 import { Tabs } from 'impact-ui';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import { ImFilterSelect } from '../../../components/common/ImFilterSelect';
 import { OpportunityStatusChip } from './OpportunityStatusChip';
 import { ProductDetailDrawer } from './ProductDetailDrawer';
 import {
-  STORES,
   DEFAULT_STORE_ID,
   getOpportunitiesByStore,
   getOpportunitySummary,
@@ -42,10 +39,9 @@ const TYPE_ICONS: Record<OpportunityType, React.ReactNode> = {
 export const ProductOpportunitiesPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const isStoreLocked = user?.role === 'SM';
   const [isLoading, setIsLoading] = useState(true);
-  const [storeId, setStoreId] = useState(isStoreLocked ? (user?.storeId ?? DEFAULT_STORE_ID) : DEFAULT_STORE_ID);
-  const [showStoreDropdown, setShowStoreDropdown] = useState(false);
+  // Store is always locked to the current user's store (all mock data is for STR-001 / Downtown Flagship)
+  const storeId = user?.storeId ?? DEFAULT_STORE_ID;
   const [activeTab, setActiveTab] = useState('all');
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
@@ -128,43 +124,11 @@ export const ProductOpportunitiesPage: React.FC = () => {
           </div>
           <div className="po-header-meta">
             <div className="po-store-picker-wrap">
-              {isStoreLocked ? (
-                <div className="po-store-picker po-store-picker--locked">
-                  <StoreOutlined sx={{ fontSize: 14 }} />
-                  <span>{store?.storeName ?? user?.store ?? 'My Store'}</span>
-                  <span className="po-store-picker-id">{storeId}</span>
-                </div>
-              ) : (
-                <>
-                  <button className="po-store-picker" onClick={() => setShowStoreDropdown(prev => !prev)}>
-                    <StoreOutlined sx={{ fontSize: 14 }} />
-                    <span>{store?.storeName ?? 'Select Store'}</span>
-                    <span className="po-store-picker-id">{storeId}</span>
-                    <KeyboardArrowDown sx={{ fontSize: 14 }} className={showStoreDropdown ? 'po-rotated' : ''} />
-                  </button>
-                  {showStoreDropdown && (
-                    <div className="po-store-dropdown">
-                      {STORES.map(s => (
-                        <button
-                          key={s.storeId}
-                          className={`po-store-option ${s.storeId === storeId ? 'active' : ''}`}
-                          onClick={() => { setStoreId(s.storeId); setShowStoreDropdown(false); setPage(0); }}
-                        >
-                          <div className="po-store-option-main">
-                            <StoreOutlined sx={{ fontSize: 13 }} />
-                            <span className="po-store-option-label">{s.storeName}</span>
-                          </div>
-                          <div className="po-store-option-meta">
-                            <span>{s.storeId}</span>
-                            <span>{s.region}</span>
-                          </div>
-                          {s.storeId === storeId && <Check sx={{ fontSize: 14 }} className="po-store-check" />}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
+              <div className="po-store-picker po-store-picker--locked">
+                <StoreOutlined sx={{ fontSize: 14 }} />
+                <span>{store?.storeName ?? user?.store ?? 'Downtown Flagship'}</span>
+                <span className="po-store-picker-id">{storeId}</span>
+              </div>
             </div>
             {store && (
               <div className="po-cycle-pill">
