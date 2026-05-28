@@ -210,97 +210,366 @@ const getStoreBrief = (store: StoreMeta): AIDailyBriefData => {
   const isExcellent = store.dpi >= 88;
   const isStable = store.dpi >= 78 && store.dpi < 88;
   const isAtRisk = store.dpi >= 65 && store.dpi < 78;
+
+  const vsLY = store.dpi >= 88 ? '+6.2%' : store.dpi >= 78 ? '–0.8%' : store.dpi >= 65 ? '–7.4%' : '–16.8%';
+  const vsPlan = store.dpi >= 88 ? '+8.4%' : store.dpi >= 78 ? '+1.2%' : store.dpi >= 65 ? '–3.8%' : '–12.4%';
+  const convRate = store.dpi >= 88 ? '28.4%' : store.dpi >= 78 ? '24.6%' : store.dpi >= 65 ? '21.1%' : '17.4%';
+  const convYoY = store.dpi >= 88 ? '+1.8pp' : store.dpi >= 78 ? 'flat' : store.dpi >= 65 ? '–2.1pp' : '–5.8pp';
+  const basketSize = store.dpi >= 88 ? '$62.40 (+4.2% YoY)' : store.dpi >= 78 ? '$56.10 (+3.5% YoY)' : store.dpi >= 65 ? '$52.40 (flat YoY)' : '$48.20 (–15.3% over 4 wks)';
+  const transactions = store.dpi >= 88 ? '3,820' : store.dpi >= 78 ? '2,810' : store.dpi >= 65 ? '1,940' : '1,420';
+  const gmRate = store.dpi >= 88 ? '38.2% (+0.8pp vs plan)' : store.dpi >= 78 ? '35.1% (–0.7pp vs plan)' : store.dpi >= 65 ? '32.1% (–3.7pp vs plan)' : '28.6% (–9.2pp vs plan)';
+
   if (isExcellent) {
     return {
-      greeting: `${store.name} (#${store.number}) is leading the district at SPI ${store.dpi} — benchmark performance with all streams in green.`,
+      greeting: `${store.name} (#${store.number}) delivered a standout week — SPI ${store.dpi}, #${store.rank} of ${store.totalStores} in the district. Net sales beat plan by +8.4% driven by Summer 2 floorset execution and favorable weekend weather. Here is your full weekly business recap.`,
       sections: [
-        { title: 'Performance Highlights', icon: 'performance', bullets: [
-          `SPI of <strong>${store.dpi}</strong> ranks <strong>#${store.rank} of ${store.totalStores}</strong> — Excellence tier sustained.`,
-          'Net sales tracking <strong>+4.2% vs plan</strong> consistently for 6 weeks.',
-          'VoC satisfaction at <strong>4.3/5</strong> — top theme \"Friendly Staff\" mentioned in 38% of positive reviews.',
-        ]},
-        { title: 'Operational Excellence', icon: 'ops', bullets: [
-          'Shelf audit compliance <strong>91/100</strong>, planogram adherence at 96% — no critical SEA findings open.',
-          'Stock availability <strong>96.8%</strong> with zero OOS-risk SKUs flagged for the week.',
-          'Margin held at <strong>42.1%</strong> with markdown discipline preserved through season.',
-        ]},
-        { title: 'Recommended Actions', icon: 'recommendations', bullets: [
-          'Codify your playbook — schedule a knowledge-share with peer-store managers next week.',
-          'Begin preparing for seasonal transition: review markdown plan and pre-stage incoming Spring assortment.',
-        ]},
+        {
+          title: 'Weekly Scorecard — vs Plan, LY, Forecast & Comp Week',
+          icon: 'scorecard',
+          bullets: [
+            `<strong>vs Plan:</strong> Net sales <strong>${vsPlan} above plan</strong>. Units sold +6.1%. Gross margin <strong>${gmRate}</strong>. Markdown rate 10.8% — within the 12% plan cap.`,
+            `<strong>vs Last Year (LY):</strong> Net sales <strong>${vsLY} vs LY</strong>. Traffic up +4.2% YoY. Conversion improved to <strong>${convRate}</strong> (${convYoY}). Average basket size ${basketSize}.`,
+            '<strong>vs AI Forecast:</strong> +5.3% above demand forecast — model was conservative on Dresses given last year\'s weather miss; actual warm weekend delivered the upside.',
+            `<strong>vs Comparable Week (52-wk prior):</strong> <strong>+7.8% net-comp</strong> — strong like-for-like performance. District rank: <strong>#${store.rank} of ${store.totalStores} stores</strong>. Revenue contribution: 17.8% of total district weekly revenue.`,
+          ],
+        },
+        {
+          title: 'Traffic & Conversion Analysis',
+          icon: 'traffic',
+          bullets: [
+            `Total transactions: <strong>${transactions} this week</strong> (+4.2% YoY). Peak day was Saturday (+22% vs Monday baseline) driven by warm weather and Semi Annual Sale awareness.`,
+            `Conversion rate: <strong>${convRate}</strong> — strongest in the district. Fitting room utilization 74% during 12–3pm with minimal wait times (VoC confirms near-zero queue complaints).`,
+            'Units per transaction (UPT): <strong>2.8</strong> (+0.3 vs LY). Multi-item basket attach rates improved — the Summer 2 Dress + Accessories cross-sell Endcap setup is driving multi-item conversions.',
+            `Average transaction value (ATV): <strong>${basketSize.split(' ')[0]}</strong> — premium SKU attach (Blazer, Midi Dress) increasing as these items are at eyeline per current planogram spec.`,
+          ],
+        },
+        {
+          title: 'External Context — Weather, Events & Market Factors',
+          icon: 'external',
+          bullets: [
+            '<strong>Weather:</strong> Saturday and Sunday were <strong>3°F above seasonal average</strong> — warm and sunny. Dresses lifted +22% Saturday vs Thursday baseline. Weather-sensitive categories outperformed forecast by 18%. The fully completed Summer 2 floorset amplified the weather benefit — peer stores with partial sets underperformed despite the same conditions.',
+            '<strong>Semi Annual Sale:</strong> Estimated <strong>+$9,200 incremental revenue</strong> (AI attribution vs non-sale baseline). Clearance endcap generated 14% of transactions while occupying 8% of floor space — strong efficiency ratio.',
+            '<strong>Local Events:</strong> Graduation weekend in Nashville metro added an estimated 8–12% Saturday AM foot traffic lift. Formal-adjacent purchases (Blazer, Midi Dress, accessories) spiked +31% Saturday vs Tuesday average.',
+            'No negative external factors this week — no weather disruptions, no competitive promotions detected in the trade area.',
+          ],
+        },
+        {
+          title: "Product Performance — Division & Department Breakdown",
+          icon: 'product',
+          bullets: [
+            '<strong>Women\'s Division (+14.2% vs plan — division leader):</strong> Dresses: +22% — Summer Midi Dress was the #1 SKU this week (98 units, $4,802). Tops/Basics: +8.1% (V-Neck at 64 units). Accessories: –4.1% — only division below plan; facing count gap on Endcap is the fix.',
+            '<strong>Men\'s Division (+6.8% vs plan):</strong> Denim Slim Fit Dark Wash: 47 units ($2,303). Polo Classic: 38 units. Compression Tee: 29 units. Consistent performance across all Men\'s subcategories.',
+            '<strong>Kids (+3.2% vs plan):</strong> Color Block Tee and Cargo Shorts leading. Kids Party Dress lagging — size-run gaps (XS, 4T) limiting conversion. Request DC dispatch this week.',
+            '<strong>Footwear (+11.4% vs plan):</strong> Running Shoes Elite: 28 units (#2 overall SKU). Canvas Sneakers: 22 units. Strong week across all footwear styles.',
+            '<strong>Accessories (–4.1% vs plan):</strong> The only miss. Endcap at 4 facings vs the 6-facing POG spec — 33% fewer impulse-grab opportunities. Estimated lost revenue: $320–$480 this week. A 20-minute fix.',
+          ],
+        },
+        {
+          title: 'Seasonal vs. NOS / Core Performance',
+          icon: 'drivers',
+          bullets: [
+            '<strong>Seasonal (Summer 2): 62% of weekly revenue</strong> — above the 58% plan mix. Full-price sell-through on Summer 2 hero items at 94%. Markdown rate on seasonal items: 4% (plan: 8%). No markdown pressure for 2+ more weeks.',
+            '<strong>NOS / Core: 38% of revenue.</strong> V-Neck Basics, Classic Tee, and Denim are the NOS engines — all above plan. Core items holding 78% sell-through despite the seasonal mix shift.',
+            '<strong>Clearance / Sale items:</strong> 12% of units, 8.2% of revenue — below plan markdown rate. Clearance velocity healthy; no over-stacked clearance risk this week.',
+          ],
+        },
+        {
+          title: 'What Drove the Week — AI Business Analysis',
+          icon: 'drivers',
+          bullets: [
+            '<strong>Primary driver — Floorset execution × weather:</strong> A fully set Summer 2 floorset combined with warm weekend weather created a compounding uplift. Peer stores with partial floorsets averaged $82K lower revenue despite the same weather tailwind — execution quality is the differentiator.',
+            '<strong>Secondary driver — Semi Annual Sale placement:</strong> Clearance endcap at the high-traffic aisle junction drove 14% transaction share from 8% floor space — maximized conversion without cannibalizing full-price.',
+            '<strong>Tertiary driver — Fitting room staffing:</strong> 2× fitting room coverage at peak drove 31% conversion in Dresses and Blazers vs the district\'s 22% average for the same departments.',
+            '<strong>One drag — Accessories Endcap facing gap:</strong> 4 facings vs 6 spec = 33% fewer touchpoints per customer pass. Estimated lost revenue: $320–$480. A 20-minute fix for next week.',
+          ],
+        },
+        {
+          title: 'District Context — Your Store vs the District',
+          icon: 'district',
+          bullets: [
+            `This store is <strong>#${store.rank} of ${store.totalStores} in the district</strong> this week. SPI ${store.dpi} is well above the district average. Momentum is <strong>${store.momentum}</strong> — sustained performance over 6 consecutive weeks.`,
+            'You contributed 17.8% of total district weekly revenue. Indexed productivity per sq ft: +24% above district average.',
+            'District DPI this week: <strong>87 (Excellence)</strong>. Your store anchors this ranking. All 4 active HQ broadcasts acknowledged — full compliance.',
+          ],
+        },
+        {
+          title: "Today's Priorities & Week Ahead Focus",
+          icon: 'recommendations',
+          bullets: [
+            '<strong>Monday — Accessories Endcap (20 min):</strong> Reset to 6-facing POG spec. Estimated weekly revenue recovery: $320–$480.',
+            '<strong>Tuesday — Kids size-run audit:</strong> Resolve XS and 4T gaps in Party Dress. Request DC dispatch or inter-store transfer.',
+            '<strong>This week — Fall transition planning:</strong> Review incoming Fall assortment plan with your merch lead. Pre-stage clearance fixtures. Fall hero items arrive in 3 weeks.',
+            '<strong>Schedule — Knowledge share:</strong> DM has flagged your store as a best-practice template. Suggest a 30-min SM peer session with lower-ranked stores in the district.',
+          ],
+        },
       ],
-      closing: 'Sustain momentum and protect against complacency. Consider mentoring a peer store currently in At-Risk tier.',
+      closing: `${store.name} is the district benchmark this week. The only open action is the Accessories facing correction — a 20-minute fix. Maintain execution, document the playbook, and start positioning for Fall.`,
     };
   }
+
   if (isStable) {
     return {
-      greeting: `${store.name} (#${store.number}) is tracking plan at SPI ${store.dpi} — execution steady with minor opportunities to push into Excellence.`,
+      greeting: `${store.name} (#${store.number}) is tracking plan at SPI ${store.dpi} — net sales ${vsPlan} vs plan but 3 category misses and a conversion gap are leaving upside on the table. Here is the weekly business recap with root causes and the fix list.`,
       sections: [
-        { title: 'Performance & Trends', icon: 'performance', bullets: [
-          `SPI of <strong>${store.dpi}</strong> places you mid-pack at #${store.rank} of ${store.totalStores} — momentum is ${store.momentum}.`,
-          'Net sales at <strong>+1.2% vs plan</strong> — opportunity in Footwear which is trailing district by 3.4 pts.',
-          'VoC satisfaction at <strong>4.0/5</strong>, slight dip from 4.2 — \"Checkout Speed\" mentions trending up.',
-        ]},
-        { title: 'Operational Notes', icon: 'ops', bullets: [
-          'Shelf audit compliance <strong>86/100</strong> — Cleanliness category needs attention (-4 pts vs target).',
-          '2 OOS-risk SKUs in Basics — replenishment scheduled for tomorrow.',
-        ]},
-        { title: 'Recommended Actions', icon: 'recommendations', bullets: [
-          'Run a Footwear category review with the dept lead to identify the assortment gap vs peer stores.',
-          'Increase checkout coverage during peak (12-2pm, 5-7pm) to address the rising VoC theme.',
-        ]},
+        {
+          title: 'Weekly Scorecard — vs Plan, LY, Forecast & Comp Week',
+          icon: 'scorecard',
+          bullets: [
+            `<strong>vs Plan:</strong> Net sales <strong>${vsPlan} vs plan</strong>. Units: flat vs plan. Gross margin <strong>${gmRate}</strong>. Slightly below plan target due to higher-than-planned markdowns in Men's Denim clearance.`,
+            `<strong>vs Last Year (LY):</strong> Net sales <strong>${vsLY} vs LY</strong>. Traffic –2.1% YoY — 3rd consecutive week of softness. Conversion <strong>${convRate}</strong> (${convYoY}). Average basket size ${basketSize}.`,
+            '<strong>vs AI Forecast:</strong> In line with forecast. Model had flagged Men\'s Denim underperformance risk 2 weeks ago based on assortment gap data — the miss materialized as predicted.',
+            `<strong>vs Comparable Week:</strong> <strong>+0.4% net-comp</strong> — essentially flat. District rank: <strong>#${store.rank} of ${store.totalStores} stores</strong>, below district average SPI. Momentum: <strong>${store.momentum}</strong>.`,
+          ],
+        },
+        {
+          title: 'Traffic & Conversion Analysis',
+          icon: 'traffic',
+          bullets: [
+            `Total transactions: <strong>${transactions} this week</strong> (–2.1% YoY). Traffic softness has persisted 3 consecutive weeks. Possible competitive factor — one competitor ran a parallel promotion in the area this weekend.`,
+            `Conversion rate: <strong>${convRate}</strong> — below district average. Biggest drag: checkout queue during 12–2 PM and 5–7 PM peaks. VoC "Checkout Speed" mentions confirm the friction — single-register operation during peak windows is the direct cause.`,
+            'Fitting room conversion (try-on → purchase): <strong>41%</strong> vs 52% district average. Understaffed fitting rooms during peak — customers self-manage and a portion abandon without staff assist.',
+            `Average transaction value (ATV): <strong>${basketSize.split(' ')[0]}</strong> — basket quality improving but limited by conversion drop-off at the register.`,
+          ],
+        },
+        {
+          title: 'External Context — Weather, Events & Market Factors',
+          icon: 'external',
+          bullets: [
+            '<strong>Weather:</strong> Mixed week — warm Thu/Fri, overcast and cooler Saturday (–4°F vs seasonal norm). Saturday cooler weather suppressed Dress demand. Estimated weather drag on Dresses: –$1,200 vs a clear-weather Saturday.',
+            '<strong>Semi Annual Sale:</strong> Estimated <strong>+$4,800 incremental revenue</strong>. However, the clearance endcap is mid-aisle rather than at the entrance zone — missed impulse capture opportunity.',
+            '<strong>Competitive activity:</strong> Trade area data suggests a competitor ran a parallel promotional event nearby — a possible contributing factor to the –2.1% traffic softness.',
+          ],
+        },
+        {
+          title: 'Product Performance — Division & Department Breakdown',
+          icon: 'product',
+          bullets: [
+            '<strong>Women\'s Division (+4.8% vs plan):</strong> Bright spot. Basics (V-Neck, Tee) strong at +9.2%. Dresses at +2.1% — held back by cool Saturday. Accessories lagging (–7.4% vs plan) — Endcap still in Spring configuration.',
+            '<strong>Men\'s Division (–6.2% vs plan):</strong> Biggest drag. Denim Slim Fit: only 18 units vs 32 plan (–44% miss). Assortment issue — only 3 washes available vs 5 in peer stores. Polo Classic and Oxford above plan.',
+            '<strong>Kids (+2.1% vs plan):</strong> Cargo Shorts and Color Block Tee leading. Kids Party Dress lagging — size-run gaps.',
+            '<strong>Accessories (–7.4% vs plan):</strong> Endcap still in Spring configuration. Summer 2 accessories not in optimal placement. Reset is the single highest-priority execution action this week.',
+            '<strong>Footwear (+1.8% vs plan):</strong> Running Shoes slightly above plan. Canvas Sneakers flat.',
+          ],
+        },
+        {
+          title: 'Seasonal vs. NOS / Core Performance',
+          icon: 'drivers',
+          bullets: [
+            '<strong>Seasonal (Summer 2): 54% of revenue</strong> (vs 58% plan mix). Under-indexed because the Accessories Endcap — the primary Summer 2 showcase zone — has not been reset. Direct execution-to-sales linkage.',
+            '<strong>NOS / Core: 46% of revenue</strong> — over-indexed vs plan. Core items are carrying more than their planned share because seasonal execution is incomplete.',
+            '<strong>Clearance:</strong> 14% of units, 9.8% of revenue — slightly above plan. Men\'s Denim clearance moving at deeper markdowns than planned due to assortment positioning issues.',
+          ],
+        },
+        {
+          title: 'What Drove the Week — AI Business Analysis',
+          icon: 'drivers',
+          bullets: [
+            '<strong>Root cause #1 — Men\'s Denim assortment gap:</strong> The –44% miss on Slim Fit Denim is a product problem. Only 3 washes on floor vs 5 in peer stores. An assortment expansion request to the buyer is the right call this week.',
+            '<strong>Root cause #2 — Accessories Endcap in Spring configuration:</strong> Every day the endcap remains in Spring configuration, Seasonal revenue runs at 46% of potential. A reset adds an estimated $380–$520/week for this store\'s traffic volume.',
+            '<strong>Root cause #3 — Checkout bottleneck:</strong> Single register during peak hours is suppressing conversion below district average. Opening a 2nd register is the highest-ROI staffing change available — estimated $1,800/week recovery.',
+            '<strong>Weather partially explains the miss:</strong> Saturday weather drag (–$1,200 estimated) is real. The Denim and Accessories misses are execution-driven and persist regardless of weather.',
+          ],
+        },
+        {
+          title: 'District Context — Your Store vs the District',
+          icon: 'district',
+          bullets: [
+            `Ranked <strong>#${store.rank} of ${store.totalStores}</strong> in the district. SPI ${store.dpi} — the gap to top-3 is approximately 4–6 SPI points, achievable within 2 weeks with the Denim, Accessories, and checkout fixes.`,
+            'Traffic is below district median for comparable store sizes. The –2.1% YoY trend warrants a trade area competitive review.',
+            '<strong>Broadcast status:</strong> Review the "Visual Merchandising — Summer 2" HQ broadcast — it contains the Accessories Endcap reset spec, the #1 priority action this week.',
+          ],
+        },
+        {
+          title: "Today's Priorities & Week Ahead Focus",
+          icon: 'recommendations',
+          bullets: [
+            '<strong>Monday — Accessories Endcap reset (before AM open):</strong> Reset to Summer 2 POG. 45 min, 2 associates. Estimated weekly revenue uplift: $380–$520.',
+            '<strong>Daily — Open 2 registers at 12–2 PM and 5–7 PM:</strong> The checkout VoC trend will reverse within 5–7 days.',
+            '<strong>Wednesday — Men\'s Denim assortment request:</strong> Submit an assortment request to your buyer for the 2 missing wash options. Reference the –44% vs plan data. 2-week lead time.',
+            '<strong>Fitting room staffing:</strong> Deploy 1 fitting room associate 11 AM–3 PM daily. District data shows this alone increases Dresses and Blazer conversion by 8–12 points.',
+          ],
+        },
       ],
-      closing: 'Small, focused interventions on Footwear and Checkout Speed could lift SPI 2-3 points within 2 weeks.',
+      closing: `${store.name} is 3 execution corrections away from a top-3 district ranking: reset the Accessories Endcap, open the second register at peak, and escalate the Denim assortment gap. Each action is discrete, measurable, and achievable within 1 week.`,
     };
   }
+
   if (isAtRisk) {
     return {
-      greeting: `${store.name} (#${store.number}) is in At-Risk territory at SPI ${store.dpi} — trend declining over the last 4 weeks. Targeted intervention required this week.`,
+      greeting: `${store.name} (#${store.number}) had a difficult week — SPI ${store.dpi}, At-Risk tier, net sales ${vsPlan} vs plan and conversion declining for the 4th consecutive week. Here is the full business diagnostic and recovery plan.`,
       sections: [
-        { title: 'Triage & Critical Issues', icon: 'triage', bullets: [
-          '<strong>VoC: Fitting Room Wait</strong> — complaints up <strong>+34%</strong> over 2 weeks, hitting conversion rate.',
-          '<strong>OOS Risk</strong>: 8 size-run gaps in Basics, 4 SKUs critical. Replenishment delayed 36h from DC.',
-          '<strong>Planogram Drift</strong>: Women\'s Wall Display 78% compliance — featured items missing or misplaced.',
-        ]},
-        { title: 'Performance & Trends', icon: 'performance', bullets: [
-          `SPI declined <strong>${store.dpiDelta} pts</strong> over 4 weeks — trajectory points to Crisis tier within 2 weeks if uncorrected.`,
-          'Net sales at <strong>-3.8% vs plan</strong>, conversion rate down 2.1 pts.',
-          `Currently ranked <strong>#${store.rank} of ${store.totalStores}</strong> in district peer cluster.`,
-        ]},
-        { title: 'Recommended Actions', icon: 'recommendations', bullets: [
-          'Increase fitting room staffing during 11am–3pm peak — biggest sales recovery lever.',
-          'Expedite the 4 critical Basics SKUs from regional DC; clear backroom for inbound.',
-          'Reset Women\'s Wall Display tonight — POG team can deploy in 90 minutes.',
-        ]},
+        {
+          title: 'Weekly Scorecard — vs Plan, LY, Forecast & Comp Week',
+          icon: 'scorecard',
+          bullets: [
+            `<strong>vs Plan:</strong> Net sales <strong>${vsPlan} vs plan</strong>. Units: –6.2% vs plan. Gross margin <strong>${gmRate}</strong>. Over-markdown on clearance compressing margin beyond recovery this week.`,
+            `<strong>vs Last Year (LY):</strong> Net sales <strong>${vsLY} vs LY</strong>. Traffic –5.8% YoY — accelerating decline. Conversion dropped to <strong>${convRate}</strong> (${convYoY}). Average basket size ${basketSize} — basket quality holding but the funnel is leaking at conversion.`,
+            '<strong>vs AI Forecast:</strong> –2.9% below even the pessimistic scenario. Compounding factors (OOS + fitting room + POG drift) created more drag than modeled.',
+            `<strong>vs Comparable Week:</strong> <strong>–8.1% net-comp</strong> — meaningful YoY share loss. District rank: <strong>#${store.rank} of ${store.totalStores}</strong>. Revenue contribution has fallen from 12.1% to 9.4% of district total over 4 weeks. Momentum: <strong>${store.momentum}</strong>.`,
+          ],
+        },
+        {
+          title: 'Traffic & Conversion Analysis',
+          icon: 'traffic',
+          bullets: [
+            `Total transactions: <strong>${transactions} this week</strong> (–5.8% YoY, lowest week in 8 weeks). Traffic decline is partially external but conversion is the larger problem.`,
+            `Conversion rate: <strong>${convRate}</strong> — lowest in the district. Driven primarily by fitting room abandonment. Customers arrive and browse but do not complete purchases in Dresses and Blazers — the two highest-ATV categories.`,
+            'Fitting room wait time (estimated from VoC): <strong>12–18 minutes during 11am–3pm peak</strong>. Industry benchmark: above 10 minutes, abandon rate spikes to 61%.',
+            'UPT: <strong>2.1</strong> (–0.4 vs LY). Basket shrinking. Multi-item cross-sell opportunity — typically created during the fitting room visit — is being lost.',
+          ],
+        },
+        {
+          title: 'External Context — Weather & OOS Impact',
+          icon: 'external',
+          bullets: [
+            '<strong>Weather was NOT a factor:</strong> Normal seasonal conditions. Peer stores in the same climate zone outperformed plan this week — this is an execution issue, not a weather story.',
+            '<strong>OOS impact — estimated $3,200 in lost demand:</strong> 8 size-run gaps in Basics and 4 critical SKUs out-of-stock created floor voids visible to customers. Fitting room abandonment-without-purchase data correlates with the SKU gap locations.',
+            '<strong>DC delay context:</strong> The 36-hour Basics replenishment delay is an external supply chain factor. However, failure to escalate proactively (size-run monitoring should have flagged this 72 hours earlier) is an internal process gap.',
+          ],
+        },
+        {
+          title: 'Product Performance — Division & Department Breakdown',
+          icon: 'product',
+          bullets: [
+            '<strong>Women\'s Division (–8.2% vs plan):</strong> Biggest drag. Dresses: –18% (fitting room wait). Basics: –11% (OOS in V-Neck sizes S/M/XS). The division has demand — execution failures are suppressing conversion and purchase.',
+            '<strong>Men\'s Division (+2.1% vs plan):</strong> Bright spot. Polo Classic and Compression Tee above plan. Men\'s is less impacted by fitting room wait — most male shoppers size-grab without try-on.',
+            '<strong>Accessories (–6.8% vs plan):</strong> POG compliance at 78%. Leather Crossbody Bag (featured hero) not at eyeline — buried behind a returns cart.',
+            '<strong>Kids (–4.3% vs plan):</strong> Party Dress and Color Block Tee below plan — size gaps a factor.',
+            '<strong>Footwear (–1.2% vs plan):</strong> Essentially flat — minimal impact from the execution failures.',
+          ],
+        },
+        {
+          title: 'Seasonal vs. NOS / Core Performance',
+          icon: 'drivers',
+          bullets: [
+            '<strong>Seasonal (Summer 2): 48% of revenue</strong> (vs 58% plan). Floorset at 61% completion — the 39% incomplete portion is concentrated in Dresses and Accessories, both underperforming.',
+            '<strong>NOS / Core: 52% of revenue</strong> — over-indexed vs plan. Core items (Polo, Tee, Basics) are carrying the store despite OOS gaps.',
+            '<strong>Clearance:</strong> 17% of units, 11.4% of revenue — above plan markdown rate. Full-price sell-through restoration is the GM recovery path.',
+          ],
+        },
+        {
+          title: 'What Drove the Week — AI Business Analysis',
+          icon: 'drivers',
+          bullets: [
+            '<strong>Root cause #1 — Fitting room service failure ($4,800 lost revenue):</strong> AI modeling attributes $4,800/week to the fitting room wait. Adding 1 fitting room associate 11am–3pm costs ~$112/day — 6× ROI in week 1.',
+            '<strong>Root cause #2 — OOS size-run gaps ($3,200 lost demand):</strong> Creates a reinforcing negative loop: customers can\'t find their size → they leave → conversion falls → OOS persists. Escalate DC priority today.',
+            '<strong>Root cause #3 — POG drift on Women\'s Wall (78% compliance):</strong> 22% of the Wall displays the wrong items. Full reset (90 min, 2 associates) is a one-time fix.',
+            '<strong>Compounding effect:</strong> Each issue causes a –2 to –3% miss individually. Together they compound — a customer who can\'t find her size waits 15 min in a fitting room and abandons — then leaves a negative VoC review that deters the next customer.',
+          ],
+        },
+        {
+          title: 'District Context — Your Store vs the District',
+          icon: 'district',
+          bullets: [
+            `Ranked <strong>#${store.rank} of ${store.totalStores}</strong> in the district. At current trajectory this store is pulling the district average down by approximately 1.2 SPI points.`,
+            'Peer comparison: the Stable-tier store with similar traffic runs 24.8% conversion vs this store\'s 21.1%. The difference is fitting room staffing — proven in peer stores. The playbook exists.',
+            'DM is monitoring daily. 2 of 4 district HQ broadcasts unacknowledged — both contain direct action items for this store\'s recovery. Acknowledge and action before EOD today.',
+          ],
+        },
+        {
+          title: 'Triage — Act on These Today',
+          icon: 'triage',
+          bullets: [
+            '<strong>Fitting room staffing (highest ROI):</strong> 1 dedicated fitting room associate 11am–3pm. Estimated weekly revenue recovery: $1,800–$2,400.',
+            '<strong>DC escalation:</strong> Submit priority DC dispatch for 4 critical Basics SKUs (V-Neck XS/S/M, Blazer Size 6). Reference the OOS impact data.',
+            '<strong>Women\'s Wall POG reset:</strong> Tonight. 90 min, 2 associates. Must be complete before tomorrow AM open.',
+            '<strong>Daily 10-min lead stand-up:</strong> OOS count, fitting room wait at noon, audit score. Report daily to DM.',
+          ],
+        },
       ],
-      closing: 'This is a recoverable position — focused execution on the three actions above should stabilize SPI within 1 week.',
+      closing: `${store.name} has the traffic, team, and assortment to recover. The current metrics are driven by 3 specific, solvable execution failures — not a structural business problem. Execute the fitting room fix today and the recovery begins immediately.`,
     };
   }
-  // Crisis
+
+  // Crisis tier
   return {
-    greeting: `${store.name} (#${store.number}) is in CRISIS at SPI ${store.dpi} — multiple compounding failures across SEA, VoC, OOS and Sales. District Manager intervention today is required.`,
+    greeting: `${store.name} (#${store.number}) is in CRISIS at SPI ${store.dpi} — the worst week in 12 months across every metric. Multiple compounding failures require District Manager on-site intervention today. Here is the complete diagnostic.`,
     sections: [
-      { title: 'Triage & Critical Issues', icon: 'triage', bullets: [
-        '<strong>SEA Auto-Fail</strong>: Fire exit blocked in Zone B — <strong>regulatory exposure</strong>. Must be cleared before close today.',
-        '<strong>VoC Crisis</strong>: \"Messy Aisles\" and \"Staff Unavailable\" complaints up <strong>+38%</strong> in 2 weeks. VoC Score dropped 14 pts.',
-        '<strong>OOS Surge</strong>: 14 SKUs out-of-stock, 4 shipments delayed. Estimated revenue impact €4,200 this week.',
-        '<strong>Sales Miss</strong>: 4 consecutive weeks of comp sales -12%. Apparel leading the decline.',
-      ]},
-      { title: 'Performance & Trends', icon: 'performance', bullets: [
-        `SPI dropped <strong>${store.dpiDelta} pts</strong> in 4 weeks — momentum strongly negative.`,
-        'Net sales at <strong>-9.1% vs district avg</strong>; conversion rate at lowest level in 12 months.',
-        `Ranked <strong>last (#${store.rank} of ${store.totalStores})</strong> in district peer cluster.`,
-      ]},
-      { title: 'Recommended Actions', icon: 'recommendations', bullets: [
-        'Dispatch DM for on-site intervention today — escalation protocol triggered.',
-        'Clear SEA auto-fail before close. Document remediation; submit to Compliance.',
-        'Expedite top-10 OOS SKUs from RDC; restore baseline staffing for next 48h.',
-        'Deep-clean store overnight; reset planograms in priority categories before tomorrow open.',
-      ]},
+      {
+        title: 'Weekly Scorecard — vs Plan, LY, Forecast & Comp Week',
+        icon: 'scorecard',
+        bullets: [
+          `<strong>vs Plan:</strong> Net sales <strong>${vsPlan} vs plan</strong>. Units: –14.1%. Gross margin <strong>${gmRate}</strong>. Emergency clearance markdowns compressing margin beyond weekly recovery.`,
+          `<strong>vs Last Year (LY):</strong> Net sales <strong>${vsLY} vs LY</strong>. Traffic –9.1% YoY. Conversion <strong>${convRate}</strong> (${convYoY}) — lowest in 12 months. VoC Score dropped 14 pts in 2 weeks.`,
+          '<strong>vs AI Forecast:</strong> –9.4% below even the pessimistic scenario. Compounding failures accelerated faster than modeled.',
+          `<strong>vs Comparable Week:</strong> <strong>–18.2% net-comp</strong> — 2nd-worst comparable week in 3-year history. District rank: <strong>#${store.rank} of ${store.totalStores} — last in district</strong>. Revenue share collapsed from 10.8% to 6.2% of district total in 4 weeks.`,
+        ],
+      },
+      {
+        title: 'Traffic & Conversion — Critical Decline',
+        icon: 'traffic',
+        bullets: [
+          `Total transactions: <strong>${transactions} this week</strong> (–9.1% YoY, lowest week in 12 months). The traffic decline includes a measurable deterrent effect from negative VoC and social reviews beginning to suppress repeat visits.`,
+          `Conversion: <strong>${convRate}</strong> — multiple barriers active simultaneously. Messy aisles reduce browse time; OOS gaps eliminate purchase options; fitting room delays deter try-on. Together they compound to a 7.4pp gap vs district average.`,
+          'Average basket size down –15.3% vs 4 weeks ago. Customer profile shifting from planned shoppers to opportunistic clearance buyers — a signal of brand trust erosion.',
+          'Fitting room estimated wait: <strong>18–22 minutes during peak</strong>. At 18+ minutes, the entire Dresses and Blazers conversion opportunity is effectively lost.',
+        ],
+      },
+      {
+        title: 'Critical Issues — Act Before Opening',
+        icon: 'triage',
+        bullets: [
+          '<strong>SEA Auto-Fail — Fire Exit Blocked:</strong> Display fixture obstructing emergency Exit B in Zone B. Zero-tolerance regulatory violation. Store must not open until cleared and photo-documented. DM confirmation required before 9 AM. Risk: mandatory closure and penalties.',
+          '<strong>VoC Emergency — "Messy Aisles" + "Staff Unavailable":</strong> Combined complaints up +38% in 2 weeks. VoC Score dropped 14 pts. Negative Google Reviews are amplifying — estimated 2,400 impressions from new 1-star reviews this week.',
+          '<strong>OOS Surge — 14 SKUs across Basics, Blazers, Denim, and Kids:</strong> 4 DC shipments delayed. Backroom not fully audited in 5 days — actual stock position unknown. A full backroom count is required today before DC requests can be submitted.',
+          '<strong>Summer 2 Floorset — Only 34% Complete:</strong> Women\'s Wall (Dresses), Denim Wall, and Accessories Endcap all in Spring configuration. Estimated revenue suppression: <strong>$4,200/week</strong>.',
+        ],
+      },
+      {
+        title: 'External Context — What Shaped the Week',
+        icon: 'external',
+        bullets: [
+          '<strong>Weather was NOT a factor:</strong> Seasonal conditions, no disruptions. Peer stores in the same trade area outperformed plan. The crisis is entirely internal.',
+          '<strong>Semi Annual Sale was a partial offset with poor conversion:</strong> Sale awareness drove 12% incremental weekend traffic. However, the execution environment converted this traffic at half the rate of peer stores during the same promotional window.',
+          '<strong>Social media amplification risk:</strong> 1-star reviews specifically reference conditions flagged in last week\'s AI audit (messy fitting rooms, empty shelves). Estimated 2,400 impressions — a new customer deterrent forming that will suppress next week\'s traffic if not visibly addressed.',
+        ],
+      },
+      {
+        title: 'Product Performance — Division & Department Breakdown',
+        icon: 'product',
+        bullets: [
+          '<strong>Women\'s Division (–18.4% vs plan):</strong> Catastrophic. Dresses: –29% (fitting room abandonment). Basics: –22% (OOS). Division mix shifted from 48% to 36% of store total in 4 weeks.',
+          '<strong>Men\'s Division (–6.2% vs plan):</strong> Better than Women\'s but still below plan. Denim miss (–14%) due to OOS in core washes.',
+          '<strong>Accessories (–21.8% vs plan):</strong> Endcap in Spring configuration. Hero items not featured. Accessories revenue has essentially collapsed.',
+          '<strong>Kids (–11.3% vs plan):</strong> Significant OOS in Party Dress and Cargo Shorts key sizes.',
+          '<strong>Footwear (–4.1% vs plan):</strong> Minor impact — self-service format is less affected by staffing failures.',
+        ],
+      },
+      {
+        title: 'Seasonal vs. NOS / Core Performance',
+        icon: 'drivers',
+        bullets: [
+          '<strong>Seasonal (Summer 2): Only 29% of revenue</strong> (vs 58% plan). Summer 2 is essentially unexecuted — product is in backroom, on Spring fixtures, or mixed onto clearance rails.',
+          '<strong>NOS / Core: 71% of revenue</strong> — core is carrying everything, but even core items are suppressed by OOS gaps.',
+          '<strong>Clearance: 24% of units</strong> — well above plan. Emergency clearance marking is reactive and compressing GM below any recovery threshold this week.',
+        ],
+      },
+      {
+        title: 'What Drove the Week — AI Business Analysis',
+        icon: 'drivers',
+        bullets: [
+          '<strong>The compounding crisis pattern:</strong> OOS → customers can\'t buy → conversion drops → revenue misses → morale drops → execution standards fall → VoC worsens → traffic declines → OOS worsens. Breaking this cycle requires external intervention — the team cannot self-correct at this velocity.',
+          '<strong>The floorset miss is the origin point:</strong> AI attribution tracing back 4 weeks shows performance decline began precisely when the Summer 2 floorset deadline was missed. Every day of incomplete execution during the sale window costs more than a normal week.',
+          '<strong>Revenue recovery projection:</strong> If fire exit cleared (today), floorset completed (overnight), OOS addressed (48h), and fitting room staffed (tomorrow): AI projects recovery to –4 to –6% vs plan within 10 days — crisis to At-Risk. Full recovery to Stable: 3–4 weeks of sustained execution.',
+        ],
+      },
+      {
+        title: 'Immediate Recovery — Priority Order',
+        icon: 'recommendations',
+        bullets: [
+          '<strong>Before opening — Fire exit:</strong> Clear Exit B obstruction. Photo document. Submit to Compliance. DM confirmation before 9 AM. Store does not open until complete.',
+          '<strong>Before 10 AM — Full backroom count:</strong> Accurate inventory count is prerequisite to the DC dispatch request.',
+          '<strong>Today — DM on-site visit:</strong> Walk the floor together. Prioritize Women\'s Wall reset and Accessories Endcap as the two highest-revenue-recovery zones.',
+          '<strong>Tonight — Overnight floorset reset:</strong> Women\'s Wall and Accessories Endcap in Summer 2 POG. Minimum 3 associates, 3 hours. Focus the 5 hero SKUs at eyeline first.',
+          '<strong>Tomorrow AM — Fitting room staffing:</strong> 1 dedicated associate 11 AM–3 PM. Every day without this costs $680–$960 in Women\'s sales.',
+          '<strong>48 hours — Deep clean:</strong> Professional-standard clean of all aisles, fitting rooms, and entrance zone before the weekend. The VoC cycle cannot break without a visible physical improvement.',
+        ],
+      },
     ],
-    closing: 'This store requires hands-on leadership today. Escalation to Regional VP recommended if conditions persist by end of week.',
+    closing: `${store.name} is in crisis but the data shows demand exists — traffic is down only 9%, the bigger problem is ${convRate} conversion. What is needed is on-site leadership presence and a sequenced, non-negotiable action plan. Follow the priority order: safety first, then backroom count, floorset, fitting room, deep clean.`,
   };
 };
+
 
 // ── KPI Data — mirrors DI's 6 categories (Sales / VoC Sat / VoC Issue / Shelf Audit / OOS / Margin) ──
 interface StoreKPI {
@@ -1671,7 +1940,7 @@ export const StoreCenter: React.FC = () => {
 
   const store = storesData.find(s => s.id === selectedStoreId) || storesData[0];
   const auditData = getAuditData(store);
-  const aiInsight = getAIInsight(store);
+  void getAIInsight(store); // kept for future AI insight panel
   const vocData = getVoCData(store);
   const inventoryData = getInventoryData(store);
   const invDeptOptions = useMemo(
@@ -2111,40 +2380,12 @@ export const StoreCenter: React.FC = () => {
             </div>
           </div>
 
-          {/* AI Daily Brief (shared component) — merges tier narrative + AI Insight */}
+          {/* AI Daily Brief (shared component) */}
           <div className="pulse-right-panel">
-            {(() => {
-              const baseBrief = getStoreBrief(store);
-              const mergedBrief: AIDailyBriefData = {
-                ...baseBrief,
-                sections: [
-                  {
-                    title: 'Root Cause',
-                    icon: 'triage',
-                    bullets: [
-                      aiInsight.rootCause,
-                      ...aiInsight.causalChain.map(c =>
-                        `<strong>${c.factor}</strong> — ${c.contribution}% contribution <em>(${c.direction})</em>`
-                      ),
-                    ],
-                  },
-                  ...baseBrief.sections,
-                  {
-                    title: 'Ranked Actions',
-                    icon: 'recommendations',
-                    bullets: aiInsight.actions.map(a =>
-                      `<strong>#${a.priority} — ${a.action}</strong> · <em>${a.module}</em> · ${a.impact}`
-                    ),
-                  },
-                ],
-              };
-              return (
-                <AIDailyBrief
-                  brief={mergedBrief}
-                  userName={user?.name}
-                />
-              );
-            })()}
+            <AIDailyBrief
+              brief={getStoreBrief(store)}
+              userName={user?.name}
+            />
           </div>
         </div>
 
