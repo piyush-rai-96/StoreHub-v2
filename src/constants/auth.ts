@@ -49,8 +49,8 @@ export const DEFAULT_USERS: UserCredential[] = [
       role: 'SM',
       accessRoutes: ROLE_ACCESS.SM,
       status: 'active',
-      store: 'Downtown Plaza #2034',
-      storeId: '2034',
+      store: 'Downtown Flagship',
+      storeId: 'STR-001',
     },
   },
   {

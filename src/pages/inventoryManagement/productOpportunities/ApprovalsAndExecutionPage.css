@@ -42,9 +42,31 @@
 .aep-header-meta {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: var(--ia-text-xs);
   color: var(--ia-color-text-tertiary);
+}
+
+.aep-store-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, var(--ia-color-primary-soft) 0%, var(--ia-color-primary-border) 100%);
+  border: 1px solid var(--ia-color-primary-border);
+  border-radius: 8px;
+  font-size: var(--ia-text-13);
+  font-weight: var(--ia-font-weight-semibold);
+  color: var(--ia-color-primary-hover);
+}
+
+.aep-store-pill-id {
+  font-size: var(--ia-text-2xs);
+  font-weight: var(--ia-font-weight-medium);
+  color: var(--ia-color-primary);
+  padding: 2px 7px;
+  background: rgba(255,255,255,0.7);
+  border-radius: 4px;
 }
 
 /* ── Content Area ─────────────────────────────────────────── */

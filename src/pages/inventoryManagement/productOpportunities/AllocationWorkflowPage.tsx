@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 import ArrowBackOutlined from '@mui/icons-material/ArrowBackOutlined';
 import InventoryOutlined from '@mui/icons-material/InventoryOutlined';
 import LightbulbOutlined from '@mui/icons-material/LightbulbOutlined';
@@ -30,6 +31,7 @@ const REASON_OPTIONS = Object.entries(REASON_CODE_LABELS).map(([value, label]) =
 export const AllocationWorkflowPage: React.FC = () => {
   const { opportunityId } = useParams<{ opportunityId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const opp = useMemo(() => getOpportunityById(opportunityId ?? ''), [opportunityId]);
 
   const [editedQty, setEditedQty]         = useState(opp?.recommendedAllocationQty ?? 0);
@@ -93,7 +95,7 @@ export const AllocationWorkflowPage: React.FC = () => {
       comment: comment,
       diffVsRecommendation: editedQty - opp.recommendedAllocationQty,
       allocationDelta: editedQty - opp.currentHoAllocationQty,
-      submittedBy: 'Store Manager',
+      submittedBy: user?.name ?? 'Store Manager',
       dcAvailableQty: opp.dcAvailableQty,
       transferAvailableQty: opp.transferAvailableQty,
       salesLast7Days: opp.salesLast7Days,

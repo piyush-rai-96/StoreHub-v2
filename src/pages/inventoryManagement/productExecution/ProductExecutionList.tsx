@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 import AssignmentOutlined from '@mui/icons-material/AssignmentOutlined';
 import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
@@ -71,6 +72,9 @@ function avatarInitials(name: string) {
 
 export const ProductExecutionList: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const storeName = user?.store ?? 'Downtown Flagship';
+  const storeId = user?.storeId ?? 'STR-001';
 
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
@@ -187,8 +191,8 @@ export const ProductExecutionList: React.FC = () => {
           <div className="pex-header-meta">
             <div className="pex-header-store-pill">
               <StoreOutlined sx={{ fontSize: 14 }} />
-              <span>Downtown Flagship</span>
-              <span className="pex-header-store-id">STR-001</span>
+              <span>{storeName}</span>
+              <span className="pex-header-store-id">{storeId}</span>
             </div>
             <div className="pex-header-cycle-pill">
               <CalendarTodayOutlined sx={{ fontSize: 13 }} />

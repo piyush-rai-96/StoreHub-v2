@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
+import StoreOutlined from '@mui/icons-material/StoreOutlined';
+import { useAuth } from '../../../context/AuthContext';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import CancelOutlined from '@mui/icons-material/CancelOutlined';
 import EditOutlined from '@mui/icons-material/EditOutlined';
@@ -32,6 +34,9 @@ const EXEC_STATUS_TABS: (OpportunityStatus | 'all')[] = [
 ];
 
 export const ApprovalsAndExecutionPage: React.FC = () => {
+  const { user } = useAuth();
+  const storeName = user?.store ?? 'Downtown Flagship';
+  const storeId = user?.storeId ?? 'STR-001';
   const [isLoading, setIsLoading] = useState(true);
   const [mainTab, setMainTab] = useState('approvals');
   const [search, setSearch] = useState('');
@@ -123,6 +128,11 @@ export const ApprovalsAndExecutionPage: React.FC = () => {
             <h1>Allocation Approvals &amp; Execution</h1>
           </div>
           <div className="aep-header-meta">
+            <div className="aep-store-pill">
+              <StoreOutlined sx={{ fontSize: 14 }} />
+              <span>{storeName}</span>
+              <span className="aep-store-pill-id">{storeId}</span>
+            </div>
             <AccessTimeOutlined sx={{ fontSize: 12 }} />
             <span>Updated {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
           </div>

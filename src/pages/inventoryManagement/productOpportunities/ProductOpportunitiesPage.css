@@ -111,6 +111,12 @@
   border-color: var(--ia-color-primary-border);
 }
 
+.po-store-picker--locked {
+  cursor: default;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
 .po-store-picker .po-rotated {
   transform: rotate(180deg);
 }

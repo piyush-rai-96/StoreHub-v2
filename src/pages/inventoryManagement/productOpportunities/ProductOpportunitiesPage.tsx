@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import TrendingUpOutlined from '@mui/icons-material/TrendingUpOutlined';
 import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined';
@@ -40,8 +41,10 @@ const TYPE_ICONS: Record<OpportunityType, React.ReactNode> = {
 
 export const ProductOpportunitiesPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isStoreLocked = user?.role === 'SM';
   const [isLoading, setIsLoading] = useState(true);
-  const [storeId, setStoreId] = useState(DEFAULT_STORE_ID);
+  const [storeId, setStoreId] = useState(isStoreLocked ? (user?.storeId ?? DEFAULT_STORE_ID) : DEFAULT_STORE_ID);
   const [showStoreDropdown, setShowStoreDropdown] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [statusFilter, setStatusFilter] = useState('');
@@ -125,32 +128,42 @@ export const ProductOpportunitiesPage: React.FC = () => {
           </div>
           <div className="po-header-meta">
             <div className="po-store-picker-wrap">
-              <button className="po-store-picker" onClick={() => setShowStoreDropdown(prev => !prev)}>
-                <StoreOutlined sx={{ fontSize: 14 }} />
-                <span>{store?.storeName ?? 'Select Store'}</span>
-                <span className="po-store-picker-id">{storeId}</span>
-                <KeyboardArrowDown sx={{ fontSize: 14 }} className={showStoreDropdown ? 'po-rotated' : ''} />
-              </button>
-              {showStoreDropdown && (
-                <div className="po-store-dropdown">
-                  {STORES.map(s => (
-                    <button
-                      key={s.storeId}
-                      className={`po-store-option ${s.storeId === storeId ? 'active' : ''}`}
-                      onClick={() => { setStoreId(s.storeId); setShowStoreDropdown(false); setPage(0); }}
-                    >
-                      <div className="po-store-option-main">
-                        <StoreOutlined sx={{ fontSize: 13 }} />
-                        <span className="po-store-option-label">{s.storeName}</span>
-                      </div>
-                      <div className="po-store-option-meta">
-                        <span>{s.storeId}</span>
-                        <span>{s.region}</span>
-                      </div>
-                      {s.storeId === storeId && <Check sx={{ fontSize: 14 }} className="po-store-check" />}
-                    </button>
-                  ))}
+              {isStoreLocked ? (
+                <div className="po-store-picker po-store-picker--locked">
+                  <StoreOutlined sx={{ fontSize: 14 }} />
+                  <span>{store?.storeName ?? user?.store ?? 'My Store'}</span>
+                  <span className="po-store-picker-id">{storeId}</span>
                 </div>
+              ) : (
+                <>
+                  <button className="po-store-picker" onClick={() => setShowStoreDropdown(prev => !prev)}>
+                    <StoreOutlined sx={{ fontSize: 14 }} />
+                    <span>{store?.storeName ?? 'Select Store'}</span>
+                    <span className="po-store-picker-id">{storeId}</span>
+                    <KeyboardArrowDown sx={{ fontSize: 14 }} className={showStoreDropdown ? 'po-rotated' : ''} />
+                  </button>
+                  {showStoreDropdown && (
+                    <div className="po-store-dropdown">
+                      {STORES.map(s => (
+                        <button
+                          key={s.storeId}
+                          className={`po-store-option ${s.storeId === storeId ? 'active' : ''}`}
+                          onClick={() => { setStoreId(s.storeId); setShowStoreDropdown(false); setPage(0); }}
+                        >
+                          <div className="po-store-option-main">
+                            <StoreOutlined sx={{ fontSize: 13 }} />
+                            <span className="po-store-option-label">{s.storeName}</span>
+                          </div>
+                          <div className="po-store-option-meta">
+                            <span>{s.storeId}</span>
+                            <span>{s.region}</span>
+                          </div>
+                          {s.storeId === storeId && <Check sx={{ fontSize: 14 }} className="po-store-check" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
             {store && (
