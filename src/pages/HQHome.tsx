@@ -438,56 +438,58 @@ export const HQHome: React.FC = () => {
   const aiBriefContent = (
     <div className="ai-brief-summary">
       <p className="ai-brief-paragraph">
-        Good {greetingPart}, {user?.name || 'Elena'}. Here's what changed across your districts this week — performance is mixed, with two districts widening execution gaps and one delivering a record-setting compliance week.
+        Good {greetingPart}, {user?.name || 'Elena'}. The network delivered <strong>$5.2M in weekly revenue</strong> at <strong>+3.1% vs plan</strong> — steady at the enterprise level, but the picture is uneven across regions. Two districts need escalation calls today. One district is setting a new benchmark worth codifying across the chain.
       </p>
 
       <div className="ai-brief-section">
-        <h3 className="ai-brief-section-title"><TrendingUpOutlined sx={{ fontSize: 14 }}/> Network Performance</h3>
+        <h3 className="ai-brief-section-title"><TrendingUpOutlined sx={{ fontSize: 14 }}/> Enterprise Financial Snapshot</h3>
         <ul className="ai-brief-bullets">
-          <li>Network execution compliance moved to <strong>84.8%</strong> (+1.2pp WoW). 2 of 5 districts trending up; District 11 declined (–6%) and District 22 softened (–3%).</li>
-          <li>Average District Performance Index (DPI) is <strong>73</strong> (+1 pt MoM). District 14 leads at 87 — top 10% nationally — and is the highest single-district score in 6 months.</li>
-          <li>Average basket size across the network is <strong>$47.20</strong> (+3.1%), driven by the personal-care cross-sell POG rollout. <em>Recommend extending to remaining 3 districts.</em></li>
+          <li>Network revenue: <strong>$5.2M</strong> (+3.1% vs plan, +2.0% WoW). Gross margin at <strong>38.4%</strong> — flat vs last week, +0.6pp vs Q1 plan. Full-price sell-through strong in Apparel (+4.2pp vs plan); markdowns contained at 11.2% of total revenue.</li>
+          <li>Regional split: Southeast leads at +6.2% vs plan. Central is flat at –0.3%. <strong>Pacific Northwest softened to –2.1%</strong> — the only region below plan, driven by District 11 (Florida) compliance drag and slower store traffic in Gainesville, Jacksonville clusters.</li>
+          <li>Summer 2 Floorset contribution: <strong>+$340K incremental above baseline</strong> in the 12 stores that completed full floorset by Sunday. Stores with partial sets averaged +$82K — a $258K execution gap that represents the addressable opportunity this week.</li>
         </ul>
       </div>
 
       <div className="ai-brief-section">
-        <h3 className="ai-brief-section-title"><BarChartOutlined sx={{ fontSize: 14 }}/> District Performance Index</h3>
+        <h3 className="ai-brief-section-title"><BarChartOutlined sx={{ fontSize: 14 }}/> District Performance — Divergence Alert</h3>
         <ul className="ai-brief-bullets">
-          <li><strong>District 14 — Tennessee</strong> leads the network on planogram compliance for the 2nd consecutive week. Top 3 stores at 100% POG adherence; district-wide average 96%, camera audit scores averaging 96.2.</li>
-          <li><strong>District 11 — Florida</strong> dropped 6 points in execution compliance due to audit misses in 3 stores on Monday. Estimated revenue impact: <strong>$18K</strong>. DM Lisa Nguyen has been notified.</li>
-          <li><strong>District 22 — Carolina</strong> is trending down for the 3rd straight week (–3% WoW). Correlates with declining broadcast acknowledgement rates.</li>
+          <li><strong>District 14 (Tennessee) — Excellence Tier:</strong> DPI 87, top 10% nationally. POG adherence at 97% — the highest sustained score in the network for 6 consecutive weeks. This district's execution model should be considered for chain-wide rollout. <em>Action: Codify the playbook this quarter.</em></li>
+          <li><strong>District 11 (Florida) — Watch:</strong> DPI 79, down 3 pts WoW. Revenue is highest in region ($1.52M) but execution quality is deteriorating — compliance dropped to 78%, spoilage losses are 3× chain average. The revenue vs execution divergence is widening and signals structural risk if left unaddressed.</li>
+          <li><strong>District 22 (Carolina) — Declining for 3rd week:</strong> DPI 82, –2 pts WoW. Root cause is 18% quarterly staff turnover creating onboarding gaps that flow directly into audit score declines. Needs an HQ-level retention policy intervention — district-level fixes have not reversed the trend.</li>
         </ul>
       </div>
 
       <div className="ai-brief-section">
-        <h3 className="ai-brief-section-title"><TaskAltOutlined sx={{ fontSize: 14 }}/> Compliance &amp; Operations</h3>
+        <h3 className="ai-brief-section-title"><TaskAltOutlined sx={{ fontSize: 14 }}/> Network Compliance &amp; Escalations</h3>
         <ul className="ai-brief-bullets">
-          <li><strong>Compliance:</strong> Network-wide POG adherence at <strong>84.8%</strong> (–0.4pp WoW). Decline concentrated in Districts 11 (78%) and 22 (83%); remaining districts held steady.</li>
-          <li><strong>Critical issues:</strong> 14 open (+3 WoW). 2 are tied to the Children's Pajamas Drawstring Safety Recall (Batch #7742) — escalated to all impacted stores.</li>
-          <li><strong>Action backlog:</strong> 12% of total actions are overdue (vs. 8% target). Average completion time held at <strong>4.2h</strong>.</li>
+          <li>Network-wide POG adherence: <strong>84.8%</strong> (–0.4pp WoW). The decline is concentrated in Districts 11 (78%) and 22 (83%). The remaining 3 districts averaged 94.2% — demonstrating that high adherence is achievable at scale.</li>
+          <li><strong>Safety escalation:</strong> Fire exit obstruction at Johnson City Mall (District 14) auto-flagged 2 hours ago. Store Manager acknowledgment still pending. This is a zero-tolerance regulatory exposure — escalate to Regional if not resolved by EOD.</li>
+          <li><strong>Product recall:</strong> Children's Pajamas Drawstring Safety Recall (Batch #7742) — 2 open critical items across impacted stores. Recall protocol compliance at 94% chain-wide. 6 stores still need confirmation of stock pull.</li>
+          <li>Overdue action backlog: <strong>12%</strong> of total (vs 8% target). Average resolution time held at 4.2h — within SLA. Primary contributors to backlog: Districts 11 and 22 at 19% and 16% overdue respectively.</li>
         </ul>
       </div>
 
       <div className="ai-brief-section">
-        <h3 className="ai-brief-section-title"><NotificationsOutlined sx={{ fontSize: 14 }}/> Broadcasts &amp; Communication</h3>
+        <h3 className="ai-brief-section-title"><NotificationsOutlined sx={{ fontSize: 14 }}/> Broadcast Reach &amp; Field Communication</h3>
         <ul className="ai-brief-bullets">
-          <li>Broadcast reach is <strong>94.1%</strong> (+1.8pp WoW) — the highest in 8 weeks. Acknowledgement rate, however, declined in 3 districts (11, 19, 22) below the 85% threshold.</li>
-          <li>Average response time to HQ broadcasts improved from <strong>4.8h to 3.4h</strong> over the last 7 days, driven by apparel execution urgency. Districts 11 and 22 remain below 70% ack rate.</li>
-          <li>"Summer 2 Floorset — Overnight Shift Scheduling" broadcast issued 2h ago: 19 of 32 stores acknowledged. 13-store gap remains; nudge recommended before end of day.</li>
+          <li>4 active HQ broadcasts this week. Overall reach: <strong>94.1%</strong> (+1.8pp WoW) — highest in 8 weeks. But acknowledgement rate diverges sharply: Districts 14 and 19 at 98%+ vs Districts 11 and 22 at <strong>below 70%</strong>. Low ack strongly correlates with compliance score declines (r = 0.81).</li>
+          <li><strong>"Summer 2 Floorset — Overnight Shift Scheduling"</strong> issued 2h ago: 19 of 32 stores acknowledged. 13-store gap remains. Recommend a DM-level nudge to non-acknowledged stores before 6 PM to protect weekend execution.</li>
+          <li>Average HQ broadcast response time improved from 4.8h → <strong>3.4h</strong> WoW, driven by the Semi Annual Sale urgency. Districts with weekly DM huddles averaged 2.1h response — 38% faster than those without.</li>
         </ul>
       </div>
 
       <div className="ai-brief-section ai-brief-suggestions">
-        <h3 className="ai-brief-section-title"><AutoAwesomeOutlined sx={{ fontSize: 14 }}/> Suggestions</h3>
+        <h3 className="ai-brief-section-title"><AutoAwesomeOutlined sx={{ fontSize: 14 }}/> HQ Strategic Priorities This Week</h3>
         <ul className="ai-brief-bullets">
-          <li>District 14's execution playbook is a strong template for underperforming districts — <em>consider scheduling a best-practices share session</em> with Districts 11 and 22.</li>
-          <li>The cross-sell POG in personal care is showing strong lift — <em>recommend extending the rollout to Districts 11, 22, and 19 next week</em>.</li>
-          <li>Broadcast acknowledgement decline correlates with field communication frequency drop — consider reinstating the weekly DM huddle.</li>
+          <li><strong>Escalate District 22 retention:</strong> Three consecutive weeks of declining DPI mapped to staff turnover is a systemic pattern — not a one-time event. Draft a retention incentive policy proposal for Regional review. Short-term DM fixes will not solve this.</li>
+          <li><strong>Codify District 14 playbook:</strong> 6-week streak of top-decile performance with measurable results (POG 97%, DPI 87, VoC 72+) makes this the right moment to document and templatize for underperforming districts.</li>
+          <li><strong>Address Summer 2 execution gap:</strong> $258K incremental opportunity is sitting in the 20 stores with partial floorsets. A same-day broadcast with specific store-level accountability could recover a meaningful portion by weekend.</li>
+          <li><strong>Broadcast ack intervention:</strong> Reinstate the weekly DM huddle as a required cadence for districts below 80% ack rate. Data shows it reduces response time by 38% and improves compliance by 5–7pp.</li>
         </ul>
       </div>
 
       <p className="ai-brief-closing">
-        Overall, the network is steady with strong upside in District 14. Primary attention areas: address the District 11 audit misses and the rising broadcast acknowledgement gap before they widen further.
+        The network is financially healthy but operationally uneven. The execution gap between Districts 14 and 11/22 is widening — this week's window is to prevent it from becoming structural. Highest-leverage actions: the floorset broadcast nudge (short-term revenue), the District 22 retention policy (structural fix), and the fire exit escalation (zero-tolerance safety).
       </p>
     </div>
   );
@@ -558,7 +560,7 @@ export const HQHome: React.FC = () => {
         {showBriefAudio && (
           <div className="di-brief-audio-bar">
             <AudioPlayer
-              text="Good afternoon. North America performance is on track this week. Total revenue reached $142M, up 3% versus plan and 2% week over week. Gross margin steady at 38.4%. Regional compliance at 91%. Top performing district: Pacific Northwest at 94 DPI. Focus areas: Southeast compliance gap at 78%, and open store escalations in Central region require attention."
+              text="Good afternoon, Elena. The network delivered 5.2 million in weekly revenue at plus 3.1 percent versus plan. Gross margin at 38.4 percent, stable. Summer 2 floorset is contributing 340 thousand incremental in stores that completed the full set — a 258 thousand execution gap remains addressable this week. District 14 Tennessee leads the network at DPI 87, Excellence Tier, 6 consecutive weeks at top decile performance. District 11 Florida needs attention — DPI down 3 points, compliance at 78 percent, spoilage losses 3 times chain average. District 22 Carolina declining for the third consecutive week due to 18 percent staff turnover. Broadcast reach at 94 percent but Districts 11 and 22 are below 70 percent acknowledgement. Safety escalation: fire exit obstruction at Johnson City Mall requires EOD resolution. Top priority this week: nudge the Summer 2 floorset broadcast to 13 non-acknowledged stores, escalate District 22 retention to a policy-level intervention, and codify the District 14 execution playbook."
               title="AI Daily Brief"
               variant="bar"
               onClose={() => setShowBriefAudio(false)}
@@ -1948,7 +1950,7 @@ export const HQHome: React.FC = () => {
             {showBriefAudio && (
               <div className="di-brief-modal-audio">
                 <AudioPlayer
-                  text="Good afternoon. North America performance is on track this week. Total revenue reached $142M, up 3% versus plan and 2% week over week. Gross margin steady at 38.4%. Regional compliance at 91%. Top performing district: Pacific Northwest at 94 DPI. Focus areas: Southeast compliance gap at 78%, and open store escalations in Central region require attention."
+                  text="Good afternoon, Elena. The network delivered 5.2 million in weekly revenue at plus 3.1 percent versus plan. Gross margin at 38.4 percent, stable. Summer 2 floorset is contributing 340 thousand incremental in stores that completed the full set — a 258 thousand execution gap remains addressable this week. District 14 Tennessee leads the network at DPI 87, Excellence Tier, 6 consecutive weeks at top decile performance. District 11 Florida needs attention — DPI down 3 points, compliance at 78 percent, spoilage losses 3 times chain average. District 22 Carolina declining for the third consecutive week due to 18 percent staff turnover. Broadcast reach at 94 percent but Districts 11 and 22 are below 70 percent acknowledgement. Safety escalation: fire exit obstruction at Johnson City Mall requires EOD resolution. Top priority this week: nudge the Summer 2 floorset broadcast to 13 non-acknowledged stores, escalate District 22 retention to a policy-level intervention, and codify the District 14 execution playbook."
                   title="AI Daily Brief"
                   variant="card"
                   onClose={() => setShowBriefAudio(false)}

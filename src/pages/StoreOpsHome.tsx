@@ -1285,7 +1285,7 @@ export const StoreOpsHome: React.FC = () => {
         {showBriefAudio && (
           <div className="di-brief-audio-bar">
             <AudioPlayer
-              text="Good afternoon, Clarke. Your district is performing well this week. Sales and Margin. District weekly revenue came in at $1.26M, up 8% versus target and 5% week over week. 6 of 8 stores exceeded plan. Gross margin held steady at 34.2%. District Performance Index reached 87 this week, placing the district in the top 10% Excellence Tier. Compliance. All audits completed, district-wide POG adherence at 97%. Task execution at 87% on-time completion rate. Customer experience VoC Score improved to 72, up 12 points quarter over quarter."
+              text="Good morning, Clarke. District 14 is in the Excellence Tier at DPI 87 — one of your best weeks this quarter. Three items need your attention today. Revenue at 1.26 million, plus 8 percent versus target. POG compliance at 97 percent. First and most urgent: fire exit obstruction at Johnson City Mall, auto-escalated 2 hours ago with no SM acknowledgement — call the store manager before 11 AM. Second: Messy Aisles VoC spike trending plus 34 percent at 3 stores — root cause is cleaning staff hour cuts last month. Third: OOS risk at Clarksville Crossing, adaptation plan waiting your approval, 2,400 dollars at risk. Wins to recognize: Franklin Town Center on a 3-week 100 percent audit streak, and Memphis Central self-resolved their staffing gap. For root-cause analysis, open District Intelligence."
               title="AI Daily Brief"
               variant="bar"
               onClose={() => setShowBriefAudio(false)}
@@ -1296,55 +1296,46 @@ export const StoreOpsHome: React.FC = () => {
           <div className={`ai-brief-body ${isBriefCollapsed ? 'collapsed' : ''}`}>
             <div className="ai-brief-summary">
               <p className="ai-brief-paragraph">
-                Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name || 'Clarke'}. Your district is performing well this week — here's the full picture across sales, margins, operations, and customer experience.
+                Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name || 'Clarke'}. District 14 is in the <strong>Excellence Tier at DPI 87</strong> — one of your best weeks this quarter. Three items need your attention today before they escalate. Here's your morning pulse.
               </p>
 
               <div className="ai-brief-section">
-                <h3 className="ai-brief-section-title"><TrendingUpOutlined sx={{ fontSize: 14 }}/> Sales &amp; Margin</h3>
+                <h3 className="ai-brief-section-title"><TrendingUpOutlined sx={{ fontSize: 14 }}/> District Pulse — 3 Numbers</h3>
                 <ul className="ai-brief-bullets">
-                  <li>District weekly revenue came in at <strong>$1.26M</strong>, <strong>+8% vs target</strong> and +5% WoW. 6 of 8 stores exceeded plan — Nashville Flagship and Memphis Central are leading contributors.</li>
-                  <li>Gross margin held steady at <strong>34.2%</strong> (+0.3pp vs last week). Markdown optimization on seasonal clearance items contributed an estimated <strong>$18K margin recovery</strong> this period.</li>
-                  <li>Average basket size increased to <strong>$47.20</strong> (+3.1%), likely driven by the new cross-sell POG rollout in personal care aisles. <em>Consider expanding this to remaining 3 stores.</em></li>
+                  <li><strong>Revenue:</strong> $1.26M weekly — <strong>+8% vs target</strong>, +5% WoW. 6 of 8 stores exceeded plan. Nashville Flagship ($224K) and Memphis Central ($198K) are driving the outperformance.</li>
+                  <li><strong>Compliance:</strong> POG adherence at <strong>97%</strong> — up 3pp from last week. Franklin Town Center is on a 3-week streak at 100% camera audit compliance. Johnson City Mall dropped to 88% — flagged below.</li>
+                  <li><strong>Execution:</strong> 87% on-time task completion. 2 critical overdue items in your queue. District DPI at <strong>87 — top 10% nationally</strong>, up from 85 last week.</li>
                 </ul>
               </div>
 
               <div className="ai-brief-section">
-                <h3 className="ai-brief-section-title"><BarChartOutlined sx={{ fontSize: 14 }}/> District Performance Index</h3>
+                <h3 className="ai-brief-section-title"><WarningAmberOutlined sx={{ fontSize: 14 }}/> Needs Your Attention Today</h3>
                 <ul className="ai-brief-bullets">
-                  <li>DPI reached <strong>87</strong> this week (+2.4 pts WoW), placing the district in the <strong>top 10% — Excellence Tier</strong>. Up from 85 last week, continuing the improvement trend from 82 last month.</li>
-                  <li>The uplift is causally linked to improved SEA compliance scores (+6pts avg across stores) and a reduction in overdue task backlog (down 40% from last month).</li>
-                  <li>Nashville Flagship leads at <strong>94 SPI</strong>. Murfreesboro Plaza is the laggard at 78, primarily due to supply chain disruptions dragging down in-stock scores.</li>
+                  <li><strong>🚨 Fire Exit — Johnson City Mall:</strong> Display fixture blocking emergency Exit B. Auto-escalated 2h ago; Store Manager has not acknowledged. This is a zero-tolerance safety item. Call the SM before 11 AM.</li>
+                  <li><strong>⚠ Messy Aisles VoC Rising:</strong> +34% spike at Johnson City Mall, Clarksville Crossing, and Franklin Town Center — correlates directly with cleaning staff hour cuts last month. Restore 2hrs/day to reverse before it hits VoC Score.</li>
+                  <li><strong>📦 OOS Risk — Clarksville Crossing:</strong> 3 SKUs (Summer Midi Dress, Women's V-Neck Basics, Blazer) delayed 48h from DC. Adaptation plan is in your queue waiting approval — at-risk revenue: $2,400.</li>
                 </ul>
               </div>
 
               <div className="ai-brief-section">
-                <h3 className="ai-brief-section-title"><TaskAltOutlined sx={{ fontSize: 14 }}/> Operational Highlights</h3>
+                <h3 className="ai-brief-section-title"><StarBorderOutlined sx={{ fontSize: 14 }}/> Wins to Recognize</h3>
                 <ul className="ai-brief-bullets">
-                  <li><strong>Compliance:</strong> All audits completed — district-wide POG adherence at <strong>97%</strong> (up from 94%). Franklin Town Center hit 100% Camera Shelf Audit compliance for the 3rd straight week.</li>
-                  <li><strong>Task Execution:</strong> 87% on-time completion rate. 2 critical overdue items remain and are escalated in your Action Queue.</li>
-                  <li><strong>Staffing:</strong> No open shifts this week. Memphis Central resolved last week's coverage gap by cross-training 2 associates from adjacent departments.</li>
-                </ul>
-              </div>
-
-              <div className="ai-brief-section">
-                <h3 className="ai-brief-section-title"><StarBorderOutlined sx={{ fontSize: 14 }}/> Customer Experience</h3>
-                <ul className="ai-brief-bullets">
-                  <li>VoC Score improved to <strong>72 (+12 pts QoQ)</strong>. North region stores leading, with "helpful staff" as the top positive VoC theme. Store #2156 top rated at 84.</li>
-                  <li>Negative VoC theme <strong>"Messy Aisles"</strong> is trending up +34% — this is flagged as a Rising Risk in your Alerts section with a detailed breakdown.</li>
+                  <li><strong>Franklin Town Center</strong> — 100% camera audit compliance for 3 straight weeks. Consider a shout-out at today's check-in; this store is a model for the district.</li>
+                  <li><strong>Memphis Central</strong> — Resolved last week's staffing coverage gap independently by cross-training 2 associates. No escalation needed. Strong initiative from the SM team.</li>
                 </ul>
               </div>
 
               <div className="ai-brief-section ai-brief-suggestions">
-                <h3 className="ai-brief-section-title"><AutoAwesomeOutlined sx={{ fontSize: 14 }}/> Suggestions</h3>
+                <h3 className="ai-brief-section-title"><AutoAwesomeOutlined sx={{ fontSize: 14 }}/> This Week's Focus</h3>
                 <ul className="ai-brief-bullets">
-                  <li>Nashville Flagship's execution playbook could be a template for underperforming stores — consider scheduling a best-practices share session.</li>
-                  <li>Cross-sell POG in personal care is showing strong lift. <em>Recommend rolling it out to Franklin Town Center and Murfreesboro Plaza next week.</em></li>
-                  <li>The "Messy Aisles" VoC trend correlates with stores that reduced cleaning staff hours last month. Restoring 2 hours/day at affected locations could reverse the trend.</li>
+                  <li>Approve the Clarksville Crossing OOS adaptation plan — 5-minute action, $2,400 revenue protection.</li>
+                  <li>Send the Summer 2 Floorset check-in broadcast to your 8 stores — HQ data shows stores that completed the full set are running +$258K above those with partial sets.</li>
+                  <li>Open District Intelligence for the full root-cause breakdown on the Messy Aisles trend and the Johnson City Mall triage plan.</li>
                 </ul>
               </div>
 
               <p className="ai-brief-closing">
-                Overall, the district is in a strong position. Primary attention areas: resolve the Murfreesboro Plaza supply chain issue and address the rising "Messy Aisles" customer concern before it impacts VoC Score trajectory.
+                Strong week overall — the district is earning its Excellence Tier ranking. The three triage items above are the only things standing between this week and a clean scorecard. Tackle the fire exit first, then the OOS approval.
               </p>
             </div>
           </div>
@@ -1954,7 +1945,7 @@ export const StoreOpsHome: React.FC = () => {
             {showBriefAudio && (
               <div className="di-brief-modal-audio">
                 <AudioPlayer
-                  text="Good afternoon, Clarke. Your district is performing well this week. Sales and Margin. District weekly revenue came in at $1.26M, up 8% versus target and 5% week over week. 6 of 8 stores exceeded plan. Gross margin held steady at 34.2%. District Performance Index reached 87 this week, placing the district in the top 10% Excellence Tier. Compliance. All audits completed, district-wide POG adherence at 97%. Task execution at 87% on-time completion rate. Customer experience VoC Score improved to 72, up 12 points quarter over quarter."
+                  text="Good morning, Clarke. District 14 is in the Excellence Tier at DPI 87 — one of your best weeks this quarter. Three items need your attention today. Revenue at 1.26 million, plus 8 percent versus target. POG compliance at 97 percent. First and most urgent: fire exit obstruction at Johnson City Mall, auto-escalated 2 hours ago with no SM acknowledgement — call the store manager before 11 AM. Second: Messy Aisles VoC spike trending plus 34 percent at 3 stores — root cause is cleaning staff hour cuts last month. Third: OOS risk at Clarksville Crossing, adaptation plan waiting your approval, 2,400 dollars at risk. Wins to recognize: Franklin Town Center on a 3-week 100 percent audit streak, and Memphis Central self-resolved their staffing gap. For root-cause analysis, open District Intelligence."
                   title="AI Daily Brief"
                   variant="card"
                   onClose={() => setShowBriefAudio(false)}
@@ -1964,55 +1955,46 @@ export const StoreOpsHome: React.FC = () => {
             <div className="brief-modal-content">
               <div className="ai-brief-summary">
                 <p className="ai-brief-paragraph">
-                  Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name || 'Clarke'}. Your district is performing well this week — here's the full picture across sales, margins, operations, and customer experience.
+                  Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name || 'Clarke'}. District 14 is in the <strong>Excellence Tier at DPI 87</strong> — one of your best weeks this quarter. Three items need your attention today before they escalate. Here's your morning pulse.
                 </p>
 
                 <div className="ai-brief-section">
-                  <h3 className="ai-brief-section-title"><TrendingUpOutlined sx={{ fontSize: 14 }}/> Sales &amp; Margin</h3>
+                  <h3 className="ai-brief-section-title"><TrendingUpOutlined sx={{ fontSize: 14 }}/> District Pulse — 3 Numbers</h3>
                   <ul className="ai-brief-bullets">
-                    <li>District weekly revenue came in at <strong>$1.26M</strong>, <strong>+8% vs target</strong> and +5% WoW. 6 of 8 stores exceeded plan — Nashville Flagship and Memphis Central are leading contributors.</li>
-                    <li>Gross margin held steady at <strong>34.2%</strong> (+0.3pp vs last week). Markdown optimization on seasonal clearance items contributed an estimated <strong>$18K margin recovery</strong> this period.</li>
-                    <li>Average basket size increased to <strong>$47.20</strong> (+3.1%), likely driven by the new cross-sell POG rollout in personal care aisles. <em>Consider expanding this to remaining 3 stores.</em></li>
+                    <li><strong>Revenue:</strong> $1.26M weekly — <strong>+8% vs target</strong>, +5% WoW. 6 of 8 stores exceeded plan. Nashville Flagship ($224K) and Memphis Central ($198K) are driving the outperformance.</li>
+                    <li><strong>Compliance:</strong> POG adherence at <strong>97%</strong> — up 3pp from last week. Franklin Town Center is on a 3-week streak at 100% camera audit compliance. Johnson City Mall dropped to 88% — flagged below.</li>
+                    <li><strong>Execution:</strong> 87% on-time task completion. 2 critical overdue items in your queue. District DPI at <strong>87 — top 10% nationally</strong>, up from 85 last week.</li>
                   </ul>
                 </div>
 
                 <div className="ai-brief-section">
-                  <h3 className="ai-brief-section-title"><BarChartOutlined sx={{ fontSize: 14 }}/> District Performance Index</h3>
+                  <h3 className="ai-brief-section-title"><WarningAmberOutlined sx={{ fontSize: 14 }}/> Needs Your Attention Today</h3>
                   <ul className="ai-brief-bullets">
-                    <li>DPI reached <strong>87</strong> this week (+2.4 pts WoW), placing the district in the <strong>top 10% — Excellence Tier</strong>. Up from 85 last week, continuing the improvement trend from 82 last month.</li>
-                    <li>The uplift is causally linked to improved SEA compliance scores (+6pts avg across stores) and a reduction in overdue task backlog (down 40% from last month).</li>
-                    <li>Nashville Flagship leads at <strong>94 SPI</strong>. Murfreesboro Plaza is the laggard at 78, primarily due to supply chain disruptions dragging down in-stock scores.</li>
+                    <li><strong>🚨 Fire Exit — Johnson City Mall:</strong> Display fixture blocking emergency Exit B. Auto-escalated 2h ago; Store Manager has not acknowledged. This is a zero-tolerance safety item. Call the SM before 11 AM.</li>
+                    <li><strong>⚠ Messy Aisles VoC Rising:</strong> +34% spike at Johnson City Mall, Clarksville Crossing, and Franklin Town Center — correlates directly with cleaning staff hour cuts last month. Restore 2hrs/day to reverse before it hits VoC Score.</li>
+                    <li><strong>📦 OOS Risk — Clarksville Crossing:</strong> 3 SKUs (Summer Midi Dress, Women's V-Neck Basics, Blazer) delayed 48h from DC. Adaptation plan is in your queue waiting approval — at-risk revenue: $2,400.</li>
                   </ul>
                 </div>
 
                 <div className="ai-brief-section">
-                  <h3 className="ai-brief-section-title"><TaskAltOutlined sx={{ fontSize: 14 }}/> Operational Highlights</h3>
+                  <h3 className="ai-brief-section-title"><StarBorderOutlined sx={{ fontSize: 14 }}/> Wins to Recognize</h3>
                   <ul className="ai-brief-bullets">
-                    <li><strong>Compliance:</strong> All audits completed — district-wide POG adherence at <strong>97%</strong> (up from 94%). Franklin Town Center hit 100% Camera Shelf Audit compliance for the 3rd straight week.</li>
-                    <li><strong>Task Execution:</strong> 87% on-time completion rate. 2 critical overdue items remain and are escalated in your Action Queue.</li>
-                    <li><strong>Staffing:</strong> No open shifts this week. Memphis Central resolved last week's coverage gap by cross-training 2 associates from adjacent departments.</li>
-                  </ul>
-                </div>
-
-                <div className="ai-brief-section">
-                  <h3 className="ai-brief-section-title"><StarBorderOutlined sx={{ fontSize: 14 }}/> Customer Experience</h3>
-                  <ul className="ai-brief-bullets">
-                    <li>VoC Score improved to <strong>72 (+12 pts QoQ)</strong>. North region stores leading, with "helpful staff" as the top positive VoC theme. Store #2156 top rated at 84.</li>
-                    <li>Negative VoC theme <strong>"Messy Aisles"</strong> is trending up +34% — this is flagged as a Rising Risk in your Alerts section with a detailed breakdown.</li>
+                    <li><strong>Franklin Town Center</strong> — 100% camera audit compliance for 3 straight weeks. Consider a shout-out at today's check-in; this store is a model for the district.</li>
+                    <li><strong>Memphis Central</strong> — Resolved last week's staffing coverage gap independently by cross-training 2 associates. No escalation needed. Strong initiative from the SM team.</li>
                   </ul>
                 </div>
 
                 <div className="ai-brief-section ai-brief-suggestions">
-                  <h3 className="ai-brief-section-title"><AutoAwesomeOutlined sx={{ fontSize: 14 }}/> Suggestions</h3>
+                  <h3 className="ai-brief-section-title"><AutoAwesomeOutlined sx={{ fontSize: 14 }}/> This Week's Focus</h3>
                   <ul className="ai-brief-bullets">
-                    <li>Nashville Flagship's execution playbook could be a template for underperforming stores — consider scheduling a best-practices share session.</li>
-                    <li>Cross-sell POG in personal care is showing strong lift. <em>Recommend rolling it out to Franklin Town Center and Murfreesboro Plaza next week.</em></li>
-                    <li>The "Messy Aisles" VoC trend correlates with stores that reduced cleaning staff hours last month. Restoring 2 hours/day at affected locations could reverse the trend.</li>
+                    <li>Approve the Clarksville Crossing OOS adaptation plan — 5-minute action, $2,400 revenue protection.</li>
+                    <li>Send the Summer 2 Floorset check-in broadcast to your 8 stores — HQ data shows stores that completed the full set are running +$258K above those with partial sets.</li>
+                    <li>Open District Intelligence for the full root-cause breakdown on the Messy Aisles trend and the Johnson City Mall triage plan.</li>
                   </ul>
                 </div>
 
                 <p className="ai-brief-closing">
-                  Overall, the district is in a strong position. Primary attention areas: resolve the Murfreesboro Plaza supply chain issue and address the rising "Messy Aisles" customer concern before it impacts VoC Score trajectory.
+                  Strong week overall — the district is earning its Excellence Tier ranking. The three triage items above are the only things standing between this week and a clean scorecard. Tackle the fire exit first, then the OOS approval.
                 </p>
               </div>
             </div>

@@ -1093,57 +1093,58 @@ export const DistrictIntelligence: React.FC = () => {
   interface DIBrief { greeting: string; sections: DIBriefSection[]; closing: string }
   const DISTRICT_BRIEFS: Record<string, DIBrief> = {
     d14: {
-      greeting: `3 active triage items this week across Johnson City Mall, Clarksville Crossing, and Franklin Town Center. Here's the full district intelligence picture with root causes, trend analysis, and recommended actions.`,
+      greeting: `District 14 (Tennessee) holds the Excellence Tier at DPI 87 — but this analysis identifies 3 active risks and 2 emerging signals that could reverse the trend within 2–3 weeks if not addressed. Here's the full intelligence picture with root-cause analysis, cross-metric correlations, and a forward-looking risk model.`,
       sections: [
         {
-          title: 'Triage & Critical Issues',
+          title: 'Active Triage — Root Cause Analysis',
           icon: 'triage',
           bullets: [
-            '<strong>VoC: Messy Aisles</strong> — +22% theme spike across 3 stores (Johnson City Mall +45%, Clarksville Crossing +38%, Franklin Town Center +31%). WoW trend is accelerating; last week was +14%. Root cause: cleaning staff hours were cut by 2hrs/day at these locations last month.',
-            '<strong>SEA Auto-Fail: Fire Exit</strong> at Johnson City Mall is a <strong>CRITICAL</strong> regulatory exposure. Display fixture blocking emergency Exit B. Auto-escalated to DM 2 hours ago; store manager acknowledgment still pending. Any delay risks store closure and penalties.',
-            '<strong>Inbound OOS Risk</strong> at Clarksville Crossing — 3 SKUs (Summer Midi Dress, Women\'s V-Neck Basics, Women\'s Classic Blazer) delayed 48h from DC. Revenue impact estimated at $2,400. Adaptation plan awaiting DM approval.',
+            '<strong>Fire Exit — Johnson City Mall [CRITICAL]:</strong> Display fixture blocking emergency Exit B. Auto-escalated 2h ago; SM acknowledgement pending. Root cause: seasonal Summer 2 floorset staging placed fixture overflow in Exit B corridor. Regulatory exposure is zero-tolerance — any failure to resolve by EOD triggers mandatory store closure protocol. Escalate to Regional if unresolved by noon.',
+            '<strong>VoC "Messy Aisles" Spike — 3 Stores:</strong> Johnson City Mall +45%, Clarksville Crossing +38%, Franklin Town Center +31%. WoW acceleration: last week was +14%, this week +22%. Root cause identified: cleaning staff hours were cut by 2hrs/day at these 3 locations 4 weeks ago. The correlation between hour-cut date and VoC degradation onset is 0.93. This is not a service attitude issue — it\'s a scheduling execution failure. VoC Score model: if unresolved within 14 days, district-wide VoC drops an estimated <strong>–6 pts</strong>.',
+            '<strong>OOS Risk — Clarksville Crossing [3 Summer 2 Key SKUs]:</strong> Women\'s Classic Blazer, Summer Midi Dress, and V-Neck Basics delayed 48h from DC due to a distribution routing error. Combined revenue at risk: <strong>$2,400</strong>. These are all top-10 Summer 2 velocity SKUs — floor gaps are visible and will suppress impulse conversion during the Semi Annual Sale peak weekend. Adaptation plan is in your queue, awaiting approval.',
           ],
         },
         {
-          title: 'Performance & Trends',
+          title: 'Performance & Trend Analysis',
           icon: 'performance',
           bullets: [
-            'Weekly revenue at <strong>$1.26M</strong> (+8% vs target, +5% WoW). 6 of 8 stores exceeded plan. Nashville Flagship and Memphis Central are the leading revenue contributors, but Johnson City Mall\'s operational issues are offsetting sales performance.',
-            'Gross margin held at <strong>34.2%</strong> (+0.3pp WoW). YoY comparison shows a <strong>+1.8pp improvement</strong> driven by markdown optimization. Seasonal clearance contributed an estimated $18K margin recovery this period.',
-            'District DPI moved from <strong>85 → 87</strong> (+2pts MoM), placing in the <strong>top 10% — Excellence Tier</strong>. However, the triage items above represent emerging risks that could reverse this trajectory.',
-            'Store-level variance is widening: top store (Nashville Flagship) at SPI 94 vs bottom (Johnson City Mall) at SPI 58. The gap increased by 4pts this month — requires targeted intervention.',
+            'Weekly revenue at <strong>$1.26M</strong> (+8% vs target, +5% WoW). 6 of 8 stores beat plan. Nashville Flagship ($224K) and Memphis Central ($198K) drive outperformance. Importantly, Johnson City Mall is the <strong>only revenue-negative store</strong> at –$12K vs plan — its operational failures are masking an otherwise excellent district-wide result.',
+            'Gross margin at <strong>34.2%</strong> (+0.3pp WoW, +1.8pp YoY). Markdown optimization on Summer clearance contributed $18K in margin recovery. Full-price sell-through on Summer 2 hero items (Blazer +22%, Midi Dress +18%) is significantly above plan in the 6 stores where floorsets are complete.',
+            'District DPI: <strong>85 → 87</strong> (+2pts MoM), Excellence Tier. The uplift is causally linked to improved SEA compliance (+6pts avg) and a 40% reduction in overdue task backlog. However, the DPI improvement masks widening store-level variance: Nashville Flagship SPI 94 vs Johnson City Mall SPI 58 — a <strong>36-pt gap</strong>, widened by 4pts this month.',
+            'Forward-looking DPI risk: the 3 active triage items above carry a combined estimated DPI drag of –4 to –6 pts if unresolved over the next 2 weeks. Continued Excellence Tier status is at risk.',
           ],
         },
         {
-          title: 'Operational Analysis',
+          title: 'Apparel & Floorset Execution Analysis',
           icon: 'ops',
           bullets: [
-            '<strong>Compliance:</strong> District-wide POG adherence at <strong>97%</strong> (up from 94%). Franklin Town Center at 100% Camera Shelf Audit for 3 consecutive weeks. However, Johnson City Mall dropped to 88% — directly linked to the messy aisles / fire exit issues.',
-            '<strong>Cross-metric relationship:</strong> The VoC "Messy Aisles" complaints correlate 0.87 with declining Cleanliness audit scores. Both map to the same 3 stores. This is not a coincidence — it\'s a staffing execution failure.',
-            '<strong>Task execution:</strong> 87% on-time completion. 2 critical overdue items are the fire exit resolution and the Clarksville Crossing adaptation approval — both in your triage queue.',
+            '<strong>Summer 2 Floorset Status:</strong> 7 of 8 stores completed the full floorset by the Sunday deadline. Johnson City Mall is the exception at 61% complete — Women\'s Wall and Accessories Endcap remain in Spring configuration. Stores with 100% completion are averaging <strong>+$258K above partial-set stores</strong> in the first 5 days.',
+            '<strong>Semi Annual Sale Signage Compliance:</strong> 6 of 8 stores confirmed windows, marquee, and sign toppers in place. Johnson City Mall and Clarksville Crossing have open signage confirmations. Broadcast acknowledgement rate for the signage brief is 75% — 2 stores have not acknowledged.',
+            '<strong>Cross-category performance:</strong> Women\'s Dresses and Denim are the highest-velocity categories district-wide. Accessories is underperforming — AI shelf audit at 3 stores shows incorrect facing counts and misplaced hero items on the Endcap. Facing correction alone could recover an estimated 8–12% in Accessories revenue.',
           ],
         },
         {
-          title: 'Customer Experience',
+          title: 'Customer Experience — Pattern Analysis',
           icon: 'customer',
           bullets: [
-            'VoC Score improved to <strong>72 (+12 pts QoQ)</strong> district-wide, but this masks a divergence: stores without triage issues are at VoC Score 81, while Clarksville Crossing / Johnson City Mall average VoC Score 61.',
-            '"Messy Aisles" is now the <strong>#1 negative VoC theme</strong> (+34% WoW, +22% overall). If not addressed within 2 weeks, VoC Score modeling projects a <strong>-6pt district-wide impact</strong>.',
-            'Positive signal: "Helpful staff" remains the top positive theme. Staff friendliness scores are stable across all stores — the issue is purely operational (cleanliness, stocking), not service attitude.',
+            'District VoC at <strong>72 (+12 pts QoQ)</strong>. However, a critical divergence exists: stores without triage items average VoC 81; Clarksville Crossing and Johnson City Mall average VoC 61. The district-wide number is misleading.',
+            '"Messy Aisles" is the #1 negative theme (+34% WoW). Cross-referencing with in-store audit data: the theme spike maps precisely to Cleanliness audit category scores, which declined in the same 3 stores at the same time. Causation is clearer than correlation here — the staffing cut is the single root cause.',
+            '"Helpful Staff" remains the #1 positive theme across the district. This is significant: the VoC degradation is purely <em>operational</em> (cleanliness, stocking gaps) not <em>attitudinal</em>. The fix is a scheduling change, not a coaching program.',
+            '<strong>Emerging signal:</strong> "Fitting Room Wait" mentions are rising at Murfreesboro Plaza (+19% WoW). This store is currently Stable tier, but the pattern is early-stage identical to the Johnson City Mall situation 6 weeks ago. Intervene early to avoid the same trajectory.',
           ],
         },
         {
-          title: 'Recommendations & Next Steps',
+          title: 'Prioritized Actions & Forward Plan',
           icon: 'recommendations',
           bullets: [
-            '<strong>Immediate (today):</strong> Deploy Johnson City Mall team to clear fire exit and confirm compliance. This is a zero-tolerance safety item — escalate to Regional if not resolved by EOD.',
-            '<strong>This week:</strong> Restore cleaning hours at Johnson City Mall, Clarksville Crossing, and Franklin Town Center (+2hrs/day). Model shows this alone could reverse the Messy Aisles trend within 10 days.',
-            '<strong>Approve:</strong> Clarksville Crossing adaptation plan for the 3 delayed SKUs — estimated to recover $2,400 in at-risk revenue.',
-            '<strong>Forward-looking:</strong> Nashville Flagship\'s execution playbook should be templated for Johnson City Mall turnaround. Schedule a best-practices session and consider pairing store managers.',
+            '<strong>Today (non-negotiable):</strong> (1) Call Johnson City Mall SM — fire exit clearance must be confirmed before noon. (2) Approve Clarksville Crossing OOS adaptation plan — 5-minute action, $2,400 revenue protection.',
+            '<strong>This week:</strong> Restore +2hrs/day cleaning at Johnson City Mall, Clarksville Crossing, and Franklin Town Center. VoC model shows this reverses "Messy Aisles" trend within 10 days. Issue a district-wide broadcast: "Summer 2 Signage Confirmation Required by EOD."',
+            '<strong>Forward-looking (2-week horizon):</strong> Monitor Murfreesboro Plaza fitting room metrics — intervene if the trend continues next week. Begin templating Nashville Flagship\'s execution playbook for Johnson City Mall turnaround. Schedule a SM-to-SM best-practice session.',
+            '<strong>Structural recommendation:</strong> The cleaning-hours cut that triggered this cascade was a local cost-reduction decision without a risk model. Propose a district-level protocol: any staffing hour reductions >10% require DM sign-off with a VoC impact assessment.',
           ],
         },
       ],
-      closing: 'Overall, the district is in a strong position at DPI 87 / Excellence Tier, but the 3 active triage items need rapid resolution to prevent backsliding. Priority: fire exit (safety), messy aisles (VoC trend), OOS adaptation (revenue protection).',
+      closing: 'District 14 is in a genuinely strong position — the Excellence Tier ranking is earned. The 3 triage items are resolvable within 48 hours with focused action. The bigger strategic priority is preventing the Johnson City Mall SPI gap from widening further, and catching the Murfreesboro Plaza signal early before it becomes the next triage story.',
     },
     d08: {
       greeting: `3 active triage items in Georgia district this week. Shrinkage and checkout speed are the dominant concerns. Here's your detailed intelligence brief with store-level analysis and action plan.`,

@@ -398,141 +398,171 @@ const getStoreBrief = (store: DistrictStore): AIDailyBriefData => {
   const tier = store.spiTier;
   if (tier === 'Excellence') {
     return {
-      greeting: `${store.storeName} (#${store.storeNumber}) is leading the district at SPI ${store.spi} — a benchmark performance with all streams in green.`,
+      greeting: `${store.storeName} (#${store.storeNumber}) is the district benchmark at SPI ${store.spi} — all execution streams are green and Summer 2 Floorset is tracking ahead of schedule.`,
       sections: [
         {
-          title: 'Performance Highlights',
-          icon: 'performance',
-          bullets: [
-            `SPI of <strong>${store.spi}</strong> ranks in the top 10% of the district — Excellence Tier maintained for 6 consecutive weeks.`,
-            'Net sales tracking <strong>+8.4% vs plan</strong>, with Apparel and Home both contributing above district average.',
-            'VoC satisfaction at <strong>92%</strong> — top theme is "Friendly Staff" mentioned in 38% of positive reviews.',
-          ],
-        },
-        {
-          title: 'Operational Excellence',
+          title: "Today's Priorities",
           icon: 'ops',
           bullets: [
-            'Shelf audit compliance <strong>97%</strong>, planogram adherence at 96% — no critical SEA findings open.',
-            'Stock availability <strong>99.2%</strong> with zero OOS-risk SKUs flagged for the week.',
-            'Backroom efficiency at top quartile — receiving SLA met 100% of the time over last 30 days.',
+            '<strong>Floorset Completion:</strong> Women\'s Wall and Denim Wall resets are 94% complete — finish the remaining 2 bays before opening to lock in full Summer 2 execution credit.',
+            '<strong>Semi Annual Sale Signage:</strong> Confirm all window toppers, marquee, and sign toppers are in correct position per the HQ visual brief. Photo confirm to DM before noon.',
+            '<strong>Receiving:</strong> Inbound delivery expected 9–11 AM — prioritize the Blazer and Midi Dress cartons to the floor immediately. These are top-20 Summer 2 SKUs.',
           ],
         },
         {
-          title: 'Recommended Actions',
+          title: 'Store Performance Snapshot',
+          icon: 'performance',
+          bullets: [
+            `Store SPI at <strong>${store.spi}</strong> — top 10% of the district, Excellence Tier maintained for 6 consecutive weeks. Net sales <strong>+8.4% vs plan</strong> this week.`,
+            'Apparel leading with Women\'s Dresses +14% and Denim +11% vs plan. Athletic and Basics are at plan. Accessories is the only category below target (–4%).`,',
+            'VoC at <strong>92%</strong> — "Friendly Staff" the #1 positive theme (38% of reviews). Zero complaints about checkout speed or fitting room wait times.',
+          ],
+        },
+        {
+          title: 'Operational Health',
+          icon: 'ops',
+          bullets: [
+            'Shelf audit compliance <strong>97%</strong>, planogram adherence <strong>96%</strong> — no open SEA critical findings. Last camera audit scored 98.2.',
+            'Stock availability <strong>99.2%</strong> — zero OOS-risk SKUs flagged. Backroom is organized; receiving SLA met 100% of the time over the last 30 days.',
+            'Staffing: All shifts covered this week. Fitting rooms staffed at 2× coverage during 11am–3pm peak — the right call given Summer 2 traffic patterns.',
+          ],
+        },
+        {
+          title: 'Strategic Actions This Week',
           icon: 'recommendations',
           bullets: [
-            'Codify your playbook — schedule a knowledge-share session with peer-store managers next week.',
-            'Begin preparing for seasonal transition: review markdown plan and pre-stage incoming Spring assortment.',
+            'Document your Summer 2 floorset execution process — your DM has flagged your store as a best-practice template for the district.',
+            'Review the Semi Annual Sale markdown plan with your merch lead. Pre-stage clearance fixtures to free up primary wall space for incoming Fall transition assortment.',
+            'Begin outreach to your peer SM at the district\'s lowest-ranked store — a knowledge-share session has been proposed by your DM.',
           ],
         },
       ],
-      closing: 'Sustain momentum and protect against complacency. Consider mentoring a peer store currently in At-Risk tier.',
+      closing: `${store.storeName} is a district model right now. The focus this week is maintaining execution discipline during the Summer 2 peak while beginning to position for the Fall transition. Don't let complacency creep in — protect the streak.`,
     };
   }
   if (tier === 'Stable') {
     return {
-      greeting: `${store.storeName} (#${store.storeNumber}) is tracking plan at SPI ${store.spi} — execution steady with minor opportunities to push into Excellence.`,
+      greeting: `${store.storeName} (#${store.storeNumber}) is tracking plan at SPI ${store.spi} — Summer 2 Floorset is 78% complete with 2 category gaps to close today.`,
       sections: [
         {
-          title: 'Performance & Trends',
+          title: "Today's Priorities",
+          icon: 'ops',
+          bullets: [
+            '<strong>Floorset Gap — Accessories Endcap:</strong> AI shelf audit detected the Accessories Endcap is still in Spring configuration. Reset required today — standard wall takes ~45 minutes with 2 associates.',
+            '<strong>OOS Replenishment:</strong> 2 SKUs at-risk in Women\'s Basics (V-Neck size S and M). Pull from backroom Rails B2–B3 before noon to avoid floor gaps during peak hours.',
+            '<strong>Semi Annual Sale:</strong> Verify all markdown tickets are on the correct items — AI detected 3 mismatched price tags on the Denim wall in yesterday\'s audit.',
+          ],
+        },
+        {
+          title: 'Store Performance Snapshot',
           icon: 'performance',
           bullets: [
-            `SPI of <strong>${store.spi}</strong> places you mid-pack in the district — momentum is flat-to-improving.`,
-            'Net sales at <strong>+1.2% vs plan</strong> — opportunity in Footwear which is trailing district by 3.4 pts.',
-            'VoC satisfaction at <strong>84%</strong>, slight dip from 86% — "Checkout Speed" mentions trending up.',
+            `Store SPI at <strong>${store.spi}</strong> — Stable tier, mid-pack in the district. Net sales <strong>+1.2% vs plan</strong>. Opportunity in Denim which is trailing district average by 3.4 pts.`,
+            'Women\'s Dresses and Basics are at plan. Men\'s Denim is the category dragging the overall score — assortment gap vs peer stores likely at play.',
+            'VoC satisfaction at <strong>84%</strong> — slight dip from 86% last week. "Checkout Speed" mentions have increased +18% over 2 weeks. Worth watching.',
           ],
         },
         {
           title: 'Operational Notes',
           icon: 'ops',
           bullets: [
-            'Shelf audit compliance <strong>91%</strong> — Cleanliness category needs attention (-4 pts vs target).',
-            '2 OOS-risk SKUs in Basics — replenishment scheduled for tomorrow.',
+            'Shelf audit compliance <strong>91%</strong> — Cleanliness category is –4 pts vs target, driven by the fitting room area. Schedule a mid-shift clean between 2–3 PM.',
+            'Staffing: 1 open shift Saturday afternoon. Cover from within the store or request cross-store coverage before Friday.',
+            'Broadcast acknowledgement: "Store-to-Store Transfer" broadcast from DM is unread. Action required before EOD today.',
           ],
         },
         {
-          title: 'Recommended Actions',
+          title: 'Actions to Move the Needle',
           icon: 'recommendations',
           bullets: [
-            'Run a Footwear category review with the dept lead to identify the assortment gap vs peer stores.',
-            'Increase checkout coverage during peak (12-2pm, 5-7pm) to address the rising VoC theme.',
+            'Run a 15-minute Denim wall review with your dept lead — identify the top 3 SKUs trailing vs peer stores and surface any floor placement issues.',
+            'Add a second register during 12–2 PM and 5–7 PM peaks this week. Checkout speed VoC mentions correlate 0.82 with single-register periods.',
+            'Complete the Accessories Endcap reset before the afternoon rush — this is the single biggest compliance gap holding back your SEA score.',
           ],
         },
       ],
-      closing: 'Small, focused interventions on Footwear and Checkout Speed could lift SPI 2-3 points within 2 weeks.',
+      closing: `${store.storeName} is 2–3 focused actions away from Excellence Tier. The Denim gap and Accessories reset are the highest-leverage items this week. Get the floorset to 100% and the VoC trend will follow.`,
     };
   }
   if (tier === 'AtRisk') {
     return {
-      greeting: `${store.storeName} (#${store.storeNumber}) is in At-Risk territory at SPI ${store.spi} — trend declining over the last 4 weeks. Targeted intervention required this week.`,
+      greeting: `${store.storeName} (#${store.storeNumber}) is in At-Risk territory at SPI ${store.spi} — trend declining for 4 consecutive weeks. Three operational failures are compounding. Immediate focus required today.`,
       sections: [
         {
-          title: 'Triage & Critical Issues',
+          title: 'Triage — Act on These Today',
           icon: 'triage',
           bullets: [
-            '<strong>VoC: Fitting Room Wait</strong> — complaints up <strong>+34%</strong> over 2 weeks. Customers abandoning try-ons in Women\'s Dresses, directly impacting conversion.',
-            '<strong>OOS Risk</strong>: 8 size-run gaps in Basics, 4 SKUs critical. Replenishment delayed 36h from DC.',
-            '<strong>Planogram Drift</strong>: Women\'s Wall Display 78% compliance — featured items missing or misplaced.',
+            '<strong>Fitting Room Staffing Crisis:</strong> VoC "Fitting Room Wait" complaints up <strong>+34%</strong> in 2 weeks — customers are abandoning try-ons in Women\'s Dresses. This is directly suppressing conversion. Add 1 fitting room associate during 11am–3pm immediately.',
+            '<strong>OOS — Basics Size Gaps:</strong> 8 size-run gaps in Women\'s V-Neck Basics and Classic Blazer; 4 SKUs critical. Replenishment delayed 36h from DC. Escalate to DM today for priority DC dispatch.',
+            '<strong>Planogram Drift — Women\'s Wall:</strong> AI shelf audit shows 78% compliance — featured Summer 2 items missing or misplaced. Full reset needed before tomorrow\'s AM open (estimated 90 minutes, 2 associates).',
           ],
         },
         {
-          title: 'Performance & Trends',
+          title: 'Store Performance Snapshot',
           icon: 'performance',
           bullets: [
-            `SPI declined <strong>-${(78 - store.spi).toFixed(1)} pts</strong> over 4 weeks — trajectory points to Crisis tier within 2 weeks if uncorrected.`,
-            'Net sales at <strong>-3.8% vs plan</strong>, conversion rate down 2.1 pts.',
-            'VoC satisfaction <strong>76%</strong>, lowest in district peer cluster.',
+            `Store SPI at <strong>${store.spi}</strong> — At-Risk tier, declining 4 weeks in a row. At current trajectory, Crisis tier is 10–14 days away without intervention.`,
+            'Net sales at <strong>–3.8% vs plan</strong>. Conversion rate down 2.1 pts — fitting room abandonment is the primary driver. Average basket size held flat, suggesting traffic quality is fine.',
+            'VoC satisfaction at <strong>76%</strong> — lowest in the district peer cluster. "Fitting Room Wait" is now the #1 negative theme ahead of "Staff Availability."',
           ],
         },
         {
-          title: 'Recommended Actions',
+          title: 'Floorset & Seasonal Execution',
+          icon: 'ops',
+          bullets: [
+            'Summer 2 Floorset: <strong>only 61% complete</strong> — the lowest in the district. Women\'s Wall and Accessories Endcap are the two incomplete zones. Every day of partial set is an estimated $180–240 in suppressed sales.',
+            'Semi Annual Sale signage: DM audit found 2 windows missing marquee signage as of yesterday. Must be corrected before today\'s trading hours.',
+            'Broadcast compliance: "Visual Merchandising — Summer 2 Floorset" broadcast is unacknowledged. This is a required action — confirm receipt and completion status to DM.',
+          ],
+        },
+        {
+          title: 'Recovery Plan',
           icon: 'recommendations',
           bullets: [
-            'Increase fitting room staffing during 11am–3pm peak window — biggest sales recovery lever.',
-            'Expedite the 4 critical Basics SKUs from regional DC; clear backroom for inbound.',
-            'Reset Women\'s Wall Display tonight — POG team can deploy in 90 minutes.',
+            '<strong>Today:</strong> Add fitting room coverage 11am–3pm. Complete Women\'s Wall planogram reset tonight. Escalate DC delay for Basics SKUs.',
+            '<strong>Tomorrow:</strong> Full floorset completion across all zones. Verify Semi Annual Sale signage in all windows. Run a VoC check-in with your floor team on what customers are saying.',
+            '<strong>This week:</strong> Daily 10-minute stand-up with your leads to track OOS, fitting room wait times, and audit scores. Share updates in the DM broadcast channel.',
           ],
         },
       ],
-      closing: 'This is a recoverable position — focused execution on the three actions above should stabilize SPI within 1 week.',
+      closing: `This is a recoverable position — ${store.storeName} has the traffic, the assortment, and the team. The three triage actions above, executed this week, should stabilize SPI and begin reversing the trend. The DM is monitoring daily.`,
     };
   }
   // Crisis
   return {
-    greeting: `${store.storeName} (#${store.storeNumber}) is in CRISIS at SPI ${store.spi} — multiple compounding failures across SEA, VoC, OOS and Sales. District Manager intervention today is required.`,
+    greeting: `${store.storeName} (#${store.storeNumber}) is in CRISIS at SPI ${store.spi} — compounding failures across safety, VoC, inventory, and sales. District Manager on-site intervention is being arranged today.`,
     sections: [
       {
-        title: 'Triage & Critical Issues',
+        title: 'Critical — Zero-Tolerance Items',
         icon: 'triage',
         bullets: [
-          '<strong>SEA Auto-Fail</strong>: Fire exit blocked in Zone B — <strong>regulatory exposure</strong>. Must be cleared before close today; otherwise risk store closure.',
-          '<strong>VoC Crisis</strong>: "Messy Aisles" and "Staff Unavailable" complaints up <strong>+38%</strong> in 2 weeks. VoC Score dropped 14 pts.',
-          '<strong>OOS Surge</strong>: 14 SKUs out-of-stock, 4 shipments delayed. Estimated revenue impact €4,200 this week alone.',
-          '<strong>Sales Miss</strong>: 4 consecutive weeks of comp sales -12%. Apparel leading the decline.',
+          '<strong>SEA Auto-Fail — Fire Exit Blocked:</strong> Display fixture obstructing emergency Exit B in Zone B. This is a <strong>regulatory zero-tolerance violation</strong>. Clear the obstruction before the store opens today; failure to do so risks mandatory store closure and fines.',
+          '<strong>VoC Emergency:</strong> "Messy Aisles" and "Staff Unavailable" complaints surged <strong>+38%</strong> in 2 weeks. VoC Score dropped 14 pts. Customers are actively leaving negative reviews on Google and social — reputational damage is accelerating.',
+          '<strong>Summer 2 Floorset:</strong> Only <strong>34% complete</strong> — lowest in the district and chain. Women\'s Wall, Denim Wall, and Accessories Endcap are all in Spring configuration. Estimated revenue impact from non-set: <strong>$4,200/week</strong>.',
+          '<strong>OOS Surge:</strong> 14 SKUs out-of-stock, 4 DC shipments delayed. Critical gaps in Basics, Blazers, and Denim. Backroom audit needed today to confirm actual stock position.',
         ],
       },
       {
-        title: 'Performance & Trends',
+        title: 'Store Performance Snapshot',
         icon: 'performance',
         bullets: [
-          `SPI dropped <strong>-6 pts</strong> in 4 weeks — momentum strongly negative, trending further down.`,
-          'Net sales at <strong>-9.1% vs district avg</strong>; conversion rate at lowest level in 12 months.',
-          'Currently ranked <strong>last</strong> in district peer cluster on every diagnostic stream.',
+          `Store SPI at <strong>${store.spi}</strong> — Crisis tier, declining 6 pts over 4 weeks. Momentum is strongly negative. At current pace, SPI will reach single digits within 3 weeks.`,
+          'Net sales at <strong>–9.1% vs district average</strong>; conversion at the lowest level in 12 months. Apparel is leading the decline — a direct consequence of the incomplete floorset and OOS gaps.',
+          'Currently ranked <strong>last in the district</strong> across every performance dimension: sales, compliance, VoC, and task completion.',
         ],
       },
       {
-        title: 'Recommended Actions',
+        title: 'Immediate Recovery Actions',
         icon: 'recommendations',
         bullets: [
-          'Dispatch DM for on-site intervention today — escalation protocol triggered.',
-          'Clear SEA auto-fail before close. Document remediation; submit to Compliance.',
-          'Expedite top-10 OOS SKUs from RDC; restore baseline staffing for next 48h.',
-          'Deep-clean store overnight; reset planograms in priority categories before tomorrow open.',
+          '<strong>Right now (before opening):</strong> Clear the fire exit obstruction in Zone B. Document with photos and submit to Compliance. DM must receive confirmation before 9 AM.',
+          '<strong>Today:</strong> DM on-site visit — walk the floor, assess staffing levels, and triage the floorset completion. A store in crisis needs leadership presence, not remote direction.',
+          '<strong>Tonight:</strong> Overnight floorset reset for Women\'s Wall and Denim Wall. Minimum 3 associates for 3 hours. Prioritize Summer 2 hero items (Blazer, Midi Dress, Denim).',
+          '<strong>48 hours:</strong> Expedite top-10 OOS SKUs from regional DC via priority dispatch. Submit formal DC escalation via supply chain portal today. Deep-clean fitting rooms and main aisles before tomorrow AM open.',
         ],
       },
     ],
-    closing: 'This store requires hands-on leadership today. Escalation to Regional VP recommended if conditions persist by end of week.',
+    closing: `${store.storeName} requires immediate, hands-on leadership — not remote monitoring. The fire exit is the legal priority; the floorset is the financial priority. Both must move today. Regional VP escalation is recommended if conditions have not stabilized by end of week.`,
   };
 };
 
