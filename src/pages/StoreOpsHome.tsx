@@ -38,6 +38,11 @@ import StarBorderOutlined from '@mui/icons-material/StarBorderOutlined';
 import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
 import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
 import HeadphonesOutlined from '@mui/icons-material/HeadphonesOutlined';
+import DirectionsWalkOutlined from '@mui/icons-material/DirectionsWalkOutlined';
+import CategoryOutlined from '@mui/icons-material/CategoryOutlined';
+import BusinessOutlined from '@mui/icons-material/BusinessOutlined';
+import CompareArrowsOutlined from '@mui/icons-material/CompareArrowsOutlined';
+import ShowChartOutlined from '@mui/icons-material/ShowChartOutlined';
 import SyncOutlined from '@mui/icons-material/SyncOutlined';
 import GridOnOutlined from '@mui/icons-material/GridOnOutlined';
 import PersonOutlined from '@mui/icons-material/PersonOutlined';
@@ -1285,7 +1290,7 @@ export const StoreOpsHome: React.FC = () => {
         {showBriefAudio && (
           <div className="di-brief-audio-bar">
             <AudioPlayer
-              text="Good morning, Clarke. District 14 is in the Excellence Tier at DPI 87 — one of your best weeks this quarter. Three items need your attention today. Revenue at 1.26 million, plus 8 percent versus target. POG compliance at 97 percent. First and most urgent: fire exit obstruction at Johnson City Mall, auto-escalated 2 hours ago with no SM acknowledgement — call the store manager before 11 AM. Second: Messy Aisles VoC spike trending plus 34 percent at 3 stores — root cause is cleaning staff hour cuts last month. Third: OOS risk at Clarksville Crossing, adaptation plan waiting your approval, 2,400 dollars at risk. Wins to recognize: Franklin Town Center on a 3-week 100 percent audit streak, and Memphis Central self-resolved their staffing gap. For root-cause analysis, open District Intelligence."
+              text="Good morning, Clarke. District 14 Tennessee delivered 1.26 million in weekly revenue this week at plus 8 percent versus plan, plus 5.3 percent versus last year, and plus 6.2 percent on a net-comp basis — the number 2 ranked district nationally and the number 1 district in the Southeast. Gross margin at 34.2 percent, 0.9 points above plan. District conversion improved to 25.4 percent, up 1.3 points year over year. Warm weather across Tennessee added an estimated 42 thousand in uplift. Graduation weekends in Nashville and Memphis added a 28 percent Saturday spike in formal-adjacent purchases — this will repeat for 3 more weekends. Women's Division leads at plus 11.8 percent versus plan, with Summer Midi Dress the number 1 district SKU at 284 units. Accessories is the one district miss at minus 2.4 percent — an Endcap facing gap at 5 of 8 stores. A single district broadcast for the 6-facing reset would recover 6,200 to 8,400 per week. Nashville Flagship leads at SPI 94 and 224 thousand revenue. Johnson City Mall is in crisis at SPI 58, minus 12.4 percent versus plan, with a fire exit SEA violation unresolved. Critical actions today: one, call Johnson City Mall SM before noon on the fire exit. Two, approve the Clarksville Crossing OOS adaptation plan in your queue — 2,400 dollars at risk. Three, call Murfreesboro Plaza SM about fitting room staffing — VoC is up 19 percent, same early signal as Johnson City 6 weeks ago. Four, issue the Accessories Endcap broadcast today. District 14 is one Johnson City Mall recovery away from the national number 1 ranking."
               title="AI Daily Brief"
               variant="bar"
               onClose={() => setShowBriefAudio(false)}
@@ -1296,46 +1301,116 @@ export const StoreOpsHome: React.FC = () => {
           <div className={`ai-brief-body ${isBriefCollapsed ? 'collapsed' : ''}`}>
             <div className="ai-brief-summary">
               <p className="ai-brief-paragraph">
-                Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name || 'Clarke'}. District 14 is in the <strong>Excellence Tier at DPI 87</strong> — one of your best weeks this quarter. Three items need your attention today before they escalate. Here's your morning pulse.
+                Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name || 'Clarke'}. District 14 — Tennessee delivered <strong>$1.26M in weekly revenue at +8% vs plan</strong> — the #2 ranked district nationally. This brief covers what drove last week's results across your 8 stores, how you compare to the network, and what needs your action today.
               </p>
 
               <div className="ai-brief-section">
-                <h3 className="ai-brief-section-title"><TrendingUpOutlined sx={{ fontSize: 14 }}/> District Pulse — 3 Numbers</h3>
+                <h3 className="ai-brief-section-title"><BarChartOutlined sx={{ fontSize: 14 }}/> District Weekly Scorecard — vs Plan, LY, Forecast &amp; Comp Week</h3>
                 <ul className="ai-brief-bullets">
-                  <li><strong>Revenue:</strong> $1.26M weekly — <strong>+8% vs target</strong>, +5% WoW. 6 of 8 stores exceeded plan. Nashville Flagship ($224K) and Memphis Central ($198K) are driving the outperformance.</li>
-                  <li><strong>Compliance:</strong> POG adherence at <strong>97%</strong> — up 3pp from last week. Franklin Town Center is on a 3-week streak at 100% camera audit compliance. Johnson City Mall dropped to 88% — flagged below.</li>
-                  <li><strong>Execution:</strong> 87% on-time task completion. 2 critical overdue items in your queue. District DPI at <strong>87 — top 10% nationally</strong>, up from 85 last week.</li>
+                  <li><strong>vs Plan:</strong> District net revenue <strong>$1.26M (+8.0% vs plan)</strong>. 6 of 8 stores beat plan. Gross margin <strong>34.2%</strong> (+0.9pp vs plan target of 33.3%). Units sold: +5.8% vs plan. Markdown rate at 11.4% — within the 12% cap.</li>
+                  <li><strong>vs Last Year (LY):</strong> Net revenue <strong>+5.3% vs LY</strong>. Traffic up +2.8% YoY. Conversion improved from 24.1% → <strong>25.4%</strong> (+1.3pp). Average basket size up from $56.40 → $58.90 (+4.4% YoY).</li>
+                  <li><strong>vs AI Forecast:</strong> +3.1% above district-level forecast. Model underestimated the weather + Semi Annual Sale combined effect on Dresses and summer apparel.</li>
+                  <li><strong>vs Comparable Week (52-wk prior):</strong> <strong>+6.2% net-comp</strong>. District rank: <strong>#2 of 22 districts nationally</strong>, #1 in the Southeast region. Full-price sell-through on Summer 2 hero items at 88% — above the 85% national chain average.</li>
                 </ul>
               </div>
 
               <div className="ai-brief-section">
-                <h3 className="ai-brief-section-title"><WarningAmberOutlined sx={{ fontSize: 14 }}/> Needs Your Attention Today</h3>
+                <h3 className="ai-brief-section-title"><DirectionsWalkOutlined sx={{ fontSize: 14 }}/> Traffic &amp; Conversion — District View</h3>
                 <ul className="ai-brief-bullets">
-                  <li><strong>🚨 Fire Exit — Johnson City Mall:</strong> Display fixture blocking emergency Exit B. Auto-escalated 2h ago; Store Manager has not acknowledged. This is a zero-tolerance safety item. Call the SM before 11 AM.</li>
-                  <li><strong>⚠ Messy Aisles VoC Rising:</strong> +34% spike at Johnson City Mall, Clarksville Crossing, and Franklin Town Center — correlates directly with cleaning staff hour cuts last month. Restore 2hrs/day to reverse before it hits VoC Score.</li>
-                  <li><strong>📦 OOS Risk — Clarksville Crossing:</strong> 3 SKUs (Summer Midi Dress, Women's V-Neck Basics, Blazer) delayed 48h from DC. Adaptation plan is in your queue waiting approval — at-risk revenue: $2,400.</li>
+                  <li>District total transactions: <strong>14,280 this week</strong> (+2.8% YoY). Peak day was Saturday (+18% vs Monday baseline) — Semi Annual Sale and warm Tennessee weekend drove the spike.</li>
+                  <li>District conversion rate: <strong>25.4%</strong> — above the national chain average (23.8%). The conversion range across your 8 stores is wide: Nashville Flagship at 28.4% vs Johnson City Mall at 17.4% — a <strong>11pp store-level gap</strong> that represents the single biggest district-level performance lever.</li>
+                  <li>Fitting room conversion (try-on → purchase): district avg <strong>52%</strong> in stores with dedicated fitting room staff vs <strong>38%</strong> in stores without. Three of your stores are not staffing fitting rooms at peak — this is the direct driver of the conversion gap.</li>
+                  <li>Checkout speed VoC: stable across 6 stores. Clarksville Crossing flagged for rising "Checkout Speed" mentions (+22% WoW) — single-register operation during 12–2 PM peak is the cause. Actionable today.</li>
                 </ul>
               </div>
 
               <div className="ai-brief-section">
-                <h3 className="ai-brief-section-title"><StarBorderOutlined sx={{ fontSize: 14 }}/> Wins to Recognize</h3>
+                <h3 className="ai-brief-section-title"><WbSunnyOutlined sx={{ fontSize: 14 }}/> External Context — What Shaped the Week</h3>
                 <ul className="ai-brief-bullets">
-                  <li><strong>Franklin Town Center</strong> — 100% camera audit compliance for 3 straight weeks. Consider a shout-out at today's check-in; this store is a model for the district.</li>
-                  <li><strong>Memphis Central</strong> — Resolved last week's staffing coverage gap independently by cross-training 2 associates. No escalation needed. Strong initiative from the SM team.</li>
+                  <li><strong>Weather — Tennessee:</strong> Warm and sunny across the state this weekend (Nashville, Memphis, Clarksville 3–4°F above seasonal average). This drove a measurable lift in Dresses (+19% vs plan) and Summer 2 categories district-wide. Estimated weather uplift: <strong>+$42K above baseline weather scenario</strong>. Johnson City had a cooler weekend (–2°F) — a partial headwind, but execution failures account for 70%+ of that store's miss.</li>
+                  <li><strong>Semi Annual Sale:</strong> Sale activation contributed an estimated <strong>+$118K incremental district revenue</strong> (AI attribution model). High-traffic stores with well-positioned clearance endcaps (Nashville Flagship, Memphis Central, Franklin Town Center) generated 14–16% of their transactions through clearance while maintaining full-price velocity.</li>
+                  <li><strong>Local Events:</strong> Graduation weekends across Nashville and Memphis metro (Vanderbilt, UT, Rhodes College) drove premium-adjacent traffic Saturday AM. Formal-adjacent purchases (Blazer, Midi Dress, statement accessories) surged +28% Saturday vs Thursday average at the 4 metro stores. This was not in the AI forecast — it is an upside driver worth planning for next 3 weekends as graduation season continues.</li>
+                </ul>
+              </div>
+
+              <div className="ai-brief-section">
+                <h3 className="ai-brief-section-title"><CategoryOutlined sx={{ fontSize: 14 }}/> Product Performance — District-Wide Division Breakdown</h3>
+                <ul className="ai-brief-bullets">
+                  <li><strong>Women's Division (+11.8% vs plan — district leader):</strong> Dresses: +19% — Summer Midi Dress is the #1 SKU district-wide (284 units combined, $13,916). Basics: +7.4%. Blazer: +12% in stores with complete floorsets vs –8% in partial-set stores. The floorset completion directly controls this SKU's performance.</li>
+                  <li><strong>Men's Division (+4.2% vs plan):</strong> Denim Slim Fit Dark Wash: +8%. Polo Classic: +6%. Compression Tee: +9% (gym-adjacent weekend traffic in metro stores). Men's Division is consistent across all 8 stores — minimal store-to-store variance.</li>
+                  <li><strong>Kids (+2.8% vs plan):</strong> Color Block Tee and Cargo Shorts leading. Kids Party Dress is the consistent laggard — a district-wide size-run gap (XS, 4T) is limiting conversion. Submit a combined district assortment request to your regional merchant this week.</li>
+                  <li><strong>Accessories (–2.4% vs plan — district-wide miss):</strong> AI shelf audit shows average Accessories Endcap at 4.2 facings vs the 6-facing POG spec at 5 of 8 stores. Facing correction district-wide is estimated to recover <strong>$6,200–$8,400/week</strong>. Issuing a district broadcast for this today is the highest-ROI 5-minute action available to you.</li>
+                  <li><strong>Footwear (+8.6% vs plan):</strong> Running Shoes Elite and Canvas Sneakers strong across all 8 stores. Most consistent category district-wide.</li>
+                </ul>
+              </div>
+
+              <div className="ai-brief-section">
+                <h3 className="ai-brief-section-title"><ShowChartOutlined sx={{ fontSize: 14 }}/> Seasonal vs. NOS / Core — District Performance</h3>
+                <ul className="ai-brief-bullets">
+                  <li><strong>Seasonal (Summer 2): 58% of district revenue</strong> — exactly at plan mix. However, this masks wide variance: Nashville Flagship at 62% seasonal (above plan) vs Johnson City Mall at 29% (well below plan — a direct result of the incomplete floorset).</li>
+                  <li><strong>NOS / Core: 42% of district revenue.</strong> Core items (V-Neck Basics, Classic Tee, Polo, Slim Fit Denim) performing strongly across all 8 stores. NOS provides the revenue floor even in stores with execution challenges.</li>
+                  <li><strong>Full-price sell-through on Summer 2 hero items: 88% district average</strong> — ahead of the 85% national chain average. No early markdown pressure on Summer 2 for at least 3 more weeks. Johnson City Mall is the exception (29% seasonal mix) — the exception is execution, not demand.</li>
+                  <li><strong>Clearance:</strong> District markdown rate 11.4% — within the 12% plan cap. No over-stocked clearance risk at 7 of 8 stores. Johnson City Mall at 24% of units clearance is compressing their GM below plan.</li>
+                </ul>
+              </div>
+
+              <div className="ai-brief-section">
+                <h3 className="ai-brief-section-title"><StoreOutlined sx={{ fontSize: 14 }}/> Store-by-Store Performance Matrix</h3>
+                <ul className="ai-brief-bullets">
+                  <li><strong>Nashville Flagship (SPI 94 — #1):</strong> $224K, +8.4% vs plan. Conv 28.4%. VoC 92%. Floorset 100%. District benchmark — 17.8% of district revenue from 1 store.</li>
+                  <li><strong>Memphis Central (SPI 88 — #2):</strong> $198K, +6.2% vs plan. Conv 27.1%. VoC 88%. Strong. One minor OOS risk in Men's Denim (3 washes vs 4 plan).</li>
+                  <li><strong>Franklin Town Center (SPI 82 — #3):</strong> $171K, +3.8% vs plan. Conv 24.8%. VoC 86%. 100% broadcast compliance — best in district. All 4 HQ broadcasts acknowledged.</li>
+                  <li><strong>Murfreesboro Plaza (SPI 78 — #4):</strong> $158K, +1.4% vs plan. "Fitting Room Wait" VoC up +19% WoW — <strong>early warning signal</strong>. This is the same early-stage pattern that preceded the Johnson City Mall crisis. Intervene this week.</li>
+                  <li><strong>Knoxville Centre (SPI 74 — #5):</strong> $146K, –0.6% vs plan. Accessories Endcap at 4 facings vs 6 spec — highest-priority correction at this store. VoC stable at 82%.</li>
+                  <li><strong>Clarksville Crossing (SPI 68 — #6):</strong> $134K, –2.8% vs plan. OOS: 3 Summer 2 SKUs delayed 48h (adaptation plan awaiting your approval — $2,400 at risk). VoC "Messy Aisles" +38% WoW — cleaning hours need restoration (+2hrs/day).</li>
+                  <li><strong>Chattanooga Square (SPI 62 — #7):</strong> $121K, –4.2% vs plan. Floorset at 74%. 2 HQ broadcasts unacknowledged. Needs DM check-in this week — trending toward At-Risk.</li>
+                  <li><strong>Johnson City Mall (SPI 58 — #8, Crisis):</strong> $104K, –12.4% vs plan. Conv 17.4%. Floorset 34%. 14 OOS SKUs. 🚨 Fire exit SEA auto-fail unresolved. On-site visit required today.</li>
+                </ul>
+              </div>
+
+              <div className="ai-brief-section">
+                <h3 className="ai-brief-section-title"><CompareArrowsOutlined sx={{ fontSize: 14 }}/> What Drove the District — AI Business Analysis</h3>
+                <ul className="ai-brief-bullets">
+                  <li><strong>Floorset execution is the primary performance driver:</strong> Stores with complete Summer 2 floorsets (Nashville Flagship, Memphis Central, Franklin Town Center) averaged $197K revenue and +6.1% vs plan. Stores with incomplete sets (Johnson City Mall, Chattanooga Square, Clarksville Crossing) averaged $120K and –6.5% vs plan. The <strong>$77K average weekly revenue gap is almost entirely attributable to floorset execution</strong> — same district, same promotion, same weather.</li>
+                  <li><strong>Semi Annual Sale amplified the execution gap:</strong> All 8 stores got the same sale-driven traffic. Fully-set stores converted it at 27.1% avg; partially-set stores at 19.6% avg. The promotional amplification means execution quality has outsized impact during sale windows — the urgency of Johnson City Mall's floorset is proportional to the sale duration remaining.</li>
+                  <li><strong>Fitting room staffing is the conversion lever:</strong> Stores with dedicated fitting room associates during 11am–3pm averaged 28.1% conversion in Dresses and Blazers. Stores without averaged 21.4%. The difference is $1,020/conversion point per week per store. Three stores in your district are not staffing fitting rooms at peak — this is the fastest available conversion recovery.</li>
+                  <li><strong>Accessories Endcap facing is a systemic miss:</strong> The –2.4% vs plan in Accessories is not store-specific — it's a POG compliance gap at 5 of 8 stores. A single district broadcast would fix it this week. Estimated recovery: $6,200–$8,400/week.</li>
+                </ul>
+              </div>
+
+              <div className="ai-brief-section">
+                <h3 className="ai-brief-section-title"><BusinessOutlined sx={{ fontSize: 14 }}/> Network Context — District 14 vs All Districts</h3>
+                <ul className="ai-brief-bullets">
+                  <li>District 14 ranked <strong>#2 of 22 districts nationally</strong> at DPI 87, behind only District 19 (Alabama, DPI 88). You are the top-ranked district in the Southeast region, ahead of District 8 (Georgia, DPI 84), District 22 (Carolina, DPI 82), and District 11 (Florida, DPI 79).</li>
+                  <li>District 14 delivered the <strong>highest Semi Annual Sale incremental revenue in the Southeast</strong> ($118K attributed). HQ has flagged your district as a best-practice district for the sale rollout — the complete floorset execution was the multiplier.</li>
+                  <li><strong>Network context on Kids Party Dress:</strong> The XS/4T size-run gap is a national supply chain issue affecting 14 of 22 districts. A district-level combined request will resolve faster than store-by-store escalations — submit to your regional merchant this week.</li>
+                  <li>If Johnson City Mall is brought to Stable tier, your district conversion would reach ~26.1%, pushing toward the top 5 nationally. One store is holding the district from a #1 ranking.</li>
+                </ul>
+              </div>
+
+              <div className="ai-brief-section">
+                <h3 className="ai-brief-section-title"><WarningAmberOutlined sx={{ fontSize: 14 }}/> Critical Triage — Act on These Today</h3>
+                <ul className="ai-brief-bullets">
+                  <li><strong>🚨 Johnson City Mall — Fire Exit [call before noon]:</strong> SEA auto-fail for blocked emergency Exit B. Call SM directly; confirm clearance before noon. Regional VP escalation if unresolved. Zero-tolerance item.</li>
+                  <li><strong>📦 Clarksville Crossing — OOS Adaptation Plan [5-min action in queue]:</strong> Approve the 3-SKU OOS adaptation plan. Protects an estimated $2,400 in at-risk Semi Annual Sale revenue.</li>
+                  <li><strong>⚠ Murfreesboro Plaza — Early fitting room intervention:</strong> "Fitting Room Wait" VoC +19% WoW. Call the SM today and confirm fitting room staffing 11am–3pm. Early-stage signal — identical to the Johnson City Mall pattern 6 weeks ago.</li>
+                  <li><strong>🧹 Clarksville Crossing — Restore cleaning hours:</strong> Add +2hrs/day cleaning. VoC model: "Messy Aisles" trend reverses within 10 days of restoring hours. Root cause was a cost-cutting decision made 4 weeks ago.</li>
                 </ul>
               </div>
 
               <div className="ai-brief-section ai-brief-suggestions">
-                <h3 className="ai-brief-section-title"><AutoAwesomeOutlined sx={{ fontSize: 14 }}/> This Week's Focus</h3>
+                <h3 className="ai-brief-section-title"><AutoAwesomeOutlined sx={{ fontSize: 14 }}/> Week Ahead — District Priorities</h3>
                 <ul className="ai-brief-bullets">
-                  <li>Approve the Clarksville Crossing OOS adaptation plan — 5-minute action, $2,400 revenue protection.</li>
-                  <li>Send the Summer 2 Floorset check-in broadcast to your 8 stores — HQ data shows stores that completed the full set are running +$258K above those with partial sets.</li>
-                  <li>Open District Intelligence for the full root-cause breakdown on the Messy Aisles trend and the Johnson City Mall triage plan.</li>
+                  <li><strong>Today — Accessories Endcap broadcast:</strong> Issue a district broadcast: "Accessories Endcap — 6-Facing Reset Required by EOD Wednesday." Estimated weekly revenue recovery: $6,200–$8,400. A 5-minute task with the highest district-wide ROI available this week.</li>
+                  <li><strong>Today — Johnson City Mall on-site visit:</strong> Walk the floor, assess floorset, triage fitting room and OOS. This store needs leadership presence, not remote monitoring. Arrange overnight floorset reset for tonight.</li>
+                  <li><strong>Monday — Kids Party Dress assortment request:</strong> Submit a combined district-level request to your regional merchant for XS and 4T sizes. Reference the district-wide demand data — combined request resolves 3× faster than store-by-store escalations.</li>
+                  <li><strong>This week — Chattanooga Square check-in:</strong> 30-minute SM call. Focus on floorset completion (74% → 100%) and broadcast acknowledgement (2 of 4 outstanding). Will likely stabilize the store before it requires formal triage.</li>
+                  <li><strong>Schedule — Nashville Flagship knowledge-share:</strong> Host a virtual SM session next week using Nashville Flagship as the execution template. Target: Johnson City Mall, Chattanooga Square, Clarksville Crossing.</li>
                 </ul>
               </div>
 
               <p className="ai-brief-closing">
-                Strong week overall — the district is earning its Excellence Tier ranking. The three triage items above are the only things standing between this week and a clean scorecard. Tackle the fire exit first, then the OOS approval.
+                District 14 is a genuine high-performer — #2 nationally and the Southeast leader. The headline is earned. Beneath it, Johnson City Mall and the district-wide Accessories gap are the two items to close this week. Fix Johnson City and issue the Accessories broadcast, and District 14 is on a credible path to #1 nationally within 3–4 weeks.
               </p>
             </div>
           </div>
@@ -1945,7 +2020,7 @@ export const StoreOpsHome: React.FC = () => {
             {showBriefAudio && (
               <div className="di-brief-modal-audio">
                 <AudioPlayer
-                  text="Good morning, Clarke. District 14 is in the Excellence Tier at DPI 87 — one of your best weeks this quarter. Three items need your attention today. Revenue at 1.26 million, plus 8 percent versus target. POG compliance at 97 percent. First and most urgent: fire exit obstruction at Johnson City Mall, auto-escalated 2 hours ago with no SM acknowledgement — call the store manager before 11 AM. Second: Messy Aisles VoC spike trending plus 34 percent at 3 stores — root cause is cleaning staff hour cuts last month. Third: OOS risk at Clarksville Crossing, adaptation plan waiting your approval, 2,400 dollars at risk. Wins to recognize: Franklin Town Center on a 3-week 100 percent audit streak, and Memphis Central self-resolved their staffing gap. For root-cause analysis, open District Intelligence."
+                  text="Good morning, Clarke. District 14 Tennessee delivered 1.26 million in weekly revenue this week at plus 8 percent versus plan, plus 5.3 percent versus last year, and plus 6.2 percent on a net-comp basis — the number 2 ranked district nationally and the number 1 district in the Southeast. Gross margin at 34.2 percent, 0.9 points above plan. District conversion improved to 25.4 percent, up 1.3 points year over year. Warm weather across Tennessee added an estimated 42 thousand in uplift. Graduation weekends in Nashville and Memphis added a 28 percent Saturday spike in formal-adjacent purchases — this will repeat for 3 more weekends. Women's Division leads at plus 11.8 percent versus plan, with Summer Midi Dress the number 1 district SKU at 284 units. Accessories is the one district miss at minus 2.4 percent — an Endcap facing gap at 5 of 8 stores. A single district broadcast for the 6-facing reset would recover 6,200 to 8,400 per week. Nashville Flagship leads at SPI 94 and 224 thousand revenue. Johnson City Mall is in crisis at SPI 58, minus 12.4 percent versus plan, with a fire exit SEA violation unresolved. Critical actions today: one, call Johnson City Mall SM before noon on the fire exit. Two, approve the Clarksville Crossing OOS adaptation plan in your queue — 2,400 dollars at risk. Three, call Murfreesboro Plaza SM about fitting room staffing — VoC is up 19 percent, same early signal as Johnson City 6 weeks ago. Four, issue the Accessories Endcap broadcast today. District 14 is one Johnson City Mall recovery away from the national number 1 ranking."
                   title="AI Daily Brief"
                   variant="card"
                   onClose={() => setShowBriefAudio(false)}
@@ -1955,46 +2030,115 @@ export const StoreOpsHome: React.FC = () => {
             <div className="brief-modal-content">
               <div className="ai-brief-summary">
                 <p className="ai-brief-paragraph">
-                  Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name || 'Clarke'}. District 14 is in the <strong>Excellence Tier at DPI 87</strong> — one of your best weeks this quarter. Three items need your attention today before they escalate. Here's your morning pulse.
+                  Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name || 'Clarke'}. District 14 — Tennessee delivered <strong>$1.26M in weekly revenue at +8% vs plan</strong> — the #2 ranked district nationally. This brief covers what drove last week's results across your 8 stores, how you compare to the network, and what needs your action today.
                 </p>
 
                 <div className="ai-brief-section">
-                  <h3 className="ai-brief-section-title"><TrendingUpOutlined sx={{ fontSize: 14 }}/> District Pulse — 3 Numbers</h3>
+                  <h3 className="ai-brief-section-title"><BarChartOutlined sx={{ fontSize: 14 }}/> District Weekly Scorecard — vs Plan, LY, Forecast &amp; Comp Week</h3>
                   <ul className="ai-brief-bullets">
-                    <li><strong>Revenue:</strong> $1.26M weekly — <strong>+8% vs target</strong>, +5% WoW. 6 of 8 stores exceeded plan. Nashville Flagship ($224K) and Memphis Central ($198K) are driving the outperformance.</li>
-                    <li><strong>Compliance:</strong> POG adherence at <strong>97%</strong> — up 3pp from last week. Franklin Town Center is on a 3-week streak at 100% camera audit compliance. Johnson City Mall dropped to 88% — flagged below.</li>
-                    <li><strong>Execution:</strong> 87% on-time task completion. 2 critical overdue items in your queue. District DPI at <strong>87 — top 10% nationally</strong>, up from 85 last week.</li>
+                    <li><strong>vs Plan:</strong> District net revenue <strong>$1.26M (+8.0% vs plan)</strong>. 6 of 8 stores beat plan. Gross margin <strong>34.2%</strong> (+0.9pp vs plan target of 33.3%). Units sold: +5.8% vs plan. Markdown rate at 11.4% — within the 12% cap.</li>
+                    <li><strong>vs Last Year (LY):</strong> Net revenue <strong>+5.3% vs LY</strong>. Traffic up +2.8% YoY. Conversion improved from 24.1% → <strong>25.4%</strong> (+1.3pp). Average basket size up from $56.40 → $58.90 (+4.4% YoY).</li>
+                    <li><strong>vs AI Forecast:</strong> +3.1% above district-level forecast. Model underestimated the weather + Semi Annual Sale combined effect on Dresses and summer apparel.</li>
+                    <li><strong>vs Comparable Week (52-wk prior):</strong> <strong>+6.2% net-comp</strong>. District rank: <strong>#2 of 22 districts nationally</strong>, #1 in the Southeast region. Full-price sell-through on Summer 2 hero items at 88% — above the 85% national chain average.</li>
                   </ul>
                 </div>
 
                 <div className="ai-brief-section">
-                  <h3 className="ai-brief-section-title"><WarningAmberOutlined sx={{ fontSize: 14 }}/> Needs Your Attention Today</h3>
+                  <h3 className="ai-brief-section-title"><DirectionsWalkOutlined sx={{ fontSize: 14 }}/> Traffic &amp; Conversion — District View</h3>
                   <ul className="ai-brief-bullets">
-                    <li><strong>🚨 Fire Exit — Johnson City Mall:</strong> Display fixture blocking emergency Exit B. Auto-escalated 2h ago; Store Manager has not acknowledged. This is a zero-tolerance safety item. Call the SM before 11 AM.</li>
-                    <li><strong>⚠ Messy Aisles VoC Rising:</strong> +34% spike at Johnson City Mall, Clarksville Crossing, and Franklin Town Center — correlates directly with cleaning staff hour cuts last month. Restore 2hrs/day to reverse before it hits VoC Score.</li>
-                    <li><strong>📦 OOS Risk — Clarksville Crossing:</strong> 3 SKUs (Summer Midi Dress, Women's V-Neck Basics, Blazer) delayed 48h from DC. Adaptation plan is in your queue waiting approval — at-risk revenue: $2,400.</li>
+                    <li>District total transactions: <strong>14,280 this week</strong> (+2.8% YoY). Peak day was Saturday (+18% vs Monday baseline) — Semi Annual Sale and warm Tennessee weekend drove the spike.</li>
+                    <li>District conversion rate: <strong>25.4%</strong> — above the national chain average (23.8%). The conversion range across your 8 stores is wide: Nashville Flagship at 28.4% vs Johnson City Mall at 17.4% — a <strong>11pp store-level gap</strong> that represents the single biggest district-level performance lever.</li>
+                    <li>Fitting room conversion (try-on → purchase): district avg <strong>52%</strong> in stores with dedicated fitting room staff vs <strong>38%</strong> in stores without. Three of your stores are not staffing fitting rooms at peak — this is the direct driver of the conversion gap.</li>
+                    <li>Checkout speed VoC: stable across 6 stores. Clarksville Crossing flagged for rising "Checkout Speed" mentions (+22% WoW) — single-register operation during 12–2 PM peak is the cause. Actionable today.</li>
                   </ul>
                 </div>
 
                 <div className="ai-brief-section">
-                  <h3 className="ai-brief-section-title"><StarBorderOutlined sx={{ fontSize: 14 }}/> Wins to Recognize</h3>
+                  <h3 className="ai-brief-section-title"><WbSunnyOutlined sx={{ fontSize: 14 }}/> External Context — What Shaped the Week</h3>
                   <ul className="ai-brief-bullets">
-                    <li><strong>Franklin Town Center</strong> — 100% camera audit compliance for 3 straight weeks. Consider a shout-out at today's check-in; this store is a model for the district.</li>
-                    <li><strong>Memphis Central</strong> — Resolved last week's staffing coverage gap independently by cross-training 2 associates. No escalation needed. Strong initiative from the SM team.</li>
+                    <li><strong>Weather — Tennessee:</strong> Warm and sunny across the state this weekend (Nashville, Memphis, Clarksville 3–4°F above seasonal average). This drove a measurable lift in Dresses (+19% vs plan) and Summer 2 categories district-wide. Estimated weather uplift: <strong>+$42K above baseline weather scenario</strong>. Johnson City had a cooler weekend (–2°F) — a partial headwind, but execution failures account for 70%+ of that store's miss.</li>
+                    <li><strong>Semi Annual Sale:</strong> Sale activation contributed an estimated <strong>+$118K incremental district revenue</strong> (AI attribution model). High-traffic stores with well-positioned clearance endcaps generated 14–16% of their transactions through clearance while maintaining full-price velocity.</li>
+                    <li><strong>Local Events:</strong> Graduation weekends across Nashville and Memphis metro (Vanderbilt, UT, Rhodes College) drove premium-adjacent traffic Saturday AM. Formal-adjacent purchases (Blazer, Midi Dress, accessories) surged +28% Saturday vs Thursday average at the 4 metro stores. This was not in the AI forecast — brief your metro SMs to staff fitting rooms more heavily on Saturday mornings for the next 3 weekends.</li>
+                  </ul>
+                </div>
+
+                <div className="ai-brief-section">
+                  <h3 className="ai-brief-section-title"><CategoryOutlined sx={{ fontSize: 14 }}/> Product Performance — District-Wide Division Breakdown</h3>
+                  <ul className="ai-brief-bullets">
+                    <li><strong>Women's Division (+11.8% vs plan — district leader):</strong> Dresses: +19% — Summer Midi Dress is the #1 SKU district-wide (284 units, $13,916). Basics: +7.4%. Blazer: +12% in stores with complete floorsets vs –8% in partial-set stores. The floorset completion directly controls Blazer performance.</li>
+                    <li><strong>Men's Division (+4.2% vs plan):</strong> Denim Slim Fit Dark Wash: +8%. Polo Classic: +6%. Compression Tee: +9% (gym-adjacent weekend traffic in metro stores). Most consistent division across all 8 stores.</li>
+                    <li><strong>Kids (+2.8% vs plan):</strong> Color Block Tee and Cargo Shorts leading. Kids Party Dress is the consistent laggard — a district-wide size-run gap (XS, 4T). Submit a combined district assortment request to your regional merchant this week — resolves 3× faster than store-by-store escalations.</li>
+                    <li><strong>Accessories (–2.4% vs plan — district-wide miss):</strong> Average Accessories Endcap at 4.2 facings vs the 6-facing POG spec at 5 of 8 stores. A district broadcast for this today is estimated to recover <strong>$6,200–$8,400/week</strong> — the highest-ROI 5-minute action available to you.</li>
+                    <li><strong>Footwear (+8.6% vs plan):</strong> Running Shoes Elite and Canvas Sneakers strong across all 8 stores. Most consistent category district-wide — self-service format makes it resilient to staffing variance.</li>
+                  </ul>
+                </div>
+
+                <div className="ai-brief-section">
+                  <h3 className="ai-brief-section-title"><ShowChartOutlined sx={{ fontSize: 14 }}/> Seasonal vs. NOS / Core — District Performance</h3>
+                  <ul className="ai-brief-bullets">
+                    <li><strong>Seasonal (Summer 2): 58% of district revenue</strong> — exactly at plan mix district-wide. However, this masks wide variance: Nashville Flagship at 62% seasonal (above plan) vs Johnson City Mall at 29% (well below plan — direct result of incomplete floorset).</li>
+                    <li><strong>NOS / Core: 42% of district revenue.</strong> Core items (V-Neck Basics, Classic Tee, Polo, Slim Fit Denim) healthy and above plan across all 8 stores. The NOS base provides revenue floor stability even in stores with execution challenges.</li>
+                    <li><strong>Full-price sell-through on Summer 2 hero items: 88% district average</strong> — above the 85% national chain average. No early markdown pressure on Summer 2 for at least 3 more weeks.</li>
+                    <li><strong>Clearance:</strong> District markdown rate 11.4% — within the 12% plan cap. Johnson City Mall is the exception at 24% units clearance, compressing their GM below plan.</li>
+                  </ul>
+                </div>
+
+                <div className="ai-brief-section">
+                  <h3 className="ai-brief-section-title"><StoreOutlined sx={{ fontSize: 14 }}/> Store-by-Store Performance Matrix</h3>
+                  <ul className="ai-brief-bullets">
+                    <li><strong>Nashville Flagship (SPI 94 — #1):</strong> $224K, +8.4% vs plan. Conv 28.4%. VoC 92%. Floorset 100%. The district benchmark — 17.8% of district revenue.</li>
+                    <li><strong>Memphis Central (SPI 88 — #2):</strong> $198K, +6.2% vs plan. Conv 27.1%. VoC 88%. Strong. One minor OOS risk in Men's Denim.</li>
+                    <li><strong>Franklin Town Center (SPI 82 — #3):</strong> $171K, +3.8% vs plan. Conv 24.8%. VoC 86%. Best broadcast compliance — all 4 of 4 acknowledged. <strong>Recognize this week.</strong></li>
+                    <li><strong>Murfreesboro Plaza (SPI 78 — #4):</strong> $158K, +1.4% vs plan. "Fitting Room Wait" VoC +19% WoW. <strong>Early warning signal</strong> — intervene before this becomes the next Johnson City Mall. Call SM today.</li>
+                    <li><strong>Knoxville Centre (SPI 74 — #5):</strong> $146K, –0.6% vs plan. Accessories Endcap at 4 facings vs 6 spec. VoC stable 82%.</li>
+                    <li><strong>Clarksville Crossing (SPI 68 — #6):</strong> $134K, –2.8% vs plan. OOS 3 SKUs (adaptation plan in your queue). VoC "Messy Aisles" +38% — restore cleaning hours today.</li>
+                    <li><strong>Chattanooga Square (SPI 62 — #7):</strong> $121K, –4.2% vs plan. Floorset 74%. 2 HQ broadcasts unacknowledged. Needs DM check-in this week — trending At-Risk.</li>
+                    <li><strong>Johnson City Mall (SPI 58 — #8, Crisis):</strong> $104K, –12.4% vs plan. Conv 17.4%. Floorset 34%. 14 OOS SKUs. 🚨 Fire exit violation. On-site visit today — non-negotiable.</li>
+                  </ul>
+                </div>
+
+                <div className="ai-brief-section">
+                  <h3 className="ai-brief-section-title"><CompareArrowsOutlined sx={{ fontSize: 14 }}/> What Drove the District — AI Business Analysis</h3>
+                  <ul className="ai-brief-bullets">
+                    <li><strong>Floorset execution is the primary performance driver:</strong> Stores with complete Summer 2 floorsets averaged $197K revenue and +6.1% vs plan. Stores with incomplete sets averaged $120K and –6.5% vs plan. The <strong>$77K average weekly revenue gap is almost entirely attributable to floorset execution</strong> — same district, same promotion, same weather.</li>
+                    <li><strong>Semi Annual Sale amplified the execution gap:</strong> All 8 stores got the same sale-driven traffic. Fully-set stores converted at 27.1%; partially-set stores at 19.6%. During a sale window, execution quality has outsized impact — the urgency of Johnson City Mall's floorset is proportional to the remaining sale duration.</li>
+                    <li><strong>Fitting room staffing is the conversion lever:</strong> Stores with dedicated fitting room staff during 11am–3pm averaged 28.1% conversion in Dresses and Blazers vs 21.4% in stores without. The difference is $1,020/conversion point per week per store. Three of your 8 stores are leaving this on the table.</li>
+                    <li><strong>Accessories Endcap facing is a systemic miss:</strong> The –2.4% vs plan across 5 of 8 stores is a POG compliance gap, not a demand problem. A single district broadcast would fix it this week without any inventory change or capital.</li>
+                  </ul>
+                </div>
+
+                <div className="ai-brief-section">
+                  <h3 className="ai-brief-section-title"><BusinessOutlined sx={{ fontSize: 14 }}/> Network Context — District 14 vs All Districts</h3>
+                  <ul className="ai-brief-bullets">
+                    <li>District 14 ranked <strong>#2 of 22 districts nationally</strong> at DPI 87 — behind only District 19 (Alabama, DPI 88). You are the top district in the Southeast region, ahead of District 8 (Georgia, DPI 84), District 22 (Carolina, DPI 82), and District 11 (Florida, DPI 79).</li>
+                    <li>District 14 delivered the <strong>highest Semi Annual Sale incremental revenue in the Southeast</strong> ($118K attributed). HQ has flagged District 14 as a best-practice district for the sale rollout — your complete floorset execution at 6 of 8 stores was the multiplier.</li>
+                    <li>If Johnson City Mall is brought to Stable tier, District 14 conversion would reach ~26.1%, pushing toward the top 5 nationally. One store is the difference between #2 and #1.</li>
+                  </ul>
+                </div>
+
+                <div className="ai-brief-section">
+                  <h3 className="ai-brief-section-title"><WarningAmberOutlined sx={{ fontSize: 14 }}/> Critical Triage — Act on These Today</h3>
+                  <ul className="ai-brief-bullets">
+                    <li><strong>🚨 Johnson City Mall — Fire Exit [call before noon]:</strong> SEA auto-fail for blocked Exit B. Call SM directly; confirm clearance before noon. Regional VP escalation if unresolved.</li>
+                    <li><strong>📦 Clarksville Crossing — OOS Adaptation Plan [5-min approval]:</strong> In your queue. Protects $2,400 in at-risk Semi Annual Sale revenue.</li>
+                    <li><strong>⚠ Murfreesboro Plaza — Fitting Room Intervention [call SM today]:</strong> VoC +19% WoW. Confirm fitting room staffing 11am–3pm before this becomes the next triage store.</li>
+                    <li><strong>🧹 Clarksville Crossing — Restore cleaning hours:</strong> Add +2hrs/day. VoC model: "Messy Aisles" trend reverses within 10 days of restoration.</li>
                   </ul>
                 </div>
 
                 <div className="ai-brief-section ai-brief-suggestions">
-                  <h3 className="ai-brief-section-title"><AutoAwesomeOutlined sx={{ fontSize: 14 }}/> This Week's Focus</h3>
+                  <h3 className="ai-brief-section-title"><AutoAwesomeOutlined sx={{ fontSize: 14 }}/> Week Ahead — District Priorities</h3>
                   <ul className="ai-brief-bullets">
-                    <li>Approve the Clarksville Crossing OOS adaptation plan — 5-minute action, $2,400 revenue protection.</li>
-                    <li>Send the Summer 2 Floorset check-in broadcast to your 8 stores — HQ data shows stores that completed the full set are running +$258K above those with partial sets.</li>
-                    <li>Open District Intelligence for the full root-cause breakdown on the Messy Aisles trend and the Johnson City Mall triage plan.</li>
+                    <li><strong>Today — Accessories Endcap broadcast:</strong> "6-Facing Reset Required by EOD Wednesday." Estimated weekly revenue recovery: $6,200–$8,400. 5-minute action, highest district ROI this week.</li>
+                    <li><strong>Today — Johnson City Mall on-site visit:</strong> Walk the floor, assess floorset, triage fitting room and OOS. Arrange overnight floorset reset for tonight.</li>
+                    <li><strong>This week — Kids Party Dress assortment request:</strong> Submit a combined district-level request to your regional merchant for XS and 4T sizes. Resolves 3× faster than store-by-store escalations.</li>
+                    <li><strong>This week — Chattanooga Square SM call:</strong> Floorset completion (74% → 100%) and broadcast acknowledgements. Will stabilize the store before formal triage is required.</li>
+                    <li><strong>Schedule — Nashville Flagship knowledge-share:</strong> Virtual SM session next week. Execution template for Johnson City Mall, Chattanooga Square, Clarksville Crossing.</li>
                   </ul>
                 </div>
 
                 <p className="ai-brief-closing">
-                  Strong week overall — the district is earning its Excellence Tier ranking. The three triage items above are the only things standing between this week and a clean scorecard. Tackle the fire exit first, then the OOS approval.
+                  District 14 is a genuine high-performer — #2 nationally and the Southeast leader. The Johnson City Mall crisis and the district-wide Accessories gap are the two items to close this week. Fix Johnson City and issue the Accessories broadcast, and District 14 is on a credible path to #1 nationally within 3–4 weeks.
                 </p>
               </div>
             </div>
