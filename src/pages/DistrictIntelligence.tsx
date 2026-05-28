@@ -68,12 +68,12 @@ type MomentumType = 'Improving' | 'Slipping' | 'Flat';
 // Mock Data
 const mockStores: StoreData[] = [
   { id: '1', rank: 1, storeNumber: '2034', storeName: 'Nashville Flagship', dpi: 94, dpiTier: 'Excellence', netSales: 245000, netSalesVar: 8.2, seaScore: 96, vocSatisfied: 92, topVocIssue: 'Wait times', topSeaIssue: '-', trend: 'up', status: 'excellent' },
-  { id: '2', rank: 2, storeNumber: '1876', storeName: 'Memphis Central', dpi: 91, dpiTier: 'Excellence', netSales: 198000, netSalesVar: 5.4, seaScore: 94, vocSatisfied: 89, topVocIssue: 'Product availability', topSeaIssue: '-', trend: 'up', status: 'excellent' },
-  { id: '3', rank: 3, storeNumber: '3421', storeName: 'Knoxville East', dpi: 85, dpiTier: 'Stable', netSales: 176000, netSalesVar: 2.1, seaScore: 88, vocSatisfied: 85, topVocIssue: 'Staff friendliness', topSeaIssue: 'Signage', trend: 'flat', status: 'stable' },
-  { id: '4', rank: 4, storeNumber: '2198', storeName: 'Chattanooga Riverside', dpi: 82, dpiTier: 'Stable', netSales: 165000, netSalesVar: -1.2, seaScore: 85, vocSatisfied: 82, topVocIssue: 'Checkout speed', topSeaIssue: 'Planogram', trend: 'down', status: 'stable' },
-  { id: '5', rank: 5, storeNumber: '4532', storeName: 'Murfreesboro Plaza', dpi: 78, dpiTier: 'Stable', netSales: 142000, netSalesVar: -3.5, seaScore: 82, vocSatisfied: 78, topVocIssue: 'Product quality', topSeaIssue: 'Cleanliness', trend: 'down', status: 'warning' },
-  { id: '6', rank: 6, storeNumber: '1234', storeName: 'Franklin Town Center', dpi: 72, dpiTier: 'AtRisk', netSales: 128000, netSalesVar: -6.8, seaScore: 75, vocSatisfied: 71, topVocIssue: 'Staff availability', topSeaIssue: 'Planogram', trend: 'down', status: 'warning' },
-  { id: '7', rank: 7, storeNumber: '5678', storeName: 'Clarksville Crossing', dpi: 65, dpiTier: 'AtRisk', netSales: 112000, netSalesVar: -9.2, seaScore: 68, vocSatisfied: 65, topVocIssue: 'Long queues', topSeaIssue: 'Safety', trend: 'down', status: 'critical' },
+  { id: '2', rank: 2, storeNumber: '1876', storeName: 'Memphis Central', dpi: 88, dpiTier: 'Excellence', netSales: 198000, netSalesVar: 5.4, seaScore: 94, vocSatisfied: 89, topVocIssue: 'Product availability', topSeaIssue: '-', trend: 'up', status: 'excellent' },
+  { id: '3', rank: 3, storeNumber: '1234', storeName: 'Franklin Town Center', dpi: 82, dpiTier: 'Stable', netSales: 176000, netSalesVar: 0.8, seaScore: 85, vocSatisfied: 82, topVocIssue: 'Staff friendliness', topSeaIssue: 'Signage', trend: 'up', status: 'stable' },
+  { id: '4', rank: 4, storeNumber: '4532', storeName: 'Murfreesboro Plaza', dpi: 78, dpiTier: 'Stable', netSales: 158000, netSalesVar: -1.8, seaScore: 82, vocSatisfied: 78, topVocIssue: 'Product quality', topSeaIssue: 'Cleanliness', trend: 'down', status: 'warning' },
+  { id: '5', rank: 5, storeNumber: '3421', storeName: 'Knoxville Centre', dpi: 74, dpiTier: 'Stable', netSales: 142000, netSalesVar: -2.4, seaScore: 78, vocSatisfied: 75, topVocIssue: 'Staff availability', topSeaIssue: 'Planogram', trend: 'down', status: 'warning' },
+  { id: '6', rank: 6, storeNumber: '5678', storeName: 'Clarksville Crossing', dpi: 68, dpiTier: 'AtRisk', netSales: 128000, netSalesVar: -4.6, seaScore: 72, vocSatisfied: 68, topVocIssue: 'Long queues', topSeaIssue: 'Safety', trend: 'down', status: 'critical' },
+  { id: '7', rank: 7, storeNumber: '2198', storeName: 'Chattanooga Square', dpi: 62, dpiTier: 'AtRisk', netSales: 112000, netSalesVar: -6.8, seaScore: 65, vocSatisfied: 62, topVocIssue: 'Checkout speed', topSeaIssue: 'Planogram', trend: 'down', status: 'critical' },
   { id: '8', rank: 8, storeNumber: '9012', storeName: 'Johnson City Mall', dpi: 58, dpiTier: 'Crisis', netSales: 95000, netSalesVar: -12.4, seaScore: 62, vocSatisfied: 58, topVocIssue: 'Overall experience', topSeaIssue: 'Multiple', trend: 'down', status: 'critical' },
 ];
 
@@ -111,7 +111,7 @@ const HQ_DISTRICT_OPTIONS = [
 
 // Generate district-varied store data
 const DISTRICT_STORE_NAMES: string[][] = [
-  ['Nashville Flagship', 'Memphis Central', 'Knoxville East', 'Chattanooga Riverside', 'Murfreesboro Plaza', 'Franklin Town Center', 'Clarksville Crossing', 'Johnson City Mall'],
+  ['Nashville Flagship', 'Memphis Central', 'Franklin Town Center', 'Murfreesboro Plaza', 'Knoxville Centre', 'Clarksville Crossing', 'Chattanooga Square', 'Johnson City Mall'],
   ['Peachtree Plaza', 'Savannah Square', 'Augusta Mall', 'Athens Center', 'Macon Point', 'Columbus Walk'],
   ['Charlotte Hub', 'Raleigh Court', 'Durham Heights', 'Wilmington Bay', 'Greensboro Lane', 'Asheville Park', 'Chapel Hill'],
   ['Miami Central', 'Orlando Gateway', 'Tampa Bay Mall', 'Jacksonville Hub', 'Fort Lauderdale', 'St. Petersburg', 'Tallahassee', 'Gainesville', 'Naples Point'],
@@ -276,8 +276,8 @@ const DISTRICT_BROADCAST_ANALYTICS: Record<string, DistrictBroadcastAnalytics> =
     storeCompliance: [
       { store: 'Nashville Flagship', storeId: '2034', ackRate: 100, avgTime: '28m', tier: 'top', missedCount: 0 },
       { store: 'Memphis Central', storeId: '1876', ackRate: 100, avgTime: '35m', tier: 'top', missedCount: 0 },
-      { store: 'Knoxville East', storeId: '3421', ackRate: 96, avgTime: '42m', tier: 'top', missedCount: 0 },
-      { store: 'Chattanooga Riverside', storeId: '2198', ackRate: 92, avgTime: '1h 10m', tier: 'top', missedCount: 1 },
+      { store: 'Knoxville Centre', storeId: '3421', ackRate: 96, avgTime: '42m', tier: 'top', missedCount: 0 },
+      { store: 'Chattanooga Square', storeId: '2198', ackRate: 92, avgTime: '1h 10m', tier: 'top', missedCount: 1 },
       { store: 'Murfreesboro Plaza', storeId: '4532', ackRate: 83, avgTime: '2h 20m', tier: 'at-risk', missedCount: 3 },
       { store: 'Franklin Town Center', storeId: '1234', ackRate: 75, avgTime: '3h 40m', tier: 'defaulter', missedCount: 5 },
       { store: 'Clarksville Crossing', storeId: '5678', ackRate: 88, avgTime: '1h 45m', tier: 'at-risk', missedCount: 2 },
@@ -701,7 +701,7 @@ const districtKPIs: DistrictKPI[] = [
 
 // Team members for chat/broadcast
 const teamMembers = [
-  { id: 'sm1', name: 'Sarah Mitchell', role: 'Store Manager - Nashville Flagship', avatar: 'SM', status: 'online' },
+  { id: 'sm1', name: 'Sarah Johnson', role: 'Store Manager - Nashville Flagship', avatar: 'SJ', status: 'online' },
   { id: 'sm2', name: 'Marcus Chen', role: 'Store Manager - Franklin Town Center', avatar: 'MC', status: 'online' },
   { id: 'sm3', name: 'Lisa Warren', role: 'Store Manager - Johnson City Mall', avatar: 'LW', status: 'away' },
   { id: 'am1', name: 'Thomas Miller', role: 'Area Manager - East Tennessee', avatar: 'TM', status: 'online' },

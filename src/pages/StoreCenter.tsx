@@ -209,14 +209,14 @@ interface InventoryItem {
 const getStoreBrief = (store: StoreMeta): AIDailyBriefData => {
   const isExcellent = store.dpi >= 88;
   const isStable = store.dpi >= 78 && store.dpi < 88;
-  const isAtRisk = store.dpi >= 65 && store.dpi < 78;
+  const isAtRisk = store.dpi >= 60 && store.dpi < 78;
 
-  const vsLY = store.dpi >= 88 ? '+6.2%' : store.dpi >= 78 ? '–0.8%' : store.dpi >= 65 ? '–7.4%' : '–16.8%';
-  const vsPlan = store.dpi >= 88 ? '+8.4%' : store.dpi >= 78 ? '+1.2%' : store.dpi >= 65 ? '–3.8%' : '–12.4%';
-  const convRate = store.dpi >= 88 ? '28.4%' : store.dpi >= 78 ? '24.6%' : store.dpi >= 65 ? '21.1%' : '17.4%';
-  const convYoY = store.dpi >= 88 ? '+1.8pp' : store.dpi >= 78 ? 'flat' : store.dpi >= 65 ? '–2.1pp' : '–5.8pp';
-  const basketSize = store.dpi >= 88 ? '$62.40 (+4.2% YoY)' : store.dpi >= 78 ? '$56.10 (+3.5% YoY)' : store.dpi >= 65 ? '$52.40 (flat YoY)' : '$48.20 (–15.3% over 4 wks)';
-  const transactions = store.dpi >= 88 ? '3,820' : store.dpi >= 78 ? '2,810' : store.dpi >= 65 ? '1,940' : '1,420';
+  const vsLY = store.dpi >= 88 ? '+6.2%' : store.dpi >= 78 ? '–0.8%' : store.dpi >= 60 ? '–7.4%' : '–16.8%';
+  const vsPlan = store.dpi >= 88 ? '+8.4%' : store.dpi >= 78 ? '+1.2%' : store.dpi >= 60 ? '–3.8%' : '–12.4%';
+  const convRate = store.dpi >= 88 ? '28.4%' : store.dpi >= 78 ? '24.6%' : store.dpi >= 60 ? '21.1%' : '17.4%';
+  const convYoY = store.dpi >= 88 ? '+1.8pp' : store.dpi >= 78 ? 'flat' : store.dpi >= 60 ? '–2.1pp' : '–5.8pp';
+  const basketSize = store.dpi >= 88 ? '$62.40 (+4.2% YoY)' : store.dpi >= 78 ? '$56.10 (+3.5% YoY)' : store.dpi >= 60 ? '$52.40 (flat YoY)' : '$48.20 (–15.3% over 4 wks)';
+  const transactions = store.dpi >= 88 ? '3,820' : store.dpi >= 78 ? '2,810' : store.dpi >= 60 ? '1,940' : '1,420';
   const gmRate = store.dpi >= 88 ? '38.2% (+0.8pp vs plan)' : store.dpi >= 78 ? '35.1% (–0.7pp vs plan)' : store.dpi >= 60 ? '32.1% (–3.7pp vs plan)' : '28.6% (–9.2pp vs plan)';
   const revenueContrib = (['17.8%', '15.7%', '13.6%', '12.5%', '11.6%', '10.6%', '9.6%', '8.3%'])[store.rank - 1] || '11%';
   const districtRankLabel = store.rank === 1
@@ -2112,7 +2112,7 @@ export const StoreCenter: React.FC = () => {
         confidenceScore: issue.confidenceScore,
       }]);
     });
-    navigate('/store-operations/task-center');
+    navigate('/command-center/operations-queue');
   };
 
   return (
@@ -3542,7 +3542,7 @@ export const StoreCenter: React.FC = () => {
                           </Button>
                           <Button variant="text" size="small" color="primary"
                             startIcon={<LaunchOutlined sx={{ fontSize: 13 }}/>}
-                            onClick={() => navigate('/store-operations/task-center')}>
+                            onClick={() => navigate('/command-center/operations-queue')}>
                             Open in Ops Queue
                           </Button>
                         </div>
@@ -3551,7 +3551,7 @@ export const StoreCenter: React.FC = () => {
                         <div className="eac-task-actions">
                           <Button variant="text" size="small" color="primary"
                             startIcon={<LaunchOutlined sx={{ fontSize: 13 }}/>}
-                            onClick={() => navigate('/store-operations/task-center')}>
+                            onClick={() => navigate('/command-center/operations-queue')}>
                             View in Ops Queue
                           </Button>
                         </div>

@@ -351,7 +351,7 @@ export const HQHome: React.FC = () => {
         entities: [
           { id: '2034', name: 'Nashville Flagship #2034', status: 'info', detail: '100% POG · 98 audit score · Top performer', manager: 'John Doe' },
           { id: '1876', name: 'Memphis Central #1876', status: 'info', detail: '100% POG · 96 audit score', manager: 'John Doe' },
-          { id: '3421', name: 'Knoxville East #3421', status: 'info', detail: '100% POG · 95 audit score', manager: 'John Doe' },
+          { id: '3421', name: 'Knoxville Centre #3421', status: 'info', detail: '100% POG · 95 audit score', manager: 'John Doe' },
         ],
         ctas: [
           { label: 'Open District Intelligence', action: 'district-intel' },

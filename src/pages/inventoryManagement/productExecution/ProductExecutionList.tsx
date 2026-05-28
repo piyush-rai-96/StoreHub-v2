@@ -196,7 +196,7 @@ export const ProductExecutionList: React.FC = () => {
             </div>
             <div className="pex-header-cycle-pill">
               <CalendarTodayOutlined sx={{ fontSize: 13 }} />
-              <span>Week of May 19–25</span>
+              <span>Week of May 25–31</span>
             </div>
             <span className="pex-header-updated">
               <AccessTimeOutlined sx={{ fontSize: 12 }} />

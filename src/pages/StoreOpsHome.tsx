@@ -723,9 +723,9 @@ export const StoreOpsHome: React.FC = () => {
 
   // Mock data for modals — aligned with StoreCenter broadcastActions bc-001 store breakdown
   const impactedStores = [
-    { id: '1234', name: 'Franklin Town Center #1234', address: '88 Main Street, Franklin TN', status: 'critical', unitCount: 24, manager: 'Dan Kim', phone: '(615) 555-0123' },
-    { id: '5678', name: 'Clarksville Crossing #5678', address: '220 Riverside Dr, Clarksville TN', status: 'warning', unitCount: 12, manager: 'Rachel Torres', phone: '(931) 555-0456' },
-    { id: '9012', name: 'Johnson City Mall #9012', address: '45 State of Franklin Rd, Johnson City TN', status: 'warning', unitCount: 18, manager: 'Kevin Patel', phone: '(423) 555-0789' },
+    { id: '1234', name: 'Franklin Town Center #1234', address: '88 Main Street, Franklin TN', status: 'critical', unitCount: 24, manager: 'Lisa Chen', phone: '(615) 555-0123' },
+    { id: '5678', name: 'Clarksville Crossing #5678', address: '220 Riverside Dr, Clarksville TN', status: 'warning', unitCount: 12, manager: 'James Williams', phone: '(931) 555-0456' },
+    { id: '9012', name: 'Johnson City Mall #9012', address: '45 State of Franklin Rd, Johnson City TN', status: 'warning', unitCount: 18, manager: 'Priya Sharma', phone: '(423) 555-0789' },
   ];
 
   const atRiskSkus = [
@@ -1087,9 +1087,9 @@ export const StoreOpsHome: React.FC = () => {
             description: 'Mentions up +34% over last 2 weeks. Correlates with declining SEA Cleanliness scores and negative sales trajectory.',
             impactSummary: '3 stores affected · VoC Score impact risk',
             stores: [
-              { id: '4532', name: 'Murfreesboro Plaza #4532', status: 'warning', detail: '+22% mentions · SEA Cleanliness score dropped 8pts', manager: 'Marcus Hill' },
-              { id: '2198', name: 'Chattanooga Square #2198', status: 'warning', detail: '+18% mentions · 2 failed cleanliness audits', manager: 'Brandon Cole' },
-              { id: '3421', name: 'Knoxville Centre #3421', status: 'info', detail: '+12% mentions · Cleaning hours reduced last month', manager: 'Megan Davis' },
+              { id: '4532', name: 'Murfreesboro Plaza #4532', status: 'warning', detail: '+22% mentions · SEA Cleanliness score dropped 8pts', manager: 'Kevin Patel' },
+              { id: '2198', name: 'Chattanooga Square #2198', status: 'warning', detail: '+18% mentions · 2 failed cleanliness audits', manager: 'Rachel Torres' },
+              { id: '3421', name: 'Knoxville Centre #3421', status: 'info', detail: '+12% mentions · Cleaning hours reduced last month', manager: 'David Park' },
             ],
             ctas: [
               { label: 'Ask Alan', icon: 'sparkles', action: 'copilot', kind: 'navigate' as const },
@@ -1109,9 +1109,9 @@ export const StoreOpsHome: React.FC = () => {
             description: '12 SKUs below safety stock — immediate reorder needed. Potential $24K revenue loss if unresolved.',
             impactSummary: '3 stores impacted · 2 overdue actions · $24K at risk',
             stores: [
-              { id: '1234', name: 'Franklin Town Center #1234', status: 'critical', detail: '5 SKUs below safety stock', manager: 'Sarah Johnson' },
-              { id: '5678', name: 'Clarksville Crossing #5678', status: 'warning', detail: '4 SKUs below safety stock', manager: 'Rachel Torres' },
-              { id: '9012', name: 'Johnson City Mall #9012', status: 'warning', detail: '3 SKUs below safety stock', manager: 'Kevin Patel' },
+              { id: '1234', name: 'Franklin Town Center #1234', status: 'critical', detail: '5 SKUs below safety stock', manager: 'Lisa Chen' },
+              { id: '5678', name: 'Clarksville Crossing #5678', status: 'warning', detail: '4 SKUs below safety stock', manager: 'James Williams' },
+              { id: '9012', name: 'Johnson City Mall #9012', status: 'warning', detail: '3 SKUs below safety stock', manager: 'Priya Sharma' },
             ],
             ctas: [
               { label: 'Open in Operations Queue', icon: 'zap', action: 'operations', kind: 'navigate' as const },
@@ -1169,7 +1169,7 @@ export const StoreOpsHome: React.FC = () => {
   };
 
   const handleOpenChat = (_contactId?: string) => {
-    navigate('/communications');
+    navigate('/command-center/communications');
   };
 
 
@@ -1290,7 +1290,7 @@ export const StoreOpsHome: React.FC = () => {
         {showBriefAudio && (
           <div className="di-brief-audio-bar">
             <AudioPlayer
-              text="Good morning, Clarke. District 14 Tennessee delivered 1.26 million in weekly revenue this week at plus 8 percent versus plan, plus 5.3 percent versus last year, and plus 6.2 percent on a net-comp basis — the number 2 ranked district nationally and the number 1 district in the Southeast. Gross margin at 34.2 percent, 0.9 points above plan. District conversion improved to 25.4 percent, up 1.3 points year over year. Warm weather across Tennessee added an estimated 42 thousand in uplift. Graduation weekends in Nashville and Memphis added a 28 percent Saturday spike in formal-adjacent purchases — this will repeat for 3 more weekends. Women's Division leads at plus 11.8 percent versus plan, with Summer Midi Dress the number 1 district SKU at 284 units. Accessories is the one district miss at minus 2.4 percent — an Endcap facing gap at 5 of 8 stores. A single district broadcast for the 6-facing reset would recover 6,200 to 8,400 per week. Nashville Flagship leads at SPI 94 and 224 thousand revenue. Johnson City Mall is in crisis at SPI 58, minus 12.4 percent versus plan, with a fire exit SEA violation unresolved. Critical actions today: one, call Johnson City Mall SM before noon on the fire exit. Two, approve the Clarksville Crossing OOS adaptation plan in your queue — 2,400 dollars at risk. Three, call Murfreesboro Plaza SM about fitting room staffing — VoC is up 19 percent, same early signal as Johnson City 6 weeks ago. Four, issue the Accessories Endcap broadcast today. District 14 is one Johnson City Mall recovery away from the national number 1 ranking."
+              text="Good morning, John. District 14 Tennessee delivered 1.26 million in weekly revenue this week at plus 8 percent versus plan, plus 5.3 percent versus last year, and plus 6.2 percent on a net-comp basis — the number 2 ranked district nationally and the number 1 district in the Southeast. Gross margin at 34.2 percent, 0.9 points above plan. District conversion improved to 25.4 percent, up 1.3 points year over year. Warm weather across Tennessee added an estimated 42 thousand in uplift. Graduation weekends in Nashville and Memphis added a 28 percent Saturday spike in formal-adjacent purchases — this will repeat for 3 more weekends. Women's Division leads at plus 11.8 percent versus plan, with Summer Midi Dress the number 1 district SKU at 284 units. Accessories is the one district miss at minus 2.4 percent — an Endcap facing gap at 5 of 8 stores. A single district broadcast for the 6-facing reset would recover 6,200 to 8,400 per week. Nashville Flagship leads at SPI 94 and 224 thousand revenue. Johnson City Mall is in crisis at SPI 58, minus 12.4 percent versus plan, with a fire exit SEA violation unresolved. Critical actions today: one, call Johnson City Mall SM before noon on the fire exit. Two, approve the Clarksville Crossing OOS adaptation plan in your queue — 2,400 dollars at risk. Three, call Murfreesboro Plaza SM about fitting room staffing — VoC is up 19 percent, same early signal as Johnson City 6 weeks ago. Four, issue the Accessories Endcap broadcast today. District 14 is one Johnson City Mall recovery away from the national number 1 ranking."
               title="AI Daily Brief"
               variant="bar"
               onClose={() => setShowBriefAudio(false)}
@@ -1301,7 +1301,7 @@ export const StoreOpsHome: React.FC = () => {
           <div className={`ai-brief-body ${isBriefCollapsed ? 'collapsed' : ''}`}>
             <div className="ai-brief-summary">
               <p className="ai-brief-paragraph">
-                Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name || 'Clarke'}. District 14 — Tennessee delivered <strong>$1.26M in weekly revenue at +8% vs plan</strong> — the #2 ranked district nationally. This brief covers what drove last week's results across your 8 stores, how you compare to the network, and what needs your action today.
+                Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name || 'John'}. District 14 — Tennessee delivered <strong>$1.26M in weekly revenue at +8% vs plan</strong> — the #2 ranked district nationally. This brief covers what drove last week's results across your 8 stores, how you compare to the network, and what needs your action today.
               </p>
 
               <div className="ai-brief-section">
@@ -2020,7 +2020,7 @@ export const StoreOpsHome: React.FC = () => {
             {showBriefAudio && (
               <div className="di-brief-modal-audio">
                 <AudioPlayer
-                  text="Good morning, Clarke. District 14 Tennessee delivered 1.26 million in weekly revenue this week at plus 8 percent versus plan, plus 5.3 percent versus last year, and plus 6.2 percent on a net-comp basis — the number 2 ranked district nationally and the number 1 district in the Southeast. Gross margin at 34.2 percent, 0.9 points above plan. District conversion improved to 25.4 percent, up 1.3 points year over year. Warm weather across Tennessee added an estimated 42 thousand in uplift. Graduation weekends in Nashville and Memphis added a 28 percent Saturday spike in formal-adjacent purchases — this will repeat for 3 more weekends. Women's Division leads at plus 11.8 percent versus plan, with Summer Midi Dress the number 1 district SKU at 284 units. Accessories is the one district miss at minus 2.4 percent — an Endcap facing gap at 5 of 8 stores. A single district broadcast for the 6-facing reset would recover 6,200 to 8,400 per week. Nashville Flagship leads at SPI 94 and 224 thousand revenue. Johnson City Mall is in crisis at SPI 58, minus 12.4 percent versus plan, with a fire exit SEA violation unresolved. Critical actions today: one, call Johnson City Mall SM before noon on the fire exit. Two, approve the Clarksville Crossing OOS adaptation plan in your queue — 2,400 dollars at risk. Three, call Murfreesboro Plaza SM about fitting room staffing — VoC is up 19 percent, same early signal as Johnson City 6 weeks ago. Four, issue the Accessories Endcap broadcast today. District 14 is one Johnson City Mall recovery away from the national number 1 ranking."
+                  text="Good morning, John. District 14 Tennessee delivered 1.26 million in weekly revenue this week at plus 8 percent versus plan, plus 5.3 percent versus last year, and plus 6.2 percent on a net-comp basis — the number 2 ranked district nationally and the number 1 district in the Southeast. Gross margin at 34.2 percent, 0.9 points above plan. District conversion improved to 25.4 percent, up 1.3 points year over year. Warm weather across Tennessee added an estimated 42 thousand in uplift. Graduation weekends in Nashville and Memphis added a 28 percent Saturday spike in formal-adjacent purchases — this will repeat for 3 more weekends. Women's Division leads at plus 11.8 percent versus plan, with Summer Midi Dress the number 1 district SKU at 284 units. Accessories is the one district miss at minus 2.4 percent — an Endcap facing gap at 5 of 8 stores. A single district broadcast for the 6-facing reset would recover 6,200 to 8,400 per week. Nashville Flagship leads at SPI 94 and 224 thousand revenue. Johnson City Mall is in crisis at SPI 58, minus 12.4 percent versus plan, with a fire exit SEA violation unresolved. Critical actions today: one, call Johnson City Mall SM before noon on the fire exit. Two, approve the Clarksville Crossing OOS adaptation plan in your queue — 2,400 dollars at risk. Three, call Murfreesboro Plaza SM about fitting room staffing — VoC is up 19 percent, same early signal as Johnson City 6 weeks ago. Four, issue the Accessories Endcap broadcast today. District 14 is one Johnson City Mall recovery away from the national number 1 ranking."
                   title="AI Daily Brief"
                   variant="card"
                   onClose={() => setShowBriefAudio(false)}
@@ -2030,7 +2030,7 @@ export const StoreOpsHome: React.FC = () => {
             <div className="brief-modal-content">
               <div className="ai-brief-summary">
                 <p className="ai-brief-paragraph">
-                  Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name || 'Clarke'}. District 14 — Tennessee delivered <strong>$1.26M in weekly revenue at +8% vs plan</strong> — the #2 ranked district nationally. This brief covers what drove last week's results across your 8 stores, how you compare to the network, and what needs your action today.
+                  Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name || 'John'}. District 14 — Tennessee delivered <strong>$1.26M in weekly revenue at +8% vs plan</strong> — the #2 ranked district nationally. This brief covers what drove last week's results across your 8 stores, how you compare to the network, and what needs your action today.
                 </p>
 
                 <div className="ai-brief-section">

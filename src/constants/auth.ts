@@ -49,7 +49,7 @@ export const DEFAULT_USERS: UserCredential[] = [
       role: 'SM',
       accessRoutes: ROLE_ACCESS.SM,
       status: 'active',
-      store: 'Downtown Flagship',
+      store: 'Nashville Flagship',
       storeId: 'STR-001',
     },
   },
