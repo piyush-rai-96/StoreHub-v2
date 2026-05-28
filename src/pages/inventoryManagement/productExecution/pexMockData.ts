@@ -124,16 +124,15 @@ export const PEX_ISSUE_TYPES = [
   'Other',
 ];
 
-const PRODUCT_IMAGES = [
-  'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=80&h=80&fit=crop',
-  'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=80&h=80&fit=crop',
-  'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=80&h=80&fit=crop',
-  'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=80&h=80&fit=crop',
-  'https://images.unsplash.com/photo-1560343090-f0409e92791a?w=80&h=80&fit=crop',
-  'https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=80&h=80&fit=crop',
-  'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=80&h=80&fit=crop',
-  'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=80&h=80&fit=crop',
-];
+// SKU-keyed product images — matched to actual product category and name
+const SKU_IMAGES: Record<string, string> = {
+  'FTW-RUN-002': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=120&h=120&fit=crop',   // Running Shoes Elite
+  'WOM-TOP-014': 'https://images.unsplash.com/photo-1624484631620-9e53e4aed980?w=120&h=120&fit=crop', // Women's V-Neck Basics
+  'MEN-DNM-003': 'https://images.unsplash.com/photo-1714143164072-7646ef5cb24d?w=120&h=120&fit=crop', // Slim Fit Denim — Dark Wash
+  'ACC-BAG-005': 'https://images.unsplash.com/photo-1572966059657-6e8910c8c3c0?w=120&h=120&fit=crop', // Canvas Tote Bag
+  'MEN-ACT-004': 'https://images.unsplash.com/photo-1613593013133-b6e122feafe8?w=120&h=120&fit=crop', // Athletic Compression Tee
+  'SEA-JKT-004': 'https://images.unsplash.com/photo-1559433101-fd3dfc8823ae?w=120&h=120&fit=crop',   // Seasonal Rain Jacket
+};
 
 const emptyFindings = (): PexFindings => ({
   stockReceived: null,
@@ -181,7 +180,7 @@ export const PEX_TASKS: PexTask[] = [
     department: 'Footwear',
     subDepartment: "Men's Athletic",
     itemClass: 'Running',
-    productImage: PRODUCT_IMAGES[0],
+    productImage: SKU_IMAGES['FTW-RUN-002'],
     storeId: 'STR-001',
     storeName: 'Downtown Flagship',
     priority: 'High',
@@ -215,7 +214,7 @@ export const PEX_TASKS: PexTask[] = [
     department: "Women's",
     subDepartment: 'Tops',
     itemClass: 'Basics',
-    productImage: PRODUCT_IMAGES[4],
+    productImage: SKU_IMAGES['WOM-TOP-014'],
     storeId: 'STR-001',
     storeName: 'Downtown Flagship',
     priority: 'High',
@@ -251,7 +250,7 @@ export const PEX_TASKS: PexTask[] = [
     department: "Men's",
     subDepartment: 'Bottoms',
     itemClass: 'Denim',
-    productImage: PRODUCT_IMAGES[5],
+    productImage: SKU_IMAGES['MEN-DNM-003'],
     storeId: 'STR-001',
     storeName: 'Downtown Flagship',
     priority: 'Medium',
@@ -294,7 +293,7 @@ export const PEX_TASKS: PexTask[] = [
     department: 'Accessories',
     subDepartment: 'Bags',
     itemClass: 'Totes',
-    productImage: PRODUCT_IMAGES[1],
+    productImage: SKU_IMAGES['ACC-BAG-005'],
     storeId: 'STR-001',
     storeName: 'Downtown Flagship',
     priority: 'Medium',
@@ -328,7 +327,7 @@ export const PEX_TASKS: PexTask[] = [
     department: "Men's",
     subDepartment: 'Activewear',
     itemClass: 'Tops',
-    productImage: PRODUCT_IMAGES[6],
+    productImage: SKU_IMAGES['MEN-ACT-004'],
     storeId: 'STR-001',
     storeName: 'Downtown Flagship',
     priority: 'Medium',
@@ -362,7 +361,7 @@ export const PEX_TASKS: PexTask[] = [
     department: "Women's",
     subDepartment: 'Tops',
     itemClass: 'Basics',
-    productImage: PRODUCT_IMAGES[2],
+    productImage: SKU_IMAGES['WOM-TOP-014'],
     storeId: 'STR-001',
     storeName: 'Downtown Flagship',
     priority: 'High',
@@ -405,7 +404,7 @@ export const PEX_TASKS: PexTask[] = [
     department: 'Seasonal',
     subDepartment: 'Outerwear',
     itemClass: 'Jackets',
-    productImage: PRODUCT_IMAGES[7],
+    productImage: SKU_IMAGES['SEA-JKT-004'],
     storeId: 'STR-001',
     storeName: 'Downtown Flagship',
     priority: 'High',
@@ -439,7 +438,7 @@ export const PEX_TASKS: PexTask[] = [
     department: "Men's",
     subDepartment: 'Bottoms',
     itemClass: 'Denim',
-    productImage: PRODUCT_IMAGES[3],
+    productImage: SKU_IMAGES['MEN-DNM-003'],
     storeId: 'STR-001',
     storeName: 'Downtown Flagship',
     priority: 'Medium',

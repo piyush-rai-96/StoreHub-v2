@@ -15,16 +15,29 @@ export const STORES: StoreMeta[] = [
 
 export const DEFAULT_STORE_ID = 'STR-001';
 
-const PRODUCT_IMAGES = [
-  'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=80&h=80&fit=crop',
-  'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=80&h=80&fit=crop',
-  'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=80&h=80&fit=crop',
-  'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=80&h=80&fit=crop',
-  'https://images.unsplash.com/photo-1560343090-f0409e92791a?w=80&h=80&fit=crop',
-  'https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=80&h=80&fit=crop',
-  'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=80&h=80&fit=crop',
-  'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=80&h=80&fit=crop',
-];
+// SKU-keyed product images — matched to actual product category and name
+const SKU_IMAGES: Record<string, string> = {
+  'WOM-BLZ-001': 'https://images.unsplash.com/photo-1629726343583-d9718b3e8f3f?w=120&h=120&fit=crop', // Women's Classic Blazer
+  'WOM-TOP-014': 'https://images.unsplash.com/photo-1624484631620-9e53e4aed980?w=120&h=120&fit=crop', // Women's V-Neck Basics
+  'WOM-DRS-014': 'https://images.unsplash.com/photo-1777888784810-3a42d674d97b?w=120&h=120&fit=crop', // Floral Midi Dress — Navy
+  'WOM-DNM-005': 'https://images.unsplash.com/photo-1714143164072-7646ef5cb24d?w=120&h=120&fit=crop', // High-Rise Skinny Jeans
+  'WOM-OUT-003': 'https://images.unsplash.com/photo-1724709972210-4beb408de580?w=120&h=120&fit=crop', // Wool Trench Coat
+  'WOM-ACT-002': 'https://images.unsplash.com/photo-1762331655528-4af4bccf7c62?w=120&h=120&fit=crop', // Athletic Leggings
+  'MEN-PLO-002': 'https://images.unsplash.com/photo-1720514496503-c399e2af61d2?w=120&h=120&fit=crop', // Men's Polo Classic
+  'MEN-DNM-003': 'https://images.unsplash.com/photo-1714143164072-7646ef5cb24d?w=120&h=120&fit=crop', // Slim Fit Denim — Dark Wash
+  'MEN-OUT-006': 'https://images.unsplash.com/photo-1769467701268-6a24ece1d417?w=120&h=120&fit=crop', // Puffer Jacket
+  'MEN-ACT-004': 'https://images.unsplash.com/photo-1613593013133-b6e122feafe8?w=120&h=120&fit=crop', // Athletic Compression Tee
+  'MEN-CHN-007': 'https://images.unsplash.com/photo-1624378439575-d8705ad01f20?w=120&h=120&fit=crop', // Men's Stretch Chino
+  'KID-SHT-019': 'https://images.unsplash.com/photo-1632337950445-ba446cb0e26f?w=120&h=120&fit=crop', // Kids Cargo Shorts
+  'ACC-BAG-005': 'https://images.unsplash.com/photo-1572966059657-6e8910c8c3c0?w=120&h=120&fit=crop', // Canvas Tote Bag
+  'ACC-BAG-011': 'https://images.unsplash.com/photo-1569484221992-2a453658fff3?w=120&h=120&fit=crop', // Leather Crossbody Bag
+  'ACC-SCF-009': 'https://images.unsplash.com/photo-1635417198137-75d31b8045e2?w=120&h=120&fit=crop', // Silk Blend Scarf
+  'ACC-BLT-011': 'https://images.unsplash.com/photo-1596159981047-a1eabbc2595b?w=120&h=120&fit=crop', // Leather Belt Classic
+  'FTW-RUN-002': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=120&h=120&fit=crop',   // Running Shoes Elite
+  'SEA-HOO-014': 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=120&h=120&fit=crop',   // Limited Edition Hoodie
+  'SEA-JKT-004': 'https://images.unsplash.com/photo-1559433101-fd3dfc8823ae?w=120&h=120&fit=crop',   // Seasonal Rain Jacket
+};
+const DEFAULT_PRODUCT_IMAGE = 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=120&h=120&fit=crop';
 
 const makeOpp = (
   idx: number,
@@ -36,7 +49,7 @@ const makeOpp = (
     storeId,
     storeName: STORES.find(s => s.storeId === storeId)?.storeName ?? '',
     region: STORES.find(s => s.storeId === storeId)?.region ?? '',
-    productImage: PRODUCT_IMAGES[idx % PRODUCT_IMAGES.length],
+    productImage: overrides.sku ? (SKU_IMAGES[overrides.sku] ?? DEFAULT_PRODUCT_IMAGE) : DEFAULT_PRODUCT_IMAGE,
     productName: `Product ${idx}`,
     sku: `SKU-${String(10000 + idx)}`,
     category: 'General',
@@ -340,7 +353,7 @@ export const MOCK_ALLOCATION_REQUESTS: AllocationRequest[] = [
     storeId: 'STR-001',
     storeName: 'Downtown Flagship',
     region: 'Northeast',
-    productImage: PRODUCT_IMAGES[2],
+    productImage: SKU_IMAGES['WOM-DRS-014'],
     productName: 'Floral Midi Dress — Navy',
     sku: 'WOM-DRS-014',
     category: 'Apparel',
@@ -375,7 +388,7 @@ export const MOCK_ALLOCATION_REQUESTS: AllocationRequest[] = [
     storeId: 'STR-001',
     storeName: 'Downtown Flagship',
     region: 'Northeast',
-    productImage: PRODUCT_IMAGES[3],
+    productImage: SKU_IMAGES['SEA-HOO-014'],
     productName: 'Limited Edition Hoodie',
     sku: 'SEA-HOO-014',
     category: 'Seasonal',
@@ -410,10 +423,10 @@ export const MOCK_ALLOCATION_REQUESTS: AllocationRequest[] = [
     storeId: 'STR-001',
     storeName: 'Downtown Flagship',
     region: 'Northeast',
-    productImage: PRODUCT_IMAGES[3],
-    productName: 'Smart Home Hub Pro',
-    sku: 'SKU-IOT-4404',
-    category: 'Electronics',
+    productImage: SKU_IMAGES['MEN-PLO-002'],
+    productName: "Men's Polo Classic",
+    sku: 'MEN-PLO-002',
+    category: 'Apparel',
     opportunityType: 'top_performing',
     opportunityValue: 5500,
     currentHoAllocationQty: 40,
@@ -449,9 +462,9 @@ export const MOCK_EXECUTION_RECORDS: ExecutionRecord[] = [
     requestId: 'REQ-0003',
     storeId: 'STR-001',
     storeName: 'Downtown Flagship',
-    productImage: PRODUCT_IMAGES[3],
-    productName: 'Smart Home Hub Pro',
-    sku: 'SKU-IOT-4404',
+    productImage: SKU_IMAGES['MEN-PLO-002'],
+    productName: "Men's Polo Classic",
+    sku: 'MEN-PLO-002',
     fulfillmentPath: 'dc_allocation',
     approvedAllocationQty: 60,
     executionStatus: 'approved',
@@ -468,9 +481,9 @@ export const MOCK_EXECUTION_RECORDS: ExecutionRecord[] = [
     requestId: 'REQ-0005',
     storeId: 'STR-001',
     storeName: 'Downtown Flagship',
-    productImage: PRODUCT_IMAGES[4],
-    productName: 'Sustainable Water Bottle',
-    sku: 'SKU-ACC-2205',
+    productImage: SKU_IMAGES['WOM-DNM-005'],
+    productName: 'High-Rise Skinny Jeans',
+    sku: 'WOM-DNM-005',
     fulfillmentPath: 'dc_allocation',
     approvedAllocationQty: 85,
     executionStatus: 'actioned',
@@ -487,9 +500,9 @@ export const MOCK_EXECUTION_RECORDS: ExecutionRecord[] = [
     requestId: 'REQ-0006',
     storeId: 'STR-001',
     storeName: 'Downtown Flagship',
-    productImage: PRODUCT_IMAGES[5],
-    productName: 'Premium Yoga Mat',
-    sku: 'SKU-FIT-3306',
+    productImage: SKU_IMAGES['MEN-CHN-007'],
+    productName: "Men's Stretch Chino",
+    sku: 'MEN-CHN-007',
     fulfillmentPath: 'combined',
     approvedAllocationQty: 50,
     executionStatus: 'closed',
@@ -506,9 +519,9 @@ export const MOCK_EXECUTION_RECORDS: ExecutionRecord[] = [
     requestId: 'REQ-0007',
     storeId: 'STR-001',
     storeName: 'Downtown Flagship',
-    productImage: PRODUCT_IMAGES[6],
-    productName: 'Noise-Canceling Headphones',
-    sku: 'SKU-AUD-5507',
+    productImage: SKU_IMAGES['ACC-BLT-011'],
+    productName: 'Leather Belt Classic',
+    sku: 'ACC-BLT-011',
     fulfillmentPath: 'store_transfer',
     approvedAllocationQty: 0,
     executionStatus: 'rejected',
@@ -525,9 +538,9 @@ export const MOCK_EXECUTION_RECORDS: ExecutionRecord[] = [
     requestId: 'REQ-0008',
     storeId: 'STR-001',
     storeName: 'Downtown Flagship',
-    productImage: PRODUCT_IMAGES[7],
+    productImage: SKU_IMAGES['ACC-BAG-011'],
     productName: 'Leather Crossbody Bag',
-    sku: 'SKU-BAG-1108',
+    sku: 'ACC-BAG-011',
     fulfillmentPath: 'dc_allocation',
     approvedAllocationQty: 70,
     executionStatus: 'unresolved',
