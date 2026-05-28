@@ -353,6 +353,16 @@ export const ProductExecutionDetail: React.FC = () => {
   const [dismissReason, setDismissReason] = useState('');
   const [aiAnalysisShown, setAiAnalysisShown] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isStepLoading, setIsStepLoading] = useState(false);
+
+  function goToStep(idx: number) {
+    setIsStepLoading(true);
+    setTimeout(() => {
+      setCurrentStep(idx);
+      setIsStepLoading(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 650);
+  }
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (isLoading) {
@@ -531,7 +541,7 @@ export const ProductExecutionDetail: React.FC = () => {
             <React.Fragment key={step.label}>
               <button
                 className={`pex-step${active ? ' pex-step--active' : ''}${done ? ' pex-step--done' : ''}`}
-                onClick={() => setCurrentStep(idx)}
+                onClick={() => idx !== currentStep && goToStep(idx)}
               >
                 <div className="pex-step-circle">
                   {done ? <CheckOutlined sx={{ fontSize: 13 }} /> : step.icon}
@@ -719,8 +729,10 @@ export const ProductExecutionDetail: React.FC = () => {
           </div>
 
           <div className="pex-step-nav">
-            <Button variant="primary" onClick={() => setCurrentStep(1)}>
-              Next: Findings &amp; Evidence →
+            <Button variant="primary" onClick={() => goToStep(1)} disabled={isStepLoading}>
+              {isStepLoading
+                ? <span className="pex-step-btn-loading"><span className="pex-step-btn-spinner" />Loading…</span>
+                : 'Next: Findings & Evidence →'}
             </Button>
           </div>
         </>
@@ -901,8 +913,10 @@ export const ProductExecutionDetail: React.FC = () => {
 
           <div className="pex-step-nav pex-step-nav--split">
             <Button variant="outlined" onClick={() => setCurrentStep(0)}>← Back</Button>
-            <Button variant="primary" onClick={() => setCurrentStep(2)}>
-              Next: Resolution →
+            <Button variant="primary" onClick={() => goToStep(2)} disabled={isStepLoading}>
+              {isStepLoading
+                ? <span className="pex-step-btn-loading"><span className="pex-step-btn-spinner" />Loading…</span>
+                : 'Next: Resolution →'}
             </Button>
           </div>
         </>
