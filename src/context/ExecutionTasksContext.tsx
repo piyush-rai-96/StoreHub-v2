@@ -28,7 +28,7 @@ export interface ExecutionTask {
   category: string;
   createdAt: string;
   localizationId: string;
-  source?: 'AI POG Audit' | 'Localization Engine' | 'Broadcast' | 'Manual' | 'Field Signal' | 'BOH Alert' | 'Automated Execution Alert';
+  source?: 'AI POG Audit' | 'Localization Engine' | 'Broadcast' | 'Manual' | 'Field Signal' | 'BOH Alert' | 'Automated Execution Alert' | 'Product Execution';
   alertType?: 'BOH-to-Shelf Sync' | 'Phantom Stock' | 'POG Compliance Gap';
   sourceLink?: string;
   fieldSignalId?: string;

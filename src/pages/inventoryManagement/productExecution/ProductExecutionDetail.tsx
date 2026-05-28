@@ -25,10 +25,6 @@ import CameraAltOutlined from '@mui/icons-material/CameraAltOutlined';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedOutlined from '@mui/icons-material/RadioButtonUnchecked';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
-import ElectricBoltOutlined from '@mui/icons-material/ElectricBoltOutlined';
-import SyncOutlined from '@mui/icons-material/SyncOutlined';
-import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined';
-import NotificationsActiveOutlined from '@mui/icons-material/NotificationsActiveOutlined';
 import { Button, Badge } from 'impact-ui';
 import { ImFilterSelect } from '../../../components/common/ImFilterSelect';
 import {
@@ -43,8 +39,7 @@ import {
   type PexTask,
   type PexFindings,
   type PexAuditEntry,
-  type InventorySmartAction,
-  type InventorySmartActionStatus,
+
 } from './pexMockData';
 import './ProductExecution.css';
 
@@ -244,68 +239,6 @@ function PexSalesChart({ salesTrend }: PexSalesChartProps) {
         stroke="#e2e8f0" strokeWidth={1.5}
       />
     </svg>
-  );
-}
-
-// ── InventorySmart Auto-Actions Panel ─────────────────────────────────────
-const IS_STATUS_META: Record<InventorySmartActionStatus, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
-  completed: { label: 'Done',    color: '#16a34a', bg: '#f0fdf4', icon: <TaskAltOutlined sx={{ fontSize: 14 }} /> },
-  pending:   { label: 'On Resolve', color: '#7c3aed', bg: '#f5f3ff', icon: <SyncOutlined    sx={{ fontSize: 14 }} /> },
-  active:    { label: 'Active',  color: '#2563eb', bg: '#eff6ff', icon: <ElectricBoltOutlined sx={{ fontSize: 14 }} /> },
-  ready:     { label: 'Ready',   color: '#d97706', bg: '#fffbeb', icon: <NotificationsActiveOutlined sx={{ fontSize: 14 }} /> },
-};
-
-interface InventorySmartPanelProps {
-  actions: InventorySmartAction[];
-  isResolved: boolean;
-  title?: string;
-  subtitle?: string;
-}
-
-function InventorySmartPanel({ actions, isResolved, title, subtitle }: InventorySmartPanelProps) {
-  const resolvedActions = isResolved
-    ? actions.map(a => ({ ...a, status: 'completed' as InventorySmartActionStatus }))
-    : actions;
-
-  return (
-    <div className="pex-is-panel">
-      <div className="pex-is-panel-header">
-        <div className="pex-is-panel-icon-wrap">
-          <ElectricBoltOutlined sx={{ fontSize: 16 }} />
-        </div>
-        <div>
-          <div className="pex-is-panel-title">{title ?? 'InventorySmart Auto-Actions'}</div>
-          <div className="pex-is-panel-sub">
-            {subtitle ?? (isResolved
-              ? 'All automated actions completed — no manual steps required.'
-              : 'These actions trigger automatically when this task is resolved. No manual steps required.')}
-          </div>
-        </div>
-        <div className="pex-is-panel-badge">
-          <ElectricBoltOutlined sx={{ fontSize: 11 }} />
-          InventorySmart
-        </div>
-      </div>
-      <div className="pex-is-actions-list">
-        {resolvedActions.map((a, i) => {
-          const meta = IS_STATUS_META[a.status];
-          return (
-            <div key={i} className="pex-is-action-row">
-              <div className="pex-is-action-dot" style={{ background: meta.bg, color: meta.color }}>
-                {meta.icon}
-              </div>
-              <div className="pex-is-action-body">
-                <div className="pex-is-action-text">{a.action}</div>
-                <div className="pex-is-action-detail">{a.detail}</div>
-              </div>
-              <div className="pex-is-action-status" style={{ color: meta.color, background: meta.bg }}>
-                {meta.label}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
   );
 }
 
@@ -671,22 +604,6 @@ export const ProductExecutionDetail: React.FC = () => {
               </div>
             </div>
 
-            {/* InventorySmart panel — show on overview for all tasks with IS actions */}
-            {task.inventorySmartActions && task.inventorySmartActions.length > 0 && (
-              <InventorySmartPanel
-                actions={task.inventorySmartActions}
-                isResolved={task.status === 'resolved'}
-                title={task.source === 'phantom_stock' || task.source === 'boh_sync'
-                  ? 'InventorySmart — What Happens When You Resolve This'
-                  : 'InventorySmart — Proactive Actions Ready'}
-                subtitle={task.source === 'phantom_stock' || task.source === 'boh_sync'
-                  ? 'Resolve this task in 8 minutes. InventorySmart auto-corrects inventory records, recalibrates replenishment, and schedules follow-up — no cycle count required.'
-                  : task.status === 'resolved'
-                    ? 'All automated actions completed by InventorySmart.'
-                    : 'InventorySmart has pre-staged these actions. Review and approve as needed.'}
-              />
-            )}
-
             {/* Inventory mismatch callout for phantom_stock */}
             {task.source === 'phantom_stock' && task.bohUnits != null && (
               <div className="pex-mismatch-callout">
@@ -950,7 +867,7 @@ export const ProductExecutionDetail: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <Button variant="outlined" color="primary" onClick={() => navigate('/command-center/operations-queue')}>
+              <Button variant="outlined" color="primary" onClick={() => navigate('/command-center/operations-queue', { state: { highlightPexTask: task.linkedTaskId } })}>
                 <LaunchOutlined sx={{ fontSize: 14 }} />&nbsp;Open Queue Task
               </Button>
             </div>
@@ -1007,22 +924,6 @@ export const ProductExecutionDetail: React.FC = () => {
             </div>
           </div>
 
-          {/* InventorySmart panel on Resolution step */}
-          {task.inventorySmartActions && task.inventorySmartActions.length > 0 && (
-            <div className="pex-section">
-              <InventorySmartPanel
-                actions={task.inventorySmartActions}
-                isResolved={task.status === 'resolved'}
-                title={task.status === 'resolved'
-                  ? 'InventorySmart — Actions Completed'
-                  : 'InventorySmart — Actions Queued for Resolution'}
-                subtitle={task.status === 'resolved'
-                  ? 'InventorySmart has automatically corrected all inventory records. No cycle count required.'
-                  : 'Mark this task Resolved to trigger all InventorySmart automated actions below.'}
-              />
-            </div>
-          )}
-
           {/* Audit Trail */}
           <div className="pex-section">
             <div className="pex-section-header">
@@ -1077,9 +978,6 @@ export const ProductExecutionDetail: React.FC = () => {
               <span className="pex-modal-chip pex-modal-chip--green">✓ Findings saved</span>
               <span className="pex-modal-chip pex-modal-chip--blue">✓ Queue task updated</span>
               <span className="pex-modal-chip pex-modal-chip--purple">✓ Audit logged</span>
-              {task.source === 'phantom_stock' && (
-                <span className="pex-modal-chip pex-modal-chip--yellow">⚡ InventorySmart queued</span>
-              )}
             </div>
             <div className="pex-modal-actions">
               <Button variant="primary" onClick={() => { setShowSuccessModal(false); navigate('/command-center/operations-queue'); }}>

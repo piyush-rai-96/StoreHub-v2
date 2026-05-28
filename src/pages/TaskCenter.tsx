@@ -190,6 +190,79 @@ const seedTasks: ExecutionTask[] = [
     beforeImage: '/audit-evidence/hair-acc-before.jpg',
     afterImage: '/audit-evidence/hair-acc-after.jpg',
   },
+  // ── Product Execution linked tasks (OQ-PEX-*)
+  {
+    id: 'OQ-PEX-001',
+    type: 'Move',
+    title: 'Running Shoes Elite — Shelf Upgrade to End Cap (Top Performer)',
+    description: 'Running Shoes Elite (FTW-RUN-002) is the #1 Footwear SKU in the district — outselling cluster by 58%. Current shelf position Aisle 4, Bay 2 is limiting visibility. Move to Footwear End Cap W4 to capture remaining sell-through. Stock: 18 units on hand at 38 units/week sell rate — stockout in 8–10 days. Request +24 units from DC.',
+    priority: 'High',
+    reason: 'Top Performing Product — velocity acceleration 4 weeks straight',
+    impact: '+$4,200/week opportunity. Stockout risk in 8–10 days without allocation.',
+    status: 'Pending',
+    assignedTo: 'user-2',
+    assignedToName: 'Sarah Johnson',
+    dueDate: '2026-05-30',
+    storeName: 'Nashville Flagship #2034',
+    storeGroup: 'District 14 — Tennessee',
+    pogName: 'Footwear Wall W4 / End Cap',
+    category: 'Footwear',
+    createdAt: '2026-05-26T08:03:00Z',
+    localizationId: 'pex-ftw-001',
+    source: 'Product Execution',
+    sourceLink: '/inventory-management/product-execution/PEX-001',
+    slaHours: 48,
+    severityRationale: 'Top performer outselling cluster by 58%. End Cap placement drives +31% conversion vs aisle. Stockout projected Day 8 at current sell rate.',
+    confidenceScore: 94,
+  },
+  {
+    id: 'OQ-PEX-002',
+    type: 'Add',
+    title: "Women's V-Neck Basics — BOH-to-Shelf Replenishment (Overdue)",
+    description: "BOH has 48 units of Women's V-Neck Basics (WOM-TOP-014) confirmed in Rail C, Bay 2. Shelf is completely empty. Move all 48 units to Women's Basics wall immediately. SLA breach — task is overdue.",
+    priority: 'High',
+    reason: "BOH-to-Shelf gap — 48 units available, shelf empty",
+    impact: '-$420/week in lost sales. SLA breached.',
+    status: 'In Progress',
+    assignedTo: 'user-3',
+    assignedToName: 'J. Martinez',
+    dueDate: '2026-05-25',
+    storeName: 'Nashville Flagship #2034',
+    storeGroup: 'District 14 — Tennessee',
+    pogName: "Women's Basics Wall",
+    category: "Women's",
+    createdAt: '2026-05-25T09:14:00Z',
+    localizationId: 'pex-wom-002',
+    source: 'Product Execution',
+    sourceLink: '/inventory-management/product-execution/PEX-002',
+    slaHours: 3,
+    severityRationale: "Shelf image detected 0 units on Women's Basics wall while BOH confirms 48 units available in backroom. SLA of 3 hours breached.",
+    confidenceScore: 94,
+  },
+  {
+    id: 'OQ-PEX-003',
+    type: 'Add',
+    title: 'Summer Running Sneaker — Inventory Mismatch: Move BOH to Floor (In Progress)',
+    description: 'System shows 72 units on-hand for Summer Running Sneaker (FTW-SNK-007) but zero sales for 18 days. Physical investigation confirmed: 72 units are in Shoe Storage Bay S3 — misrouted from May 18 receiving. Associate A. Thompson is moving 36 pairs to Footwear Wall W4, Bay 2. Remaining 36 units to be moved tomorrow AM.',
+    priority: 'High',
+    reason: 'Inventory mismatch — digital count 72 units, physical floor count 0 units',
+    impact: '-$1,550/week vs cluster velocity. 18 consecutive zero-sale days.',
+    status: 'In Progress',
+    assignedTo: 'user-3',
+    assignedToName: 'A. Thompson',
+    dueDate: '2026-05-28',
+    storeName: 'Nashville Flagship #2034',
+    storeGroup: 'District 14 — Tennessee',
+    pogName: 'Footwear Wall W4, Bay 2',
+    category: 'Footwear',
+    createdAt: '2026-05-20T07:03:00Z',
+    localizationId: 'pex-ftw-003',
+    source: 'Product Execution',
+    sourceLink: '/inventory-management/product-execution/PEX-003',
+    slaHours: 48,
+    severityRationale: 'Phantom stock — 72 units on-hand per system, 0 on shelf for 18 days. Receiving misroute on May 18 confirmed. Associate actively correcting.',
+    confidenceScore: 88,
+  },
   // Broadcast-linked tasks
   {
     id: 'tc-bc-001-1',
@@ -516,6 +589,21 @@ export const TaskCenter: React.FC = () => {
     const el = document.getElementById(`tc-task-${highlightedTaskId}`);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [highlightedTaskId]);
+
+  // Handle deep-link from Product Execution detail — highlight the linked task
+  useEffect(() => {
+    const state = location.state as { highlightPexTask?: string } | null;
+    const pexTaskId = state?.highlightPexTask;
+    if (!pexTaskId) return;
+    window.history.replaceState({}, document.title);
+    setView('list');
+    setFilter('all');
+    setHighlightedTaskId(pexTaskId);
+    setTimeout(() => {
+      const el = document.getElementById(`tc-task-${pexTaskId}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 400);
+  }, [location.state]);
 
   // Handle broadcast deep-link from OCV
   useEffect(() => {

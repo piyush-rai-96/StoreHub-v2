@@ -38,13 +38,6 @@ export interface PexAuditEntry {
   user: string;
 }
 
-export type InventorySmartActionStatus = 'completed' | 'pending' | 'active' | 'ready';
-
-export interface InventorySmartAction {
-  action: string;
-  status: InventorySmartActionStatus;
-  detail: string;
-}
 
 export interface PexWeeklySales {
   week: string;
@@ -86,10 +79,8 @@ export interface PexTask {
   // Findings
   findings: PexFindings;
   auditTrail: PexAuditEntry[];
-  // InventorySmart automated actions — shown as a panel on the task
-  inventorySmartActions?: InventorySmartAction[];
-  // Quick context numbers for the hero story
-  bohUnits?: number;         // units confirmed in back-of-house
+  // Quick context numbers for the mismatch callout
+  bohUnits?: number;
   daysSinceLastSale?: number;
 }
 
@@ -220,12 +211,6 @@ export const PEX_TASKS: PexTask[] = [
       { timestamp: '2026-05-26T08:02:00Z', action: 'DC allocation request pre-staged: +24 units FTW-RUN-002 (awaiting SM approval)', user: 'System (InventorySmart)' },
       { timestamp: '2026-05-26T08:03:00Z', action: 'Task auto-created — owner assigned: Sarah Johnson', user: 'System' },
     ],
-    inventorySmartActions: [
-      { action: 'DC allocation request pre-staged: +24 units FTW-RUN-002', status: 'ready', detail: 'SM approval required — 1 click to submit to DC' },
-      { action: 'End Cap position W4 reserved in active planogram', status: 'active', detail: 'Footwear End Cap available after Wednesday floorset reset' },
-      { action: 'Stockout alert scheduled at Day 8 if sell rate continues', status: 'active', detail: 'InventorySmart monitoring daily velocity' },
-      { action: 'Peer store best practice: Knoxville Centre ran same SKU at End Cap — +31% conversion vs Aisle position', status: 'active', detail: 'Benchmark data from district performance feed' },
-    ],
   },
   {
     id: 'PEX-002',
@@ -317,14 +302,6 @@ export const PEX_TASKS: PexTask[] = [
       { timestamp: '2026-05-28T10:22:00Z', action: 'Physical investigation complete: 72 units confirmed in Shoe Storage Bay S3. Mismatch cause: receiving misroute on May 18. Units never reached the Footwear floor.', user: 'A. Thompson' },
       { timestamp: '2026-05-28T10:24:00Z', action: 'Moving 36 pairs to Footwear Wall W4, Bay 2 (eye level). Remaining 36 units designated as BOH buffer.', user: 'A. Thompson' },
       { timestamp: '2026-05-28T10:28:00Z', action: 'Findings saved: In BOH=Yes, On shelf=No, Location=Bay S3. 36 units now in transit to floor.', user: 'A. Thompson' },
-    ],
-    inventorySmartActions: [
-      { action: 'Phantom stock alert cleared for FTW-SNK-007', status: 'pending', detail: 'Auto-clears when task is marked Resolved' },
-      { action: 'Shelf count corrected: 0 → 36 units (Footwear Wall W4, Bay 2)', status: 'pending', detail: 'Inventory record updated automatically on resolution' },
-      { action: 'Replenishment model recalibrated — phantom inflation removed from forecast', status: 'pending', detail: 'DC will no longer see 72 phantom units as "in stock" — correct reorder triggered' },
-      { action: 'BOH-to-Shelf follow-up task created for remaining 36 units', status: 'pending', detail: 'Scheduled for tomorrow AM — A. Thompson assigned' },
-      { action: 'Receiving process flag raised: Bay S3 misroute pattern (2nd occurrence in 30 days)', status: 'pending', detail: 'Ops alert sent to store manager for receiving SOP review' },
-      { action: 'SKU accuracy recount scheduled: Jun 27, 2026', status: 'pending', detail: '30-day automated recount to verify inventory accuracy post-correction' },
     ],
   },
   {
