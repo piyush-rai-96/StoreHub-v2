@@ -36,7 +36,7 @@ import NorthEast from '@mui/icons-material/NorthEast';
 import SouthEast from '@mui/icons-material/SouthEast';
 import FilterListOutlined from '@mui/icons-material/FilterListOutlined';
 import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined';
-import { Button, Card, Tabs } from 'impact-ui';
+import { Button, Card, Tabs, Loader, Panel, TextArea, Table } from 'impact-ui';
 import { ImFilterSelect } from '../components/common/ImFilterSelect';
 import { useAuth } from '../context/AuthContext';
 import { openAskAlan } from '../utils/openAskAlan';
@@ -1533,7 +1533,7 @@ export const DistrictIntelligence: React.FC = () => {
     return (
       <div className="district-intel">
         <div className="district-intel-loading">
-          <div className="loading-spinner" />
+          <Loader size="large" />
           <p>Loading District Intelligence...</p>
         </div>
       </div>
@@ -1922,46 +1922,67 @@ export const DistrictIntelligence: React.FC = () => {
         {/* Broadcast List */}
         <div className="bca-sub-section">
           <div className="bca-table-wrapper">
-            <table className="bca-table wow-table">
-              <thead>
-                <tr>
-                  <th>Broadcast</th>
-                  <th>Priority</th>
-                  <th>Ack Rate</th>
-                  <th>Avg Ack Time</th>
-                  <th>Pending</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {activeBroadcasts.effectiveness.map(bc => {
-                  const pending = bc.stores - bc.acked;
-                  return (
-                    <tr key={bc.id} className="bca-table-row" onClick={() => setBcaSelectedBroadcast(bc)}>
-                      <td>
-                        <div className="bca-bc-name">{bc.name}</div>
-                        <span className="bca-bc-sent">{bc.type} · Sent {bc.sentAt}</span>
-                      </td>
-                      <td>
-                        <span className={`bca-priority-badge ${bc.priority}`}>{bc.priority}</span>
-                      </td>
-                      <td>
-                        <span className={`bca-bc-metric-val ${bc.ackRate >= 90 ? 'high' : bc.ackRate >= 75 ? 'medium' : 'low'}`}>{bc.ackRate}%</span>
-                      </td>
-                      <td className="bca-td-time">{bc.avgAckTime}</td>
-                      <td>
-                        <span className={`bca-pending-count ${pending > 2 ? 'high' : pending > 0 ? 'medium' : 'zero'}`}>{pending}</span>
-                      </td>
-                      <td>
-                        <span className={`bca-status-badge ${bc.status === 'good' ? 'good' : 'at-risk'}`}>
-                          {bc.status === 'good' ? 'Good' : 'Needs Attention'}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <Table
+              columnDefs={[
+                {
+                  headerName: 'Broadcast',
+                  field: 'broadcast',
+                  flex: 2,
+                  cellRenderer: ({ data }: { data: Record<string, unknown> }) => (
+                    <div>
+                      <div className="bca-bc-name">{data.name as string}</div>
+                      <span className="bca-bc-sent">{data.type as string} · Sent {data.sentAt as string}</span>
+                    </div>
+                  ),
+                },
+                {
+                  headerName: 'Priority',
+                  field: 'priority',
+                  width: 100,
+                  cellRenderer: ({ value }: { value: unknown }) => (
+                    <span className={`bca-priority-badge ${value as string}`}>{value as string}</span>
+                  ),
+                },
+                {
+                  headerName: 'Ack Rate',
+                  field: 'ackRate',
+                  width: 100,
+                  cellRenderer: ({ value }: { value: unknown }) => {
+                    const v = value as number;
+                    return <span className={`bca-bc-metric-val ${v >= 90 ? 'high' : v >= 75 ? 'medium' : 'low'}`}>{v}%</span>;
+                  },
+                },
+                { headerName: 'Avg Ack Time', field: 'avgAckTime', width: 120 },
+                {
+                  headerName: 'Pending',
+                  field: 'pending',
+                  width: 90,
+                  cellRenderer: ({ value }: { value: unknown }) => {
+                    const p = value as number;
+                    return <span className={`bca-pending-count ${p > 2 ? 'high' : p > 0 ? 'medium' : 'zero'}`}>{p}</span>;
+                  },
+                },
+                {
+                  headerName: 'Status',
+                  field: 'status',
+                  width: 140,
+                  cellRenderer: ({ value }: { value: unknown }) => (
+                    <span className={`bca-status-badge ${value === 'good' ? 'good' : 'at-risk'}`}>
+                      {value === 'good' ? 'Good' : 'Needs Attention'}
+                    </span>
+                  ),
+                },
+              ]}
+              rowData={activeBroadcasts.effectiveness.map(bc => ({
+                ...bc,
+                pending: bc.stores - bc.acked,
+              }))}
+              rowHeight={52}
+              hideTableSetting
+              cardContainer={false}
+              onRowClicked={({ data }) => setBcaSelectedBroadcast(data as unknown as typeof activeBroadcasts.effectiveness[0])}
+              className="bca-impact-table"
+            />
           </div>
         </div>
       </div>
@@ -2584,10 +2605,15 @@ export const DistrictIntelligence: React.FC = () => {
       </div>
 
       {/* Heatmap Cell Detail Panel — Right-side */}
-      {heatmapDetail && (
-        <>
-          <div className="detail-panel-overlay" onClick={() => setHeatmapDetail(null)} />
-          <div className="detail-panel">
+      <Panel
+        open={!!heatmapDetail}
+        setIsOpen={(v) => { if (!v) setHeatmapDetail(null); }}
+        onClose={() => setHeatmapDetail(null)}
+        anchor="right"
+        size="large"
+      >
+        {heatmapDetail && (
+          <div className="detail-panel detail-panel--no-overlay">
             <div className="dp-hero-header">
               <div className="dp-hero-top">
                 <div className="dp-hero-icon" style={{ background: '#cffafe', color: '#0e7490' }}>
@@ -2881,8 +2907,8 @@ export const DistrictIntelligence: React.FC = () => {
               </div>
             </div>
           </div>
-        </>
-      )}
+        )}
+      </Panel>
 
       {/* Toast Notification */}
       {toastMessage && (
@@ -3085,7 +3111,7 @@ export const DistrictIntelligence: React.FC = () => {
 
                       <div className="bw-field">
                         <label className="bw-field-label">Message <span className="bw-required">*</span></label>
-                        <textarea className="bw-textarea" rows={5} placeholder="Type your broadcast message here…" value={bwMessage} onChange={e => setBwMessage(e.target.value)} maxLength={1000} />
+                        <TextArea rows={5} placeholder="Type your broadcast message here…" value={bwMessage} onChange={e => setBwMessage(e.target.value)} maxLength={1000} />
                         <div className="bw-field-hint">{bwMessage.length}/1000</div>
                       </div>
                       </div>{/* /bw-form-card-body */}
@@ -3290,7 +3316,8 @@ export const DistrictIntelligence: React.FC = () => {
                           showToast(`✓ Broadcast sent to ${recipientCount} ${bwAudience === 'managers' ? 'manager(s)' : 'store(s)'}`);
                         }, 1000);
                       }}
-                      startIcon={bwSending ? <div className="bw-spinner" /> : <SendOutlined sx={{ fontSize: 14 }}/>}
+                      isLoading={bwSending}
+                      startIcon={!bwSending ? <SendOutlined sx={{ fontSize: 14 }}/> : undefined}
                     >
                       {bwSending ? 'Sending…' : 'Send Broadcast'}
                     </Button>
@@ -3692,13 +3719,18 @@ export const DistrictIntelligence: React.FC = () => {
         const periodDelta = computePeriodDelta();
         const accent = activeKPIPanel.status === 'positive' ? '#047857' : activeKPIPanel.status === 'negative' ? '#991b1b' : activeKPIPanel.status === 'warning' ? '#b45309' : 'var(--ia-color-primary-pressed)';
         return (
-          <>
-            <div className="detail-panel-overlay" onClick={() => setActiveKPIPanel(null)} />
-            <div className="detail-panel">
+          <Panel
+            open={!!activeKPIPanel}
+            setIsOpen={(v) => { if (!v) setActiveKPIPanel(null); }}
+            onClose={() => setActiveKPIPanel(null)}
+            anchor="right"
+            size="large"
+          >
+            <div className="detail-panel detail-panel--no-overlay">
               {/* Hero Header */}
               <div className="dp-hero-header">
                 <div className="dp-hero-top">
-                  <div className="dp-hero-icon" style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}>
+                  <div className="dp-hero-icon" style={{ background: '#dbeafe', color: '#1d4ed8' }}>
                     <BarChartOutlined sx={{ fontSize: 16 }}/>
                   </div>
                   <span className="dp-hero-type">{activeKPIPanel.category.toUpperCase()} · 52-Week Trend</span>
@@ -3831,19 +3863,24 @@ export const DistrictIntelligence: React.FC = () => {
                 </div>
               </div>
             </div>
-          </>
+          </Panel>
         );
       })()}
 
       {/* Broadcast Analytics — Right-Side Detail Panel (same pattern as Home Screen alerts) */}
-      {bcaSelectedBroadcast && (
-        <>
-          <div className="detail-panel-overlay" onClick={closeBcaPanel} />
-          <div className="detail-panel">
+      <Panel
+        open={!!bcaSelectedBroadcast}
+        setIsOpen={(v) => { if (!v) closeBcaPanel(); }}
+        onClose={closeBcaPanel}
+        anchor="right"
+        size="large"
+      >
+        {bcaSelectedBroadcast && (
+          <div className="detail-panel detail-panel--no-overlay">
             {/* Hero Header */}
             <div className="dp-hero-header">
               <div className="dp-hero-top">
-                <div className="dp-hero-icon" style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}>
+                <div className="dp-hero-icon" style={{ background: '#ede9fe', color: '#6d28d9' }}>
                   <CampaignOutlined sx={{ fontSize: 16 }}/>
                 </div>
                 <span className="dp-hero-type">{bcaSelectedBroadcast.priority.toUpperCase()} PRIORITY · {bcaSelectedBroadcast.type}</span>
@@ -3888,35 +3925,48 @@ export const DistrictIntelligence: React.FC = () => {
                   Store-Level Compliance
                 </h3>
                 <div className="bca-panel-table-wrapper">
-                  <table className="bca-panel-table wow-table">
-                    <thead>
-                      <tr>
-                        <th>Store</th>
-                        <th>Status</th>
-                        <th>Ack Time</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {getBroadcastStoreCompliance(bcaSelectedBroadcast).map(s => (
-                        <tr
-                          key={s.storeId}
-                          className="bca-panel-table-row"
-                          onClick={() => { closeBcaPanel(); navigate(`/store-operations/store-deep-dive?store=${s.storeId}`); }}
-                        >
-                          <td>
-                            <div className="bca-panel-store-name">{s.store}</div>
-                            <span className="bca-panel-store-id">#{s.storeId}</span>
-                          </td>
-                          <td>
-                            <span className={`bca-panel-ack-badge ${s.acknowledged ? 'acked' : 'pending'}`}>
-                              {s.acknowledged ? 'Acknowledged' : 'Pending'}
-                            </span>
-                          </td>
-                          <td className="bca-panel-td-time">{s.acknowledged ? s.avgTime : '—'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <Table
+                    columnDefs={[
+                      {
+                        headerName: 'Store',
+                        field: 'store',
+                        flex: 2,
+                        cellRenderer: ({ data }: { data: Record<string, unknown> }) => (
+                          <div>
+                            <div className="bca-panel-store-name">{data.store as string}</div>
+                            <span className="bca-panel-store-id">#{data.storeId as string}</span>
+                          </div>
+                        ),
+                      },
+                      {
+                        headerName: 'Status',
+                        field: 'acknowledged',
+                        width: 140,
+                        cellRenderer: ({ value }: { value: unknown }) => (
+                          <span className={`bca-panel-ack-badge ${value ? 'acked' : 'pending'}`}>
+                            {value ? 'Acknowledged' : 'Pending'}
+                          </span>
+                        ),
+                      },
+                      {
+                        headerName: 'Ack Time',
+                        field: 'ackTime',
+                        width: 110,
+                      },
+                    ]}
+                    rowData={getBroadcastStoreCompliance(bcaSelectedBroadcast).map(s => ({
+                      ...s,
+                      ackTime: s.acknowledged ? s.avgTime : '—',
+                    }))}
+                    rowHeight={48}
+                    hideTableSetting
+                    cardContainer={false}
+                    onRowClicked={({ data }) => {
+                      closeBcaPanel();
+                      navigate(`/store-operations/store-deep-dive?store=${data.storeId}`);
+                    }}
+                    className="bca-impact-table"
+                  />
                 </div>
               </div>
 
@@ -3971,8 +4021,8 @@ export const DistrictIntelligence: React.FC = () => {
               </div>
             </div>
           </div>
-        </>
-      )}
+        )}
+      </Panel>
 
     </div>
   );

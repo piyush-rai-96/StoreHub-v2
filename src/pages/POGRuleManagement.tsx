@@ -30,7 +30,7 @@ import OpenInFullOutlined from '@mui/icons-material/OpenInFullOutlined';
 import AttachMoneyOutlined from '@mui/icons-material/AttachMoneyOutlined';
 import LabelOutlined from '@mui/icons-material/LabelOutlined';
 import GppGoodOutlined from '@mui/icons-material/GppGoodOutlined';
-import { Button, Card, Tabs, Modal, EmptyState, Stepper, StepperStep, Badge, Select, SelectOption } from 'impact-ui';
+import { Button, Card, Tabs, Modal, EmptyState, Stepper, StepperStep, Badge, Select, SelectOption, Loader, Alert, TextArea, Input } from 'impact-ui';
 import { useAuth } from '../context/AuthContext';
 import './POGRuleManagement.css';
 
@@ -1201,7 +1201,7 @@ export const POGRuleManagement: React.FC = () => {
             </div>
             <div className="wizard-field-group" style={{ marginTop: '12px' }}>
               <label>Special Instructions</label>
-              <textarea value={def.instructions || ''} onChange={(e) => updateDefinition(type, 'instructions', e.target.value)} placeholder="Enter instructions..." rows={3} />
+              <TextArea value={def.instructions || ''} onChange={(e) => updateDefinition(type, 'instructions', e.target.value)} placeholder="Enter instructions..." rows={3} />
             </div>
           </Card>
         );
@@ -1224,7 +1224,7 @@ export const POGRuleManagement: React.FC = () => {
               </div>
               <div className="wizard-field-group">
                 <label>Description</label>
-                <textarea value={builderForm.description || ''} onChange={(e) => setBuilderForm(prev => ({ ...prev, description: e.target.value }))} placeholder="Describe what this rule does and when it should be applied" rows={4} />
+                <TextArea value={builderForm.description || ''} onChange={(e) => setBuilderForm(prev => ({ ...prev, description: e.target.value }))} placeholder="Describe what this rule does and when it should be applied" rows={4} />
               </div>
             </div>
           </div>
@@ -1366,7 +1366,7 @@ export const POGRuleManagement: React.FC = () => {
     return (
       <div className="rule-management">
         <div className="page-loading">
-          <div className="page-loading-spinner" />
+          <Loader size="large" />
           <p>Loading Rule Management...</p>
         </div>
       </div>
@@ -1430,23 +1430,25 @@ export const POGRuleManagement: React.FC = () => {
           {(unmappedCount > 0 || draftCount > 0) && (
             <div className="rule-alerts">
               {unmappedCount > 0 && (
-                <div className="pi-banner pi-banner--warning">
-                  <WarningAmberOutlined sx={{ fontSize: 16 }} />
-                  <span>You have <strong>{unmappedCount}</strong> unmapped rule{unmappedCount > 1 ? 's' : ''}</span>
-                </div>
+                <Alert
+                  severity="warning"
+                  title={`You have ${unmappedCount} unmapped rule${unmappedCount > 1 ? 's' : ''}`}
+                  subtleBackground
+                />
               )}
               {draftCount > 0 && (
-                <div className="pi-banner pi-banner--info">
-                  <DescriptionOutlined sx={{ fontSize: 16 }} />
-                  <span>You have <strong>{draftCount}</strong> draft rule{draftCount > 1 ? 's' : ''}</span>
-                </div>
+                <Alert
+                  severity="info"
+                  title={`You have ${draftCount} draft rule${draftCount > 1 ? 's' : ''}`}
+                  subtleBackground
+                />
               )}
             </div>
           )}
           <div className="rule-filter-bar">
             <div className="rule-filter-bar-search">
-              <SearchOutlined sx={{ fontSize: 16 }} />
-              <input
+              <Input
+                leftIcon={<SearchOutlined sx={{ fontSize: 16 }} />}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search rules..."

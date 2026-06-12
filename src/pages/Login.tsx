@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Card } from 'impact-ui';
+import { Button, Card, Loader } from 'impact-ui';
 import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlined from '@mui/icons-material/VisibilityOffOutlined';
 import { useAuth } from '../context/AuthContext';
@@ -59,7 +59,7 @@ export const Login: React.FC = () => {
       {/* ── Sign-in loading overlay ─────────────────── */}
       {isSigningIn && (
         <div className="login-signing-in">
-          <div className="login-signing-spinner" />
+          <Loader size="large" />
           <p className="login-signing-text">Signing in...</p>
           <p className="login-signing-sub">Preparing your workspace</p>
         </div>
@@ -137,38 +137,48 @@ export const Login: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="login-form">
               {/* Email Input */}
-              <div className="form-field email-field">
-                <label className="email-label">Email / User ID</label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                  className={`email-input ${error ? 'input-error' : ''}`}
-                />
+              <div className="lf-field">
+                <label className="lf-label" htmlFor="email">Email / User ID</label>
+                <div className={`lf-input-wrap${error ? ' lf-input-error' : ''}`}>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    className="lf-input"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                  />
+                  {/* spacer div so both fields have same inner-right padding */}
+                  <div className="lf-icon-spacer" aria-hidden="true" />
+                </div>
               </div>
 
               {/* Password Input */}
-              <div className="form-field password-field">
-                <label className="password-label">Password</label>
-                <div className="password-input-wrapper">
+              <div className="lf-field">
+                <label className="lf-label" htmlFor="password">Password</label>
+                <div className={`lf-input-wrap${error ? ' lf-input-error' : ''}`}>
                   <input
                     id="password"
                     name="password"
                     type={showPassword ? 'text' : 'password'}
+                    className="lf-input lf-input-has-icon"
                     placeholder="Enter your password"
                     value={password}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-                    className={`password-input ${error ? 'input-error' : ''}`}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
                   />
-                  <button 
+                  <button
                     type="button"
+                    className="lf-eye-btn"
                     onClick={togglePasswordVisibility}
-                    className="password-toggle"
+                    tabIndex={0}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
-                    {showPassword ? <VisibilityOffOutlined sx={{ fontSize: 20 }} /> : <VisibilityOutlined sx={{ fontSize: 20 }} />}
+                    {showPassword
+                      ? <VisibilityOffOutlined sx={{ fontSize: 20 }} />
+                      : <VisibilityOutlined sx={{ fontSize: 20 }} />}
                   </button>
                 </div>
               </div>

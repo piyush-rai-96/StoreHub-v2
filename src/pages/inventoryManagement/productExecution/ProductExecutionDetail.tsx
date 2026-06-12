@@ -25,7 +25,7 @@ import CameraAltOutlined from '@mui/icons-material/CameraAltOutlined';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedOutlined from '@mui/icons-material/RadioButtonUnchecked';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
-import { Button, Badge } from 'impact-ui';
+import { Button, Badge, Loader, Alert, TextArea, Stepper } from 'impact-ui';
 import { ImFilterSelect } from '../../../components/common/ImFilterSelect';
 import {
   PEX_TASKS,
@@ -302,7 +302,7 @@ export const ProductExecutionDetail: React.FC = () => {
     return (
       <div className="pex-detail-page">
         <div className="pex-loading">
-          <div className="pex-loading-spinner" />
+          <Loader size="large" />
           <p>Loading Task Details...</p>
         </div>
       </div>
@@ -467,26 +467,13 @@ export const ProductExecutionDetail: React.FC = () => {
 
       {/* ── Step Progress Bar ───────────────────────────────────────────── */}
       <div className="pex-stepper">
-        {STEPS.map((step, idx) => {
-          const done    = idx < currentStep;
-          const active  = idx === currentStep;
-          return (
-            <React.Fragment key={step.label}>
-              <button
-                className={`pex-step${active ? ' pex-step--active' : ''}${done ? ' pex-step--done' : ''}`}
-                onClick={() => idx !== currentStep && goToStep(idx)}
-              >
-                <div className="pex-step-circle">
-                  {done ? <CheckOutlined sx={{ fontSize: 13 }} /> : step.icon}
-                </div>
-                <div className="pex-step-label">{step.label}</div>
-              </button>
-              {idx < STEPS.length - 1 && (
-                <div className={`pex-step-connector${done ? ' pex-step-connector--done' : ''}`} />
-              )}
-            </React.Fragment>
-          );
-        })}
+        <Stepper
+          steps={STEPS.map(s => ({ label: s.label }))}
+          activeStep={currentStep}
+          handleStep={(idx) => idx !== currentStep && goToStep(idx)}
+          orientation="horizontal"
+          variant="default"
+        />
       </div>
 
       {/* ════════════════════════════════════════════════════════════════ */}
@@ -646,10 +633,8 @@ export const ProductExecutionDetail: React.FC = () => {
           </div>
 
           <div className="pex-step-nav">
-            <Button variant="primary" onClick={() => goToStep(1)} disabled={isStepLoading}>
-              {isStepLoading
-                ? <span className="pex-step-btn-loading"><span className="pex-step-btn-spinner" />Loading…</span>
-                : 'Next: Findings & Evidence →'}
+            <Button variant="primary" onClick={() => goToStep(1)} disabled={isStepLoading} isLoading={isStepLoading}>
+              Next: Findings &amp; Evidence →
             </Button>
           </div>
         </>
@@ -718,9 +703,9 @@ export const ProductExecutionDetail: React.FC = () => {
                   </div>
                   <div className="pex-text-field-row pex-text-field-row--full">
                     <label className="pex-text-field-label">Notes <span className="pex-text-field-optional">optional</span></label>
-                    <textarea className="pex-textarea" placeholder="Add any relevant observations — shelf condition, customer feedback, blockages…"
+                    <TextArea placeholder="Add any relevant observations — shelf condition, customer feedback, blockages…"
                       value={localFindings.notes}
-                      onChange={e => setLocalFindings(f => ({ ...f, notes: e.target.value }))} />
+                      onChange={e => setLocalFindings(f => ({ ...f, notes: e.target.value }))} rows={4} />
                   </div>
                 </div>
               </div>
@@ -830,10 +815,8 @@ export const ProductExecutionDetail: React.FC = () => {
 
           <div className="pex-step-nav pex-step-nav--split">
             <Button variant="outlined" onClick={() => setCurrentStep(0)}>← Back</Button>
-            <Button variant="primary" onClick={() => goToStep(2)} disabled={isStepLoading}>
-              {isStepLoading
-                ? <span className="pex-step-btn-loading"><span className="pex-step-btn-spinner" />Loading…</span>
-                : 'Next: Resolution →'}
+            <Button variant="primary" onClick={() => goToStep(2)} disabled={isStepLoading} isLoading={isStepLoading}>
+              Next: Resolution →
             </Button>
           </div>
         </>
@@ -855,22 +838,14 @@ export const ProductExecutionDetail: React.FC = () => {
             </div>
 
             {/* Status context banner */}
-            <div className="pex-status-banner">
-              <div className="pex-status-banner-left">
-                <div className="pex-status-banner-icon">
-                  <AssignmentTurnedInOutlined sx={{ fontSize: 18 }} />
-                </div>
-                <div>
-                  <div className="pex-status-banner-title">Task linked to Operations Queue</div>
-                  <div className="pex-status-banner-sub">
-                    All findings and status changes sync automatically to <span className="pex-status-banner-id">{task.linkedTaskId}</span>
-                  </div>
-                </div>
-              </div>
-              <Button variant="outlined" color="primary" onClick={() => navigate('/command-center/operations-queue', { state: { highlightPexTask: task.linkedTaskId } })}>
-                <LaunchOutlined sx={{ fontSize: 14 }} />&nbsp;Open Queue Task
-              </Button>
-            </div>
+            <Alert
+              severity="info"
+              title="Task linked to Operations Queue"
+              description={<>All findings and status changes sync automatically to <span className="pex-status-banner-id">{task.linkedTaskId}</span></>}
+              actionName="Open Queue Task"
+              onAction={() => navigate('/command-center/operations-queue', { state: { highlightPexTask: task.linkedTaskId } })}
+              subtleBackground
+            />
 
             {/* Action grid */}
             <div className="pex-action-grid">

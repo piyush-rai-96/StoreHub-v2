@@ -53,7 +53,7 @@ import Check from '@mui/icons-material/Check';
 import CalendarTodayOutlined from '@mui/icons-material/CalendarTodayOutlined';
 import FilterListOutlined from '@mui/icons-material/FilterListOutlined';
 import InfoOutlined from '@mui/icons-material/InfoOutlined';
-import { Card, Tabs } from 'impact-ui';
+import { Card, Tabs, Loader, Panel, Menu } from 'impact-ui';
 import './StoreDeepDive.css';
 
 // Import localized planogram image
@@ -73,49 +73,29 @@ interface PremiumDropdownProps {
 }
 
 const PremiumDropdown: React.FC<PremiumDropdownProps> = ({ value, options, onChange, placeholder }) => {
-  const [isOpen, setIsOpen] = React.useState(false);
-  const dropdownRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
+  const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
   const selectedOption = options.find(opt => opt.value === value);
 
   return (
-    <div className="premium-dropdown" ref={dropdownRef}>
-      <button 
-        className={`premium-dropdown-trigger ${isOpen ? 'open' : ''}`}
-        onClick={() => setIsOpen(!isOpen)}
+    <div className="premium-dropdown">
+      <button
+        className={`premium-dropdown-trigger ${anchorEl ? 'open' : ''}`}
+        onClick={e => anchorEl ? setAnchorEl(null) : setAnchorEl(e.currentTarget)}
         type="button"
       >
         <span className={value ? 'has-value' : ''}>{selectedOption?.label || placeholder || options[0]?.label}</span>
-        <KeyboardArrowDown sx={{ fontSize: 14 }} className={`dropdown-chevron ${isOpen ? 'rotated' : ''}`}/>
+        <KeyboardArrowDown sx={{ fontSize: 14 }} className={`dropdown-chevron ${anchorEl ? 'rotated' : ''}`}/>
       </button>
-      {isOpen && (
-        <div className="premium-dropdown-menu">
-          {options.map((option) => (
-            <button
-              key={option.value}
-              className={`premium-dropdown-option ${value === option.value ? 'selected' : ''}`}
-              onClick={() => {
-                onChange(option.value);
-                setIsOpen(false);
-              }}
-              type="button"
-            >
-              <span>{option.label}</span>
-              {value === option.value && <Check sx={{ fontSize: 16 }} className="check-icon"/>}
-            </button>
-          ))}
-        </div>
-      )}
+      <Menu
+        anchorEl={anchorEl}
+        open={!!anchorEl}
+        onClose={() => setAnchorEl(null)}
+        options={options.map(opt => ({
+          label: opt.label,
+          value: opt.value,
+          onClick: () => { onChange(opt.value); setAnchorEl(null); },
+        }))}
+      />
     </div>
   );
 };
@@ -1213,7 +1193,7 @@ export const StoreDeepDive: React.FC = () => {
     return (
       <div className="store-deep-dive">
         <div className="store-deep-dive-loading">
-          <div className="sdd-loading-spinner" />
+          <Loader size="large" />
           <p>Loading Store Deep Dive...</p>
         </div>
       </div>
@@ -2636,9 +2616,15 @@ export const StoreDeepDive: React.FC = () => {
                   </div>
 
                   {/* Right-Side Detail Drawer */}
+                  <Panel
+                    open={!!psDrawerRow}
+                    setIsOpen={(v) => { if (!v) setPsDrawerRow(null); }}
+                    onClose={() => setPsDrawerRow(null)}
+                    anchor="right"
+                    size="large"
+                  >
                   {psDrawerRow && (
-                    <div className="ps-drawer-overlay" onClick={() => setPsDrawerRow(null)}>
-                      <div className="ps-drawer" onClick={e => e.stopPropagation()}>
+                      <div className="ps-drawer ps-drawer--panel">
                         <div className="ps-drawer-header">
                           <div className="ps-drawer-title-row">
                             <div>
@@ -2777,8 +2763,8 @@ export const StoreDeepDive: React.FC = () => {
                           </button>
                         </div>
                       </div>
-                    </div>
                   )}
+                  </Panel>
                 </div>
               );
             })(),

@@ -165,255 +165,125 @@
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
   width: 100%;
 }
 
-.form-field {
+/* ── Unified field block ─────────────────────────────── */
+.lf-field {
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  margin: 0 auto;
+  gap: 7px;
 }
 
-/* Ensure all form fields have same width */
-.form-field,
-.form-field > div,
-.form-field input,
-.password-field,
-.password-input-wrapper,
-.password-input {
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-}
-
-.login-form input,
-.login-form select,
-.login-form .impact-input,
-.login-form .impact-select,
-.login-form .MuiInputBase-root,
-.login-form .MuiOutlinedInput-root {
-  width: 100% !important;
-  box-sizing: border-box !important;
-  font-size: var(--ia-text-15) !important;
-  color: #141733 !important;
-  font-weight: 600 !important;
-}
-
-/* Refined input styling */
-.login-form input[type="text"],
-.login-form input[type="email"],
-.login-form input[type="password"],
-.login-form .MuiInputBase-input {
-  border-radius: 14px !important;
-  border: 1.5px solid #cad0ff !important;
-  transition: all 0.25s ease !important;
-  background: #f8f9ff !important;
-  box-shadow: inset 0 2px 6px rgba(13, 19, 88, 0.08);
-  color: #0c1035 !important;
-  font-weight: 600 !important;
-}
-
-.login-form input:hover {
-  border-color: #6b5cff !important;
-  background: #fdfdff !important;
-}
-
-.login-form input:focus,
-.login-form .MuiInputBase-input:focus {
-  border-color: #4730f1 !important;
-  box-shadow: 0 10px 28px rgba(71, 48, 241, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.9) !important;
-  background: var(--ia-color-surface) !important;
-}
-
-/* Fix Impact UI input wrapper to position icon inside */
-.form-field .impact-input-wrapper {
-  position: relative !important;
-  display: block !important;
-}
-
-/* Position the right icon inside the input */
-.form-field .right-input-icon {
-  position: absolute !important;
-  right: 12px !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  display: flex !important;
-  align-items: center !important;
-  z-index: 2 !important;
-  cursor: pointer !important;
-  height: auto !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-/* Ensure MUI input takes full width but leaves space for icon */
-.form-field .MuiOutlinedInput-root {
-  width: 100% !important;
-  border: none !important;
-  background: transparent !important;
-}
-
-/* Remove MUI's default notched outline to prevent double border */
-.form-field .MuiOutlinedInput-notchedOutline,
-.login-form .MuiOutlinedInput-notchedOutline,
-.login-form fieldset {
-  border: none !important;
-  display: none !important;
-}
-
-/* CRITICAL: Remove ALL borders from any element that is NOT the input itself */
-.login-form .form-field *:not(input):not(label):not(svg):not(path):not(button) {
-  border: none !important;
-  border-width: 0 !important;
-  outline: none !important;
-}
-
-/* Custom input field styling */
-.email-label,
-.password-label {
-  margin-bottom: 6px !important;
-  font-size: var(--ia-text-2xs) !important;
-  letter-spacing: 0.22em !important;
+.lf-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #5f6695 !important;
-  font-weight: 600 !important;
+  color: #5f6695;
   display: block;
+  user-select: none;
 }
 
-.email-input,
-.password-input {
-  width: 100% !important;
-  padding: 14px 20px !important;
-  border-radius: 14px !important;
-  border: 1.5px solid #cad0ff !important;
-  background: var(--ia-color-surface) !important;
-  box-shadow: none !important;
-  font-size: var(--ia-text-15) !important;
-  font-weight: 600 !important;
-  color: #0c1035 !important;
-  box-sizing: border-box !important;
-  transition: all 0.25s ease !important;
-  display: block !important;
+/* ── Input wrapper — same for BOTH fields ────────────── */
+.lf-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border-radius: 14px;
+  border: 1.5px solid #cad0ff;
+  background: #f8f9ff;
+  box-shadow: inset 0 2px 5px rgba(13, 19, 88, 0.06);
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
-.password-input {
-  padding-right: 46px !important;
+.lf-input-wrap:hover {
+  border-color: #8b7fff;
+  background: #fdfdff;
 }
 
-.email-input:hover,
-.password-input:hover {
-  border-color: #6b5cff !important;
-  background: #fdfdff !important;
+.lf-input-wrap:focus-within {
+  border-color: #4730f1;
+  background: #fff;
+  box-shadow:
+    0 0 0 3.5px rgba(71, 48, 241, 0.13),
+    inset 0 1px 4px rgba(13, 19, 88, 0.04);
 }
 
-.email-input:focus,
-.password-input:focus {
-  border-color: #4730f1 !important;
-  box-shadow: 0 0 0 3px rgba(71, 48, 241, 0.15) !important;
-  background: var(--ia-color-surface) !important;
-  outline: none !important;
+.lf-input-wrap.lf-input-error {
+  border-color: var(--ia-color-error-strong);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
-.email-input::placeholder,
-.password-input::placeholder {
-  color: #8f96c6 !important;
-  font-weight: 500 !important;
+/* ── The actual <input> ─────────────────────────────── */
+.lf-input {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 0 14px 18px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 600;
+  color: #0c1035;
+  font-family: inherit;
+  box-sizing: border-box;
 }
 
-.email-input.input-error,
-.password-input.input-error {
-  border-color: var(--ia-color-error-strong) !important;
+/* Password input — leave room for the eye button */
+.lf-input.lf-input-has-icon {
+  padding-right: 0;
 }
 
-.password-input-wrapper {
-  position: relative !important;
-  width: 100% !important;
-  display: block !important;
+.lf-input::placeholder {
+  color: #aab0d4;
+  font-weight: 500;
 }
 
-.password-toggle {
-  position: absolute !important;
-  right: 14px !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  background: transparent !important;
-  border: none !important;
-  cursor: pointer !important;
-  padding: 4px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  color: var(--ia-color-text-tertiary) !important;
-  transition: color 0.2s ease !important;
-  width: auto !important;
-  height: auto !important;
-  z-index: 10 !important;
+/* ── Invisible spacer (email field only) so its text
+      area is identical width to password field ──────── */
+.lf-icon-spacer {
+  flex-shrink: 0;
+  width: 48px;          /* same as eye-button width */
 }
 
-.password-toggle:hover {
-  color: var(--ia-color-primary-pressed) !important;
-  background: transparent !important;
+/* ── Eye toggle button ──────────────────────────────── */
+.lf-eye-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin: 0 4px;          /* 4px gap from right wall */
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #8f96c6;
+  transition: color 0.18s ease, background 0.18s ease;
+  padding: 0;
+  outline: none;
 }
 
-.password-toggle svg {
-  width: 20px !important;
-  height: 20px !important;
-  color: inherit !important;
+.lf-eye-btn:hover {
+  color: #4730f1;
+  background: rgba(71, 48, 241, 0.07);
 }
 
-.form-field .MuiOutlinedInput-input {
-  padding-right: 46px !important;
-  padding-left: 20px !important;
-  padding-top: 14px !important;
-  padding-bottom: 14px !important;
+.lf-eye-btn:focus-visible {
+  outline: 2px solid rgba(71, 48, 241, 0.4);
+  outline-offset: 2px;
 }
 
-/* Remove any extra spacing from the input container */
-.form-field .impact_inputbox_container_with_icons {
-  margin-bottom: 0 !important;
-}
-
-.form-field label,
-.form-field .impact-input-label,
-.login-form .MuiInputLabel-root {
-  margin-bottom: 6px !important;
-  font-size: var(--ia-text-2xs) !important;
-  letter-spacing: 0.22em !important;
-  text-transform: uppercase;
-  color: #5f6695 !important;
-  font-weight: 600 !important;
-}
-
-.login-form ::placeholder {
-  color: #8f96c6 !important;
-  font-weight: 500 !important;
-}
-
-.form-field [class*="helperText"],
-.form-field [class*="HelperText"],
-.form-field [class*="helper-text"] {
-  display: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  min-height: 0 !important;
-  height: 0 !important;
-}
-
-/* Icon styling */
-.login-form .right-input-icon svg,
-.login-form [class*="icon"] svg,
-.login-form svg {
-  color: var(--ia-color-text-tertiary) !important;
-  transition: color 0.2s ease !important;
-}
-
-.login-form .right-input-icon:hover svg,
-.login-form [class*="icon"]:hover svg,
-.form-field .right-input-icon:hover svg {
-  color: var(--ia-color-primary-pressed) !important;
+.lf-eye-btn svg {
+  display: block;
+  font-size: 20px !important;
 }
 
 .error-message {
@@ -457,9 +327,9 @@
   max-width: 100%;
 }
 
-.login-container button:not(.password-toggle),
-.login-button button:not(.password-toggle),
-.login-form button[type="submit"],
+.login-container button:not(.password-toggle):not(.lf-eye-btn),
+.login-button button:not(.password-toggle):not(.lf-eye-btn),
+.login-form button[type="submit"]:not(.lf-eye-btn),
 .login-form .login-button button {
   background: linear-gradient(135deg, #2ac2ee 0%, #4d78f0 50%, #6962ef 100%) !important;
   color: var(--ia-color-surface) !important;
@@ -476,9 +346,9 @@
   box-sizing: border-box !important;
 }
 
-.login-container button:not(.password-toggle):hover,
-.login-button button:not(.password-toggle):hover,
-.login-form button[type="submit"]:hover {
+.login-container button:not(.password-toggle):not(.lf-eye-btn):hover,
+.login-button button:not(.password-toggle):not(.lf-eye-btn):hover,
+.login-form button[type="submit"]:not(.lf-eye-btn):hover {
   box-shadow: 0 8px 24px rgba(66, 46, 206, 0.45) !important;
   transform: translateY(-1px) !important;
 }

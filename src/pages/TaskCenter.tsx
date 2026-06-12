@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import Add from '@mui/icons-material/Add';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
@@ -21,7 +20,6 @@ import TrackChangesOutlined from '@mui/icons-material/TrackChangesOutlined';
 import ChecklistOutlined from '@mui/icons-material/ChecklistOutlined';
 import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
 import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
-import Check from '@mui/icons-material/Check';
 import BuildOutlined from '@mui/icons-material/BuildOutlined';
 import SensorsOutlined from '@mui/icons-material/SensorsOutlined';
 import LinkOutlined from '@mui/icons-material/LinkOutlined';
@@ -34,7 +32,7 @@ import BoltOutlined from '@mui/icons-material/BoltOutlined';
 import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import GridOnOutlined from '@mui/icons-material/GridOnOutlined';
 import { useNavigate } from 'react-router-dom';
-import { Button, Badge, Card, Tabs } from 'impact-ui';
+import { Button, Badge, Card, Tabs, Loader, Alert, Panel, TextArea, Input, Menu } from 'impact-ui';
 import { useExecutionTasks, ExecutionTask, TaskStatus, Priority } from '../context/ExecutionTasksContext';
 import { useToast } from '../context/ToastContext';
 import './TaskCenter.css';
@@ -528,147 +526,8 @@ const TYPE_OPTIONS: {
   { key: 'Install Fixture',label: 'Install Fixture',   desc: 'Set up or install a display fixture',   Icon: BuildOutlined },
 ];
 
-// ── Portal Dropdown — escapes modal overflow:hidden, viewport-aware ──
-interface PortalDropdownMenuProps {
-  anchorEl: HTMLElement | null;
-  open: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
-  maxHeight?: number;
-}
-
-const PortalDropdownMenu: React.FC<PortalDropdownMenuProps> = ({
-  anchorEl, open, onClose, children, maxHeight = 256,
-}) => {
-  const menuRef = useRef<HTMLDivElement>(null);
-  const [style, setStyle] = useState<React.CSSProperties>({
-    position: 'fixed', visibility: 'hidden', zIndex: 9999,
-  });
-
-  // Recalculate position every time open/anchorEl changes, and on scroll/resize
-  const reposition = useCallback(() => {
-    if (!open || !anchorEl || !menuRef.current) return;
-    const anchor = anchorEl.getBoundingClientRect();
-    const menu = menuRef.current.getBoundingClientRect();
-    const vp = { w: window.innerWidth, h: window.innerHeight };
-    const MARGIN = 6;
-
-    const spaceBelow = vp.h - anchor.bottom - MARGIN;
-    const spaceAbove = anchor.top - MARGIN;
-    const menuH = Math.min(menu.height || maxHeight, maxHeight);
-
-    const flipUp = spaceBelow < menuH && spaceAbove > spaceBelow;
-    const top = flipUp
-      ? anchor.top - menuH - MARGIN
-      : anchor.bottom + MARGIN;
-
-    // Clamp left so it never goes off-screen right edge
-    const left = Math.min(anchor.left, vp.w - anchor.width - 8);
-
-    setStyle({
-      position: 'fixed',
-      top,
-      left,
-      width: anchor.width,
-      maxHeight,
-      zIndex: 9999,
-      visibility: 'visible',
-    });
-  }, [open, anchorEl, maxHeight]);
-
-  useEffect(() => {
-    if (!open) {
-      setStyle(s => ({ ...s, visibility: 'hidden' }));
-      return;
-    }
-    // Two-step: first paint hidden to measure, then position
-    setStyle({ position: 'fixed', visibility: 'hidden', zIndex: 9999 });
-    const id = requestAnimationFrame(reposition);
-    return () => cancelAnimationFrame(id);
-  }, [open, reposition]);
-
-  // Keep position fresh on scroll/resize while open
-  useEffect(() => {
-    if (!open) return;
-    const update = () => reposition();
-    window.addEventListener('scroll', update, true);
-    window.addEventListener('resize', update);
-    return () => {
-      window.removeEventListener('scroll', update, true);
-      window.removeEventListener('resize', update);
-    };
-  }, [open, reposition]);
-
-  // Click-outside closes (preserving existing behavior)
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (
-        menuRef.current?.contains(e.target as Node) ||
-        anchorEl?.contains(e.target as Node)
-      ) return;
-      onClose();
-    };
-    // Small delay so the trigger's own onClick doesn't immediately close
-    const t = setTimeout(() => document.addEventListener('mousedown', handler), 0);
-    return () => {
-      clearTimeout(t);
-      document.removeEventListener('mousedown', handler);
-    };
-  }, [open, onClose, anchorEl]);
-
-  if (!open) return null;
-
-  return ReactDOM.createPortal(
-    <div ref={menuRef} className="tc-dd-menu tc-dd-portal" style={style}>
-      <div className="tc-dd-portal-inner">
-        {children}
-      </div>
-    </div>,
-    document.body,
-  );
-};
-
-// ── Portal-aware dropdown trigger wrapper ──
-interface PortalDropdownProps {
-  id: string;
-  open: boolean;
-  onToggle: () => void;
-  onClose: () => void;
-  trigger: React.ReactNode;
-  children: React.ReactNode;
-  maxHeight?: number;
-}
-
-const PortalDropdown: React.FC<PortalDropdownProps> = ({
-  id, open, onToggle, onClose, trigger, children, maxHeight,
-}) => {
-  const triggerRef = useRef<HTMLButtonElement>(null);
-
-  return (
-    <div className="tc-dd-wrap">
-      <button
-        ref={triggerRef}
-        id={id}
-        type="button"
-        className={`tc-dd-trigger${open ? ' tc-dd-trigger--open' : ''}`}
-        onClick={onToggle}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-      >
-        {trigger}
-      </button>
-      <PortalDropdownMenu
-        anchorEl={triggerRef.current}
-        open={open}
-        onClose={onClose}
-        maxHeight={maxHeight}
-      >
-        {children}
-      </PortalDropdownMenu>
-    </div>
-  );
-};
+// ── Anchor-tracked dropdown state helper ──
+type DdKey = 'priority' | 'type' | 'assignee' | 'detail-status' | 'detail-owner';
 
 export const TaskCenter: React.FC = () => {
   const navigate = useNavigate();
@@ -693,10 +552,9 @@ export const TaskCenter: React.FC = () => {
   const signalPrefillHandledRef = useRef(false);
   const signalPrefillRef = useRef<{ fieldSignalId: string } | null>(null);
 
-  // Custom dropdown state for Create Task modal
-  const [openDropdown, setOpenDropdown] = useState<null | 'priority' | 'type' | 'assignee'>(null);
-  // Custom dropdown state for Detail panel
-  const [detailDropdown, setDetailDropdown] = useState<null | 'status' | 'owner'>(null);
+  const [ddAnchors, setDdAnchors] = useState<Partial<Record<DdKey, HTMLElement | null>>>({});
+  const openDd = (key: DdKey, el: HTMLElement) => setDdAnchors(a => ({ ...a, [key]: el }));
+  const closeDd = (key: DdKey) => setDdAnchors(a => ({ ...a, [key]: null }));
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
@@ -1153,7 +1011,7 @@ export const TaskCenter: React.FC = () => {
     return (
       <div className="tc-container">
         <div className="page-loading">
-          <div className="page-loading-spinner" />
+          <Loader size="large" />
           <p>Loading Operations Queue...</p>
         </div>
       </div>
@@ -1165,7 +1023,7 @@ export const TaskCenter: React.FC = () => {
       {prefillLoading && (
         <div className="tc-prefill-overlay">
           <Card size="extraSmall" sx={{ maxWidth: '100%', minHeight: 0, padding: '28px 32px' }}>
-            <div className="tc-prefill-spinner" />
+            <Loader size="medium" />
             <div className="tc-prefill-title">Linking auto-created tasks…</div>
             <div className="tc-prefill-sub">Fetching auto-created tasks for each impacted store and loading your Operations Queue.</div>
           </Card>
@@ -1173,22 +1031,13 @@ export const TaskCenter: React.FC = () => {
       )}
 
       {prefillBanner && !prefillLoading && (
-        <div className="tc-prefill-banner">
-          <div className="tc-prefill-banner-icon"><TaskAltOutlined sx={{ fontSize: 16 }} /></div>
-          <div className="tc-prefill-banner-body">
-            <div className="tc-prefill-banner-title">{prefillBanner.count} auto-created tasks linked for "{prefillBanner.title}"</div>
-            <div className="tc-prefill-banner-sub">Auto-assigned to {prefillBanner.managers.join(', ')}</div>
-          </div>
-          <Button
-            variant="text"
-            size="small"
-            className="tc-prefill-banner-close"
-            onClick={() => setPrefillBanner(null)}
-            aria-label="Dismiss"
-          >
-            <CloseOutlined sx={{ fontSize: 14 }} />
-          </Button>
-        </div>
+        <Alert
+          severity="success"
+          title={`${prefillBanner.count} auto-created tasks linked for "${prefillBanner.title}"`}
+          description={`Auto-assigned to ${prefillBanner.managers.join(', ')}`}
+          onClose={() => setPrefillBanner(null)}
+          subtleBackground
+        />
       )}
 
       {/* ── Header card ── */}
@@ -1255,23 +1104,14 @@ export const TaskCenter: React.FC = () => {
       {/* ── Toolbar (Store Leaderboard style — search left, filter pills right) ── */}
       <div className="tc-toolbar tc-toolbar--leaderboard">
         <div className="tc-search-bar">
-          <SearchOutlined sx={{ fontSize: 15 }} />
-          <input
+          <Input
+            leftIcon={<SearchOutlined sx={{ fontSize: 15 }} />}
+            rightIcon={search ? <CloseOutlined sx={{ fontSize: 13 }} /> : undefined}
+            rightIconClick={search ? () => setSearch('') : undefined}
             placeholder="Search tasks, assignees, stores..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
-          {search && (
-            <Button
-              variant="text"
-              size="small"
-              className="tc-search-clear"
-              onClick={() => setSearch('')}
-              aria-label="Clear search"
-            >
-              <CloseOutlined sx={{ fontSize: 13 }} />
-            </Button>
-          )}
         </div>
         <div className="tc-toolbar-right">
           <Tabs
@@ -1370,10 +1210,11 @@ export const TaskCenter: React.FC = () => {
                 </div>
                 <div className="tc-m-field">
                   <label>Description</label>
-                  <textarea
+                  <TextArea
                     placeholder="Add context, instructions, or notes for the assignee..."
                     value={newTask.description}
                     onChange={e => setNewTask(p => ({ ...p, description: e.target.value }))}
+                    rows={4}
                   />
                 </div>
               </div>
@@ -1388,38 +1229,29 @@ export const TaskCenter: React.FC = () => {
                   {/* Priority */}
                   <div className="tc-m-field">
                     <label>Priority</label>
-                    <PortalDropdown
-                      id="dd-priority"
-                      open={openDropdown === 'priority'}
-                      onToggle={() => setOpenDropdown(openDropdown === 'priority' ? null : 'priority')}
-                      onClose={() => setOpenDropdown(null)}
-                      maxHeight={180}
-                      trigger={<>
+                    <div className="tc-dd-wrap">
+                      <button
+                        type="button"
+                        className={`tc-dd-trigger${!!ddAnchors.priority ? ' tc-dd-trigger--open' : ''}`}
+                        onClick={e => !!ddAnchors.priority ? closeDd('priority') : openDd('priority', e.currentTarget)}
+                        aria-haspopup="listbox"
+                      >
                         <span className={`tc-dd-pri-dot tc-dd-pri-dot--${newTask.priority.toLowerCase()}`} />
                         <span className="tc-dd-trigger-text">{newTask.priority}</span>
-                        <KeyboardArrowDown sx={{ fontSize: 14 }} className={`tc-dd-chevron ${openDropdown === 'priority' ? 'tc-dd-chevron--open' : ''}`} />
-                      </>}
-                    >
-                      {(['High', 'Medium', 'Low'] as Priority[]).map(p => (
-                        <button
-                          key={p}
-                          type="button"
-                          role="option"
-                          aria-selected={p === newTask.priority}
-                          className={`tc-dd-item ${p === newTask.priority ? 'tc-dd-item--active' : ''}`}
-                          onClick={() => { setNewTask(prev => ({ ...prev, priority: p })); setOpenDropdown(null); }}
-                        >
-                          <span className="tc-dd-item-left">
-                            <span className={`tc-dd-pri-badge tc-dd-pri-badge--${p.toLowerCase()}`}>{p[0]}</span>
-                            <span className="tc-dd-item-text">
-                              <span className="tc-dd-item-name">{p}</span>
-                              <span className="tc-dd-item-desc">{PRIORITY_META[p].desc}</span>
-                            </span>
-                          </span>
-                          {p === newTask.priority && <Check sx={{ fontSize: 14 }} />}
-                        </button>
-                      ))}
-                    </PortalDropdown>
+                        <KeyboardArrowDown sx={{ fontSize: 14 }} className={`tc-dd-chevron${!!ddAnchors.priority ? ' tc-dd-chevron--open' : ''}`} />
+                      </button>
+                      <Menu
+                        anchorEl={ddAnchors.priority}
+                        open={!!ddAnchors.priority}
+                        onClose={() => closeDd('priority')}
+                        options={(['High', 'Medium', 'Low'] as Priority[]).map(p => ({
+                          label: p,
+                          subLabel: PRIORITY_META[p].desc,
+                          value: p,
+                          onClick: () => { setNewTask(prev => ({ ...prev, priority: p })); closeDd('priority'); },
+                        }))}
+                      />
+                    </div>
                   </div>
 
                   {/* Type */}
@@ -1429,38 +1261,29 @@ export const TaskCenter: React.FC = () => {
                       const activeType = TYPE_OPTIONS.find(o => o.key === newTask.type);
                       const TypeIcon = activeType?.Icon ?? BuildOutlined;
                       return (
-                        <PortalDropdown
-                          id="dd-type"
-                          open={openDropdown === 'type'}
-                          onToggle={() => setOpenDropdown(openDropdown === 'type' ? null : 'type')}
-                          onClose={() => setOpenDropdown(null)}
-                          maxHeight={296}
-                          trigger={<>
+                        <div className="tc-dd-wrap">
+                          <button
+                            type="button"
+                            className={`tc-dd-trigger${!!ddAnchors.type ? ' tc-dd-trigger--open' : ''}`}
+                            onClick={e => !!ddAnchors.type ? closeDd('type') : openDd('type', e.currentTarget)}
+                          >
                             <TypeIcon sx={{ fontSize: 14 }} className="tc-dd-icon-muted" />
                             <span className="tc-dd-trigger-text">{activeType?.label ?? newTask.type}</span>
-                            <KeyboardArrowDown sx={{ fontSize: 14 }} className={`tc-dd-chevron ${openDropdown === 'type' ? 'tc-dd-chevron--open' : ''}`} />
-                          </>}
-                        >
-                          {TYPE_OPTIONS.map(({ key, label, desc, Icon }) => (
-                            <button
-                              key={key}
-                              type="button"
-                              role="option"
-                              aria-selected={key === newTask.type}
-                              className={`tc-dd-item ${key === newTask.type ? 'tc-dd-item--active' : ''}`}
-                              onClick={() => { setNewTask(prev => ({ ...prev, type: key })); setOpenDropdown(null); }}
-                            >
-                              <span className="tc-dd-item-left">
-                                <span className="tc-dd-type-badge"><Icon sx={{ fontSize: 13 }} /></span>
-                                <span className="tc-dd-item-text">
-                                  <span className="tc-dd-item-name">{label}</span>
-                                  <span className="tc-dd-item-desc">{desc}</span>
-                                </span>
-                              </span>
-                              {key === newTask.type && <Check sx={{ fontSize: 14 }} />}
-                            </button>
-                          ))}
-                        </PortalDropdown>
+                            <KeyboardArrowDown sx={{ fontSize: 14 }} className={`tc-dd-chevron${!!ddAnchors.type ? ' tc-dd-chevron--open' : ''}`} />
+                          </button>
+                          <Menu
+                            anchorEl={ddAnchors.type}
+                            open={!!ddAnchors.type}
+                            onClose={() => closeDd('type')}
+                            options={TYPE_OPTIONS.map(({ key, label, desc, Icon }) => ({
+                              label,
+                              subLabel: desc,
+                              value: key,
+                              icon: <Icon sx={{ fontSize: 13 }} />,
+                              onClick: () => { setNewTask(prev => ({ ...prev, type: key })); closeDd('type'); },
+                            }))}
+                          />
+                        </div>
                       );
                     })()}
                   </div>
@@ -1477,22 +1300,18 @@ export const TaskCenter: React.FC = () => {
                   {/* Assignee */}
                   <div className="tc-m-field">
                     <label>Assignee</label>
-                    <PortalDropdown
-                      id="dd-assignee"
-                      open={openDropdown === 'assignee'}
-                      onToggle={() => setOpenDropdown(openDropdown === 'assignee' ? null : 'assignee')}
-                      onClose={() => setOpenDropdown(null)}
-                      maxHeight={256}
-                      trigger={<>
+                    <div className="tc-dd-wrap">
+                      <button
+                        type="button"
+                        className={`tc-dd-trigger${!!ddAnchors.assignee ? ' tc-dd-trigger--open' : ''}`}
+                        onClick={e => !!ddAnchors.assignee ? closeDd('assignee') : openDd('assignee', e.currentTarget)}
+                      >
                         {newTask.assignedTo ? (
                           <>
                             <span className="tc-dd-avatar">
-                              {(teamMembers.find(m => m.id === newTask.assignedTo)?.name || '')
-                                .split(' ').map(n => n[0]).join('').substring(0, 2)}
+                              {(teamMembers.find(m => m.id === newTask.assignedTo)?.name || '').split(' ').map(n => n[0]).join('').substring(0, 2)}
                             </span>
-                            <span className="tc-dd-trigger-text">
-                              {teamMembers.find(m => m.id === newTask.assignedTo)?.name}
-                            </span>
+                            <span className="tc-dd-trigger-text">{teamMembers.find(m => m.id === newTask.assignedTo)?.name}</span>
                           </>
                         ) : (
                           <>
@@ -1500,42 +1319,23 @@ export const TaskCenter: React.FC = () => {
                             <span className="tc-dd-trigger-text tc-dd-trigger-text--placeholder">Select assignee...</span>
                           </>
                         )}
-                        <KeyboardArrowDown sx={{ fontSize: 14 }} className={`tc-dd-chevron ${openDropdown === 'assignee' ? 'tc-dd-chevron--open' : ''}`} />
-                      </>}
-                    >
-                      <button
-                        type="button"
-                        role="option"
-                        aria-selected={!newTask.assignedTo}
-                        className={`tc-dd-item ${!newTask.assignedTo ? 'tc-dd-item--active' : ''}`}
-                        onClick={() => { setNewTask(prev => ({ ...prev, assignedTo: '' })); setOpenDropdown(null); }}
-                      >
-                        <span className="tc-dd-item-left">
-                          <span className="tc-dd-avatar tc-dd-avatar--unassigned"><PersonOutlined sx={{ fontSize: 11 }} /></span>
-                          <span className="tc-dd-item-name">Unassigned</span>
-                        </span>
-                        {!newTask.assignedTo && <Check sx={{ fontSize: 14 }} />}
+                        <KeyboardArrowDown sx={{ fontSize: 14 }} className={`tc-dd-chevron${!!ddAnchors.assignee ? ' tc-dd-chevron--open' : ''}`} />
                       </button>
-                      {teamMembers.map(m => (
-                        <button
-                          key={m.id}
-                          type="button"
-                          role="option"
-                          aria-selected={m.id === newTask.assignedTo}
-                          className={`tc-dd-item ${m.id === newTask.assignedTo ? 'tc-dd-item--active' : ''}`}
-                          onClick={() => { setNewTask(prev => ({ ...prev, assignedTo: m.id })); setOpenDropdown(null); }}
-                        >
-                          <span className="tc-dd-item-left">
-                            <span className="tc-dd-avatar">{m.name.split(' ').map(n => n[0]).join('').substring(0, 2)}</span>
-                            <span className="tc-dd-item-text">
-                              <span className="tc-dd-item-name">{m.name}</span>
-                              <span className="tc-dd-item-desc">{m.role}</span>
-                            </span>
-                          </span>
-                          {m.id === newTask.assignedTo && <Check sx={{ fontSize: 14 }} />}
-                        </button>
-                      ))}
-                    </PortalDropdown>
+                      <Menu
+                        anchorEl={ddAnchors.assignee}
+                        open={!!ddAnchors.assignee}
+                        onClose={() => closeDd('assignee')}
+                        options={[
+                          { label: 'Unassigned', value: '', icon: <PersonOutlined sx={{ fontSize: 13 }} />, onClick: () => { setNewTask(prev => ({ ...prev, assignedTo: '' })); closeDd('assignee'); } },
+                          ...teamMembers.map(m => ({
+                            label: m.name,
+                            subLabel: m.role,
+                            value: m.id,
+                            onClick: () => { setNewTask(prev => ({ ...prev, assignedTo: m.id })); closeDd('assignee'); },
+                          })),
+                        ]}
+                      />
+                    </div>
                   </div>
 
                   {/* Due Date */}
@@ -1572,12 +1372,18 @@ export const TaskCenter: React.FC = () => {
       )}
 
       {/* ── Detail Drawer (structured & wow) ── */}
-      {selectedTask && (() => {
-        const sla = getSlaStatus(selectedTask);
-        const statusKey = selectedTask.status === 'Pending' ? 'pending' : selectedTask.status === 'In Progress' ? 'inprogress' : 'completed';
-        return (
-          <div className="tc-detail-overlay" onClick={() => setSelectedTask(null)}>
-            <div className="tc-detail" onClick={e => e.stopPropagation()}>
+      <Panel
+        open={!!selectedTask}
+        setIsOpen={(v) => { if (!v) setSelectedTask(null); }}
+        onClose={() => setSelectedTask(null)}
+        anchor="right"
+        size="large"
+      >
+        {selectedTask && (() => {
+          const sla = getSlaStatus(selectedTask);
+          const statusKey = selectedTask.status === 'Pending' ? 'pending' : selectedTask.status === 'In Progress' ? 'inprogress' : 'completed';
+          return (
+            <div className="tc-detail tc-detail--panel">
               {/* Hero header */}
               <div className="tc-detail-hero">
                 <div className="tc-detail-hero-top">
@@ -1709,68 +1515,58 @@ export const TaskCenter: React.FC = () => {
                   <div className="tc-detail-grid">
                     <div className="tc-detail-cell">
                       <span className="tc-detail-cell-label">Status</span>
-                      <PortalDropdown
-                        id="detail-status-dd"
-                        open={detailDropdown === 'status'}
-                        onToggle={() => setDetailDropdown(d => d === 'status' ? null : 'status')}
-                        onClose={() => setDetailDropdown(null)}
-                        trigger={
+                      <div className="tc-dd-wrap">
+                        <button type="button" className={`tc-dd-trigger${!!ddAnchors['detail-status'] ? ' tc-dd-trigger--open' : ''}`}
+                          onClick={e => !!ddAnchors['detail-status'] ? closeDd('detail-status') : openDd('detail-status', e.currentTarget)}>
                           <span className="tc-dd-label">
                             {selectedTask.status}
-                            <KeyboardArrowDown sx={{ fontSize: 14 }} className={`tc-dd-chevron${detailDropdown === 'status' ? ' tc-dd-chevron--open' : ''}`}/>
+                            <KeyboardArrowDown sx={{ fontSize: 14 }} className={`tc-dd-chevron${!!ddAnchors['detail-status'] ? ' tc-dd-chevron--open' : ''}`}/>
                           </span>
-                        }
-                      >
-                        {(['Pending', 'In Progress', 'Completed'] as TaskStatus[]).map(s => (
-                          <div
-                            key={s}
-                            className={`tc-dd-item${selectedTask.status === s ? ' tc-dd-item--active' : ''}`}
-                            onClick={() => {
+                        </button>
+                        <Menu
+                          anchorEl={ddAnchors['detail-status']}
+                          open={!!ddAnchors['detail-status']}
+                          onClose={() => closeDd('detail-status')}
+                          options={(['Pending', 'In Progress', 'Completed'] as TaskStatus[]).map(s => ({
+                            label: s,
+                            value: s,
+                            onClick: () => {
                               updateTaskStatus(selectedTask.id, s);
                               setSelectedTask({ ...selectedTask, status: s });
-                              setDetailDropdown(null);
-                            }}
-                          >
-                            {selectedTask.status === s && <Check sx={{ fontSize: 13 }}/>} {s}
-                          </div>
-                        ))}
-                      </PortalDropdown>
+                              closeDd('detail-status');
+                            },
+                          }))}
+                        />
+                      </div>
                     </div>
                     <div className="tc-detail-cell">
                       <span className="tc-detail-cell-label">Owner</span>
-                      <PortalDropdown
-                        id="detail-owner-dd"
-                        open={detailDropdown === 'owner'}
-                        onToggle={() => setDetailDropdown(d => d === 'owner' ? null : 'owner')}
-                        onClose={() => setDetailDropdown(null)}
-                        trigger={
+                      <div className="tc-dd-wrap">
+                        <button type="button" className={`tc-dd-trigger${!!ddAnchors['detail-owner'] ? ' tc-dd-trigger--open' : ''}`}
+                          onClick={e => !!ddAnchors['detail-owner'] ? closeDd('detail-owner') : openDd('detail-owner', e.currentTarget)}>
                           <span className="tc-dd-label">
                             {selectedTask.assignedToName || 'Unassigned'}
-                            <KeyboardArrowDown sx={{ fontSize: 14 }} className={`tc-dd-chevron${detailDropdown === 'owner' ? ' tc-dd-chevron--open' : ''}`}/>
+                            <KeyboardArrowDown sx={{ fontSize: 14 }} className={`tc-dd-chevron${!!ddAnchors['detail-owner'] ? ' tc-dd-chevron--open' : ''}`}/>
                           </span>
-                        }
-                        maxHeight={220}
-                      >
-                        <div
-                          className={`tc-dd-item${!selectedTask.assignedTo ? ' tc-dd-item--active' : ''}`}
-                          onClick={() => setDetailDropdown(null)}
-                        >
-                          Unassigned
-                        </div>
-                        {teamMembers.map(m => (
-                          <div
-                            key={m.id}
-                            className={`tc-dd-item${selectedTask.assignedTo === m.id ? ' tc-dd-item--active' : ''}`}
-                            onClick={() => {
-                              assignTask(selectedTask.id, m.id, m.name);
-                              setSelectedTask({ ...selectedTask, assignedTo: m.id, assignedToName: m.name });
-                              setDetailDropdown(null);
-                            }}
-                          >
-                            {selectedTask.assignedTo === m.id && <Check sx={{ fontSize: 13 }}/>} {m.name} — {m.role}
-                          </div>
-                        ))}
-                      </PortalDropdown>
+                        </button>
+                        <Menu
+                          anchorEl={ddAnchors['detail-owner']}
+                          open={!!ddAnchors['detail-owner']}
+                          onClose={() => closeDd('detail-owner')}
+                          options={[
+                            { label: 'Unassigned', value: '', onClick: () => closeDd('detail-owner') },
+                            ...teamMembers.map(m => ({
+                              label: `${m.name} — ${m.role}`,
+                              value: m.id,
+                              onClick: () => {
+                                assignTask(selectedTask.id, m.id, m.name);
+                                setSelectedTask({ ...selectedTask, assignedTo: m.id, assignedToName: m.name });
+                                closeDd('detail-owner');
+                              },
+                            })),
+                          ]}
+                        />
+                      </div>
                     </div>
                     <div className="tc-detail-cell">
                       <span className="tc-detail-cell-label">Due Date</span>
@@ -1935,9 +1731,9 @@ export const TaskCenter: React.FC = () => {
                 )}
               </div>
             </div>
-          </div>
-        );
-      })()}
+          );
+        })()}
+      </Panel>
     </div>
   );
 };

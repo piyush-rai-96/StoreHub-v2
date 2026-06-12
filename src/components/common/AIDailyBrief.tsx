@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined';
-import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
 import TrendingUpOutlined from '@mui/icons-material/TrendingUpOutlined';
@@ -14,6 +13,7 @@ import WbSunnyOutlined from '@mui/icons-material/WbSunnyOutlined';
 import BusinessOutlined from '@mui/icons-material/BusinessOutlined';
 import BarChartOutlined from '@mui/icons-material/BarChart';
 import CompareArrowsOutlined from '@mui/icons-material/CompareArrowsOutlined';
+import { Accordion } from 'impact-ui';
 import { AudioPlayer } from './AudioPlayer';
 import './AudioPlayer.css';
 
@@ -110,74 +110,76 @@ export const AIDailyBrief: React.FC<AIDailyBriefProps> = ({
   heightStyle,
   defaultCollapsed = false,
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
+  const [expanded, setExpanded] = useState<string>(defaultCollapsed ? '' : 'brief');
   const [showModal, setShowModal] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
 
   const briefText = briefToText(brief, userName);
+  const isExpanded = expanded === 'brief';
+
+  const accordionHeader = (
+    <div className="di-brief-header-left">
+      <div className="di-brief-header">
+        <div className="di-brief-badge">
+          <AutoAwesomeOutlined sx={{ fontSize: 16 }} />
+          <span>AI Daily Brief</span>
+        </div>
+      </div>
+      {metaSuffix && (
+        <div className="di-brief-meta">
+          <span>{metaSuffix}</span>
+        </div>
+      )}
+      <button
+        className={`aup-listen-btn${showPlayer ? ' aup-listen-btn--active' : ''}`}
+        onClick={(e) => { e.stopPropagation(); setShowPlayer(v => !v); if (!isExpanded) setExpanded('brief'); }}
+        title="Listen to brief"
+      >
+        <span className="aup-listen-btn-icon">
+          {showPlayer
+            ? <span className="aup-soundwave aup-soundwave--sm"><span/><span/><span/><span/></span>
+            : <HeadphonesOutlined sx={{ fontSize: 14 }} />
+          }
+        </span>
+        {showPlayer ? 'Playing…' : 'Listen'}
+      </button>
+    </div>
+  );
+
+  const accordionContent = (
+    <div className="di-brief-body-wrapper">
+      {showPlayer && (
+        <div className="di-brief-audio-bar">
+          <AudioPlayer
+            text={briefText}
+            title="AI Daily Brief"
+            variant="bar"
+            onClose={() => setShowPlayer(false)}
+          />
+        </div>
+      )}
+      <div className="di-brief-body">
+        <BriefSummary brief={brief} userName={userName} />
+      </div>
+      <div className="di-brief-scroll-fade" />
+      <div className="di-brief-cta-row">
+        <button className="di-brief-read-more" onClick={() => setShowModal(true)}>
+          <span>Read Full Brief</span>
+          <KeyboardArrowRight sx={{ fontSize: 14 }} />
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <>
       <div className="di-ai-daily-brief" style={heightStyle}>
-        <div className="di-brief-header-bar" onClick={() => setIsCollapsed(!isCollapsed)}>
-          <div className="di-brief-header-left">
-            <div className={`di-brief-toggle ${isCollapsed ? 'collapsed' : ''}`}>
-              <KeyboardArrowDown sx={{ fontSize: 14 }} />
-            </div>
-            <div className="di-brief-header">
-              <div className="di-brief-badge">
-                <AutoAwesomeOutlined sx={{ fontSize: 16 }} />
-                <span>AI Daily Brief</span>
-              </div>
-            </div>
-          </div>
-          <div className="di-brief-header-right">
-            {metaSuffix && (
-              <div className="di-brief-meta">
-                <span>{metaSuffix}</span>
-              </div>
-            )}
-            <button
-              className={`aup-listen-btn${showPlayer ? ' aup-listen-btn--active' : ''}`}
-              onClick={(e) => { e.stopPropagation(); setShowPlayer(v => !v); if (isCollapsed) setIsCollapsed(false); }}
-              title="Listen to brief"
-            >
-              <span className="aup-listen-btn-icon">
-                {showPlayer
-                  ? <span className="aup-soundwave aup-soundwave--sm"><span/><span/><span/><span/></span>
-                  : <HeadphonesOutlined sx={{ fontSize: 14 }} />
-                }
-              </span>
-              {showPlayer ? 'Playing…' : 'Listen'}
-            </button>
-          </div>
-        </div>
-
-        {showPlayer && (
-          <div className="di-brief-audio-bar">
-            <AudioPlayer
-              text={briefText}
-              title="AI Daily Brief"
-              variant="bar"
-              onClose={() => setShowPlayer(false)}
-            />
-          </div>
-        )}
-
-        <div className="di-brief-body-wrapper">
-          <div className={`di-brief-body ${isCollapsed ? 'collapsed' : ''}`}>
-            <BriefSummary brief={brief} userName={userName} />
-          </div>
-          {!isCollapsed && <div className="di-brief-scroll-fade" />}
-          {!isCollapsed && (
-            <div className="di-brief-cta-row">
-              <button className="di-brief-read-more" onClick={() => setShowModal(true)}>
-                <span>Read Full Brief</span>
-                <KeyboardArrowRight sx={{ fontSize: 14 }} />
-              </button>
-            </div>
-          )}
-        </div>
+        <Accordion
+          isSingleItem
+          singleData={{ header: accordionHeader, content: accordionContent, value: 'brief' }}
+          expanded={expanded}
+          setExpanded={(v) => setExpanded(v as string)}
+        />
       </div>
 
       {showModal && (

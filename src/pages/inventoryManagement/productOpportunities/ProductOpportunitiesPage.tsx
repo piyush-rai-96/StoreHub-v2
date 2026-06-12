@@ -10,7 +10,7 @@ import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined';
 import StoreOutlined from '@mui/icons-material/StoreOutlined';
 import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined';
 import CalendarTodayOutlined from '@mui/icons-material/CalendarTodayOutlined';
-import { Tabs } from 'impact-ui';
+import { Tabs, Loader, Input } from 'impact-ui';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import { ImFilterSelect } from '../../../components/common/ImFilterSelect';
 import { OpportunityStatusChip } from './OpportunityStatusChip';
@@ -106,7 +106,7 @@ export const ProductOpportunitiesPage: React.FC = () => {
     return (
       <div className="po-page">
         <div className="po-loading">
-          <div className="po-loading-spinner" />
+          <Loader size="large" />
           <p>Loading Product Opportunities...</p>
         </div>
       </div>
@@ -192,9 +192,8 @@ export const ProductOpportunitiesPage: React.FC = () => {
       {/* ── Premium Filter Bar ── */}
       <div className="sc-inv-premium-filter-bar">
         <div className="sc-inv-search">
-          <SearchOutlined sx={{ fontSize: 15 }}/>
-          <input
-            type="text"
+          <Input
+            leftIcon={<SearchOutlined sx={{ fontSize: 15 }}/>}
             placeholder="Search products, SKU, category…"
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(0); }}

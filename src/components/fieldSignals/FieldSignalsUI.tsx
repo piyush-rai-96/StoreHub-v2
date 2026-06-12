@@ -31,7 +31,7 @@ import CloudOutlined from '@mui/icons-material/CloudOutlined';
 import TrafficOutlined from '@mui/icons-material/TrafficOutlined';
 import PersonOffOutlined from '@mui/icons-material/PersonOffOutlined';
 import MoreHorizOutlined from '@mui/icons-material/MoreHorizOutlined';
-import { Button, Badge, EmptyState, Input } from 'impact-ui';
+import { Button, Badge, EmptyState, Input, TextArea } from 'impact-ui';
 import type { User, UserRole } from '../../types';
 import type { FieldSignal, LogSignalFormState } from '../../types/fieldSignal';
 import {
@@ -414,12 +414,13 @@ export const LogFieldSignalDrawer: React.FC<LogFieldSignalDrawerProps> = ({
           <div className="fs-form-section fs-form-section--primary">
             <label className="fs-form-label">Description <span className="fs-required">*</span></label>
             <p className="fs-form-helper">Describe what is happening locally and how it may affect demand or operations.</p>
-            <textarea
-              className={`fs-form-textarea${errors.description ? ' fs-form-textarea--error' : ''}`}
+            <TextArea
               placeholder="Describe what is happening locally and how it may affect demand or store operations."
               rows={4}
+              width="100%"
               value={form.description}
               onChange={e => onChange({ description: e.target.value })}
+              isError={!!errors.description}
             />
             {errors.description && <span className="fs-form-error">{errors.description}</span>}
           </div>

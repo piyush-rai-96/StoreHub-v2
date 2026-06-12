@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from 'impact-ui';
+import { Header, Loader } from 'impact-ui';
 import { useAuth } from '../context/AuthContext';
 import { ROUTES } from '../types';
 import { APP_CONFIG } from '../constants/app';
@@ -27,7 +27,7 @@ export const Home: React.FC = () => {
     return (
       <div className="home-container">
         <div className="page-loading">
-          <div className="page-loading-spinner" />
+          <Loader size="large" />
           <p>Loading...</p>
         </div>
       </div>

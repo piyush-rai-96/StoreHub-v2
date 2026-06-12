@@ -10,7 +10,7 @@ import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined';
 import GavelOutlined from '@mui/icons-material/GavelOutlined';
 import LocalShippingOutlined from '@mui/icons-material/LocalShippingOutlined';
 import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined';
-import { Button, Badge, Card, Tabs } from 'impact-ui';
+import { Button, Badge, Card, Tabs, Loader, TextArea, Input } from 'impact-ui';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import { ImDrawer } from '../../../components/common/ImDrawer';
 import { ImFilterSelect } from '../../../components/common/ImFilterSelect';
@@ -111,7 +111,7 @@ export const ApprovalsAndExecutionPage: React.FC = () => {
     return (
       <div className="aep-page">
         <div className="po-loading">
-          <div className="po-loading-spinner" />
+          <Loader size="large" />
           <p>Loading Approvals & Execution...</p>
         </div>
       </div>
@@ -185,9 +185,8 @@ export const ApprovalsAndExecutionPage: React.FC = () => {
       {/* ── Premium Filter Bar ── */}
       <div className="sc-inv-premium-filter-bar">
         <div className="sc-inv-search">
-          <SearchOutlined sx={{ fontSize: 15 }}/>
-          <input
-            type="text"
+          <Input
+            leftIcon={<SearchOutlined sx={{ fontSize: 15 }}/>}
             placeholder={mainTab === 'approvals' ? 'Search by product, SKU, store, or ID…' : 'Search by product, SKU, or ID…'}
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(0); }}
@@ -485,8 +484,7 @@ export const ApprovalsAndExecutionPage: React.FC = () => {
             {!actionTaken && (
               <div className="aep-detail-section">
                 <h4 className="aep-detail-title">Approver Comment</h4>
-                <textarea
-                  className="aep-textarea"
+                <TextArea
                   rows={3}
                   placeholder="Add a comment (required for reject / request changes)..."
                   value={actionComment}

@@ -34,8 +34,7 @@ import LockOutlined from '@mui/icons-material/LockOutlined';
 import {
   Button, Badge, Card,
   Toast, Avatar, EmptyState, Tooltip,
-  Input, Switch, Checkbox, Modal, Select,
-} from 'impact-ui';
+  Input, Switch, Checkbox, Modal, Select, Loader } from 'impact-ui';
 import { useAuth } from '../context/AuthContext';
 import { User, UserRole, ROLE_LABELS, ROLE_ACCESS, ScreenAccess } from '../types';
 import './UserAccessManagement.css';
@@ -325,7 +324,7 @@ export const UserAccessManagement: React.FC = () => {
     return (
       <div className="uam-page">
         <div className="page-loading">
-          <div className="page-loading-spinner" />
+          <Loader size="large" />
           <p>Loading User Access...</p>
         </div>
       </div>

@@ -38,7 +38,7 @@ import SyncOutlined from '@mui/icons-material/SyncOutlined';
 import GridOnOutlined from '@mui/icons-material/GridOnOutlined';
 import InventoryOutlined from '@mui/icons-material/InventoryOutlined';
 import PersonOutlined from '@mui/icons-material/PersonOutlined';
-import { Button, Card } from 'impact-ui';
+import { Button, Card, Loader, Alert, Panel, TextArea, Table } from 'impact-ui';
 import { ImFilterSelect } from '../components/common/ImFilterSelect';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -432,7 +432,7 @@ export const HQHome: React.FC = () => {
     return (
       <div className="store-ops-home">
         <div className="store-ops-loading">
-          <div className="store-ops-loading-spinner" />
+          <Loader size="large" />
           <p>Loading command center...</p>
         </div>
       </div>
@@ -684,46 +684,67 @@ export const HQHome: React.FC = () => {
         {/* Broadcast List */}
         <div className="bca-sub-section">
           <div className="bca-table-wrapper">
-            <table className="bca-table wow-table">
-              <thead>
-                <tr>
-                  <th>Broadcast</th>
-                  <th>Priority</th>
-                  <th>Ack Rate</th>
-                  <th>Avg Ack Time</th>
-                  <th>Pending</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {HQ_BROADCAST_EFFECTIVENESS.map(bc => {
-                  const pending = bc.districts - bc.ackedDistricts;
-                  return (
-                    <tr key={bc.id} className="bca-table-row" onClick={() => setBcaSelectedBroadcast(bc)}>
-                      <td>
-                        <div className="bca-bc-name">{bc.name}</div>
-                        <span className="bca-bc-sent">{bc.type} · Sent {bc.sentAt}</span>
-                      </td>
-                      <td>
-                        <span className={`bca-priority-badge ${bc.priority}`}>{bc.priority}</span>
-                      </td>
-                      <td>
-                        <span className={`bca-bc-metric-val ${bc.ackRate >= 90 ? 'high' : bc.ackRate >= 75 ? 'medium' : 'low'}`}>{bc.ackRate}%</span>
-                      </td>
-                      <td className="bca-td-time">{bc.avgAckTime}</td>
-                      <td>
-                        <span className={`bca-pending-count ${pending > 1 ? 'high' : pending > 0 ? 'medium' : 'zero'}`}>{pending}</span>
-                      </td>
-                      <td>
-                        <span className={`bca-status-badge ${bc.status === 'good' ? 'good' : 'at-risk'}`}>
-                          {bc.status === 'good' ? 'Good' : 'Needs Attention'}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <Table
+              columnDefs={[
+                {
+                  headerName: 'Broadcast',
+                  field: 'broadcast',
+                  flex: 2,
+                  cellRenderer: ({ data }: { data: Record<string, unknown> }) => (
+                    <div>
+                      <div className="bca-bc-name">{data.name as string}</div>
+                      <span className="bca-bc-sent">{data.type as string} · Sent {data.sentAt as string}</span>
+                    </div>
+                  ),
+                },
+                {
+                  headerName: 'Priority',
+                  field: 'priority',
+                  width: 100,
+                  cellRenderer: ({ value }: { value: unknown }) => (
+                    <span className={`bca-priority-badge ${value as string}`}>{value as string}</span>
+                  ),
+                },
+                {
+                  headerName: 'Ack Rate',
+                  field: 'ackRate',
+                  width: 100,
+                  cellRenderer: ({ value }: { value: unknown }) => {
+                    const v = value as number;
+                    return <span className={`bca-bc-metric-val ${v >= 90 ? 'high' : v >= 75 ? 'medium' : 'low'}`}>{v}%</span>;
+                  },
+                },
+                { headerName: 'Avg Ack Time', field: 'avgAckTime', width: 120 },
+                {
+                  headerName: 'Pending',
+                  field: 'pending',
+                  width: 90,
+                  cellRenderer: ({ value }: { value: unknown }) => {
+                    const p = value as number;
+                    return <span className={`bca-pending-count ${p > 1 ? 'high' : p > 0 ? 'medium' : 'zero'}`}>{p}</span>;
+                  },
+                },
+                {
+                  headerName: 'Status',
+                  field: 'status',
+                  width: 140,
+                  cellRenderer: ({ value }: { value: unknown }) => (
+                    <span className={`bca-status-badge ${value === 'good' ? 'good' : 'at-risk'}`}>
+                      {value === 'good' ? 'Good' : 'Needs Attention'}
+                    </span>
+                  ),
+                },
+              ]}
+              rowData={HQ_BROADCAST_EFFECTIVENESS.map(bc => ({
+                ...bc,
+                pending: bc.districts - bc.ackedDistricts,
+              }))}
+              rowHeight={52}
+              hideTableSetting
+              cardContainer={false}
+              onRowClicked={({ data }) => setBcaSelectedBroadcast(data as unknown as typeof HQ_BROADCAST_EFFECTIVENESS[0])}
+              className="bca-impact-table"
+            />
           </div>
         </div>
       </div>
@@ -1326,35 +1347,48 @@ export const HQHome: React.FC = () => {
                   District-Level Compliance
                 </h3>
                 <div className="bca-panel-table-wrapper">
-                  <table className="bca-panel-table wow-table">
-                    <thead>
-                      <tr>
-                        <th>District</th>
-                        <th>Status</th>
-                        <th>Ack Time</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {getBroadcastDistrictCompliance(bcaSelectedBroadcast).map(d => (
-                        <tr
-                          key={d.districtId}
-                          className="bca-panel-table-row"
-                          onClick={() => { closeBcaPanel(); navigate(`/store-operations/district-intelligence?district=${d.districtId}`); }}
-                        >
-                          <td>
-                            <div className="bca-panel-store-name">{d.district}</div>
-                            <span className="bca-panel-store-id">#{d.districtId}</span>
-                          </td>
-                          <td>
-                            <span className={`bca-panel-ack-badge ${d.acknowledged ? 'acked' : 'pending'}`}>
-                              {d.acknowledged ? 'Acknowledged' : 'Pending'}
-                            </span>
-                          </td>
-                          <td className="bca-panel-td-time">{d.acknowledged ? d.avgTime : '—'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <Table
+                    columnDefs={[
+                      {
+                        headerName: 'District',
+                        field: 'district',
+                        flex: 2,
+                        cellRenderer: ({ data }: { data: Record<string, unknown> }) => (
+                          <div>
+                            <div className="bca-panel-store-name">{data.district as string}</div>
+                            <span className="bca-panel-store-id">#{data.districtId as string}</span>
+                          </div>
+                        ),
+                      },
+                      {
+                        headerName: 'Status',
+                        field: 'acknowledged',
+                        width: 140,
+                        cellRenderer: ({ value }: { value: unknown }) => (
+                          <span className={`bca-panel-ack-badge ${value ? 'acked' : 'pending'}`}>
+                            {value ? 'Acknowledged' : 'Pending'}
+                          </span>
+                        ),
+                      },
+                      {
+                        headerName: 'Ack Time',
+                        field: 'ackTime',
+                        width: 110,
+                      },
+                    ]}
+                    rowData={getBroadcastDistrictCompliance(bcaSelectedBroadcast).map(d => ({
+                      ...d,
+                      ackTime: d.acknowledged ? d.avgTime : '—',
+                    }))}
+                    rowHeight={48}
+                    hideTableSetting
+                    cardContainer={false}
+                    onRowClicked={({ data }) => {
+                      closeBcaPanel();
+                      navigate(`/store-operations/district-intelligence?district=${data.districtId}`);
+                    }}
+                    className="bca-impact-table"
+                  />
                 </div>
               </div>
 
@@ -1600,7 +1634,7 @@ export const HQHome: React.FC = () => {
 
                       <div className="bw-field">
                         <label className="bw-field-label">Message <span className="bw-required">*</span></label>
-                        <textarea className="bw-textarea" rows={5} placeholder="Type your broadcast message here…" value={bwMessage} onChange={(e) => setBwMessage(e.target.value)} maxLength={1000} />
+                        <TextArea rows={5} placeholder="Type your broadcast message here…" value={bwMessage} onChange={(e) => setBwMessage(e.target.value)} maxLength={1000} />
                         <div className="bw-field-hint">{bwMessage.length}/1000</div>
                       </div>
                       </div>{/* /bw-form-card-body */}
@@ -1789,6 +1823,7 @@ export const HQHome: React.FC = () => {
                       color="primary"
                       size="large"
                       disabled={!canSend || bwSending}
+                      isLoading={bwSending}
                       startIcon={bwSending ? undefined : <SendOutlined sx={{ fontSize: 14 }}/>}
                       onClick={() => {
                         setBwSending(true);
@@ -1818,10 +1853,15 @@ export const HQHome: React.FC = () => {
       )}
 
       {/* NEAC Drawer */}
-      {neacDrawer && (
-        <>
-          <div className="eac2-drawer-overlay" onClick={() => setNeacDrawer(null)}/>
-          <div className="eac2-drawer">
+      <Panel
+        open={!!neacDrawer}
+        setIsOpen={(v) => { if (!v) setNeacDrawer(null); }}
+        onClose={() => setNeacDrawer(null)}
+        anchor="right"
+        size="large"
+      >
+        {neacDrawer && (
+          <div className="eac2-drawer eac2-drawer--panel">
             {/* ── Hero header ── */}
             <div className="eac2-drawer-header">
               <div className="eac2-drawer-hero-top">
@@ -1852,13 +1892,12 @@ export const HQHome: React.FC = () => {
                 <div className="eac2-drawer-block-label">
                   <WarningAmberOutlined sx={{ fontSize: 11 }}/> Network Summary
                 </div>
-                <div className={`eac2-drawer-risk-banner eac2-drawer-risk-banner--${neacDrawer.severityClass}`}>
-                  <WarningAmberOutlined sx={{ fontSize: 15 }} className="eac2-drawer-risk-banner-icon"/>
-                  <div>
-                    <p className="eac2-drawer-risk-title">{neacDrawer.skuCount} SKUs · {neacDrawer.riskValue} at risk · {neacDrawer.taskCompletion}% completion</p>
-                    <p className="eac2-drawer-risk-desc">{neacDrawer.desc}</p>
-                  </div>
-                </div>
+                <Alert
+                  severity={neacDrawer.severityClass === 'high' ? 'error' : neacDrawer.severityClass === 'medium' ? 'warning' : 'info'}
+                  title={`${neacDrawer.skuCount} SKUs · ${neacDrawer.riskValue} at risk · ${neacDrawer.taskCompletion}% completion`}
+                  description={neacDrawer.desc}
+                  subtleBackground
+                />
               </div>
 
               {/* Task Status block */}
@@ -1970,8 +2009,8 @@ export const HQHome: React.FC = () => {
               <AccessTimeOutlined sx={{ fontSize: 12 }}/> Last detected {neacDrawer.lastDetected} · Auto-assigned to District Managers
             </div>
           </div>
-        </>
-      )}
+        )}
+      </Panel>
 
       {/* AI Brief Full Modal */}
       {showBriefModal && (

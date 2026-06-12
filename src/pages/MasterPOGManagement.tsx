@@ -7,7 +7,7 @@ import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined';
 import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import LayersOutlined from '@mui/icons-material/LayersOutlined';
 import TuneOutlined from '@mui/icons-material/TuneOutlined';
-import { Button, Badge, Card, Tabs, Tag, Select, SelectOption, Chips } from 'impact-ui';
+import { Button, Badge, Card, Tabs, Tag, Select, SelectOption, Chips, Loader, Input } from 'impact-ui';
 import { useAuth } from '../context/AuthContext';
 import './MasterPOGManagement.css';
 import WomensWallStandard from '../assets/C&A_WOMENS_WALL_STANDARD.png';
@@ -248,7 +248,7 @@ export const MasterPOGManagement: React.FC = () => {
     return (
       <div className="master-pog-container">
         <div className="page-loading">
-          <div className="page-loading-spinner" />
+          <Loader size="large" />
           <p>Loading Master POG...</p>
         </div>
       </div>
@@ -321,8 +321,8 @@ export const MasterPOGManagement: React.FC = () => {
             {/* Single-row filter bar */}
             <div className="pog-filter-bar">
               <div className="pog-filter-bar-search">
-                <SearchOutlined sx={{ fontSize: 16 }} />
-                <input
+                <Input
+                  leftIcon={<SearchOutlined sx={{ fontSize: 16 }} />}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search planograms..."

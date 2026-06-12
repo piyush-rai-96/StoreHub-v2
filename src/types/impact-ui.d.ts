@@ -350,6 +350,208 @@ declare module 'impact-ui' {
   }
   export const ChatBotComponent: FC<ChatBotComponentProps>;
 
+  // ── Loader ───────────────────────────────────────────────────────────────
+  export interface LoaderProps {
+    size?: 'small' | 'medium' | 'large';
+    className?: string;
+  }
+  export const Loader: FC<LoaderProps>;
+
+  // ── Alert ────────────────────────────────────────────────────────────────
+  export interface AlertProps {
+    title?: ReactNode;
+    description?: ReactNode;
+    severity?: 'success' | 'info' | 'warning' | 'error';
+    onClose?: () => void;
+    onAction?: () => void;
+    actionName?: string;
+    subtleBackground?: boolean;
+    actionButtonProps?: Record<string, unknown>;
+    children?: ReactNode;
+    className?: string;
+    style?: CSSProperties;
+  }
+  export const Alert: FC<AlertProps>;
+
+  // ── Panel ────────────────────────────────────────────────────────────────
+  export interface PanelProps {
+    open?: boolean;
+    setIsOpen?: (open: boolean) => void;
+    anchor?: 'left' | 'right';
+    size?: 'large' | 'medium';
+    title?: ReactNode;
+    onClose?: () => void;
+    primaryButtonLabel?: string;
+    secondaryButtonLabel?: string;
+    onPrimaryButtonClick?: () => void;
+    onSecondaryButtonClick?: () => void;
+    children?: ReactNode;
+    className?: string;
+    width?: string | number;
+    zIndex?: number;
+    customFooterContent?: ReactNode;
+    primaryButtonProps?: Record<string, unknown>;
+    secondaryButtonProps?: Record<string, unknown>;
+  }
+  export const Panel: FC<PanelProps>;
+
+  // ── TextArea ─────────────────────────────────────────────────────────────
+  export interface TextAreaProps {
+    label?: string;
+    placeholder?: string;
+    value?: string;
+    onChange?: (e: ChangeEvent<HTMLTextAreaElement>) => void;
+    onBlur?: (e: React.FocusEvent<HTMLTextAreaElement>) => void;
+    isRequired?: boolean;
+    isDisabled?: boolean;
+    isError?: boolean;
+    helperText?: string;
+    rows?: number;
+    maxLength?: number;
+    width?: string;
+    height?: string;
+    className?: string;
+    id?: string;
+    name?: string;
+  }
+  export const TextArea: FC<TextAreaProps>;
+
+  // ── Chart ────────────────────────────────────────────────────────────────
+  export interface ChartSeriesItem {
+    name?: string;
+    data: number[];
+    type?: string;
+    color?: string;
+    [key: string]: unknown;
+  }
+  export interface ChartProps {
+    graphType?: 'column' | 'bar' | 'line' | 'area' | 'pie' | 'spline' | 'scatter' | 'bubble' | 'heatmap';
+    xAxisCategories?: string[];
+    xAxisTitle?: string;
+    yAxisTitle?: string;
+    seriesData?: ChartSeriesItem[];
+    graphTitle?: string;
+    stackedColumn?: boolean;
+    showDownloadButton?: boolean;
+    cardContainer?: boolean;
+    showHeader?: boolean;
+    height?: number | null;
+    width?: number | null;
+    showExpandButton?: boolean;
+    topLeftOptions?: ReactNode;
+    topRightOptions?: ReactNode;
+    className?: string;
+    chartOptions?: Record<string, unknown>;
+    xAxisOptions?: Record<string, unknown>;
+    yAxisOptions?: Record<string, unknown>;
+    tooltipOptions?: Record<string, unknown>;
+    legendOptions?: Record<string, unknown>;
+    plotOptionsOptions?: Record<string, unknown>;
+    additionalOptions?: Record<string, unknown>;
+    [key: string]: unknown;
+  }
+  export const Chart: FC<ChartProps>;
+
+  // ── Slider ────────────────────────────────────────────────────────────────
+  export interface SliderProps {
+    value?: number | [number, number];
+    onChange?: (e: React.SyntheticEvent, value: number | number[]) => void;
+    min?: number;
+    max?: number;
+    disabled?: boolean;
+    required?: boolean;
+    label?: string;
+    header?: ReactNode;
+    variant?: 'default' | 'ranged';
+    inputPosition?: 'inline' | 'bottom';
+    colorChangeThreshold?: number;
+    valueFormat?: [string, string];
+    step?: number;
+    className?: string;
+    [key: string]: unknown;
+  }
+  export const Slider: FC<SliderProps>;
+
+  // ── ProgressBar ──────────────────────────────────────────────────────────
+  export interface ProgressBarProps {
+    value: number;
+    showTime?: boolean;
+    time?: number;
+    customLabel?: ReactNode;
+    status?: string;
+    className?: string;
+    style?: CSSProperties;
+  }
+  export const ProgressBar: FC<ProgressBarProps>;
+
+  // ── Accordion ────────────────────────────────────────────────────────────
+  export interface AccordionDataItem {
+    header: ReactNode;
+    content: ReactNode;
+    value: string;
+    defaultExpanded?: boolean;
+    disabled?: boolean;
+  }
+  export interface AccordionSingleData {
+    header: ReactNode;
+    content: ReactNode;
+    value: string;
+  }
+  export interface AccordionProps {
+    expanded?: string | string[];
+    setExpanded?: (v: string | string[]) => void;
+    isMultiExpanded?: boolean;
+    data?: AccordionDataItem[];
+    onChange?: (value: string) => void;
+    isSingleItem?: boolean;
+    singleData?: AccordionSingleData;
+    disabled?: boolean;
+  }
+  export const Accordion: FC<AccordionProps>;
+  export const AccordionModern: FC<AccordionProps>;
+
+  // ── Table ────────────────────────────────────────────────────────────────
+  export interface TableColumnDef {
+    field?: string;
+    headerName?: string;
+    isSearchable?: boolean;
+    sortable?: boolean;
+    filter?: boolean;
+    width?: number;
+    minWidth?: number;
+    maxWidth?: number;
+    flex?: number;
+    cellRenderer?: FC<{ value: unknown; data: Record<string, unknown> }> | string;
+    cellRendererParams?: Record<string, unknown>;
+    valueFormatter?: (params: { value: unknown }) => string;
+    pinned?: 'left' | 'right';
+    checkboxSelection?: boolean;
+    headerCheckboxSelection?: boolean;
+    suppressMovable?: boolean;
+    resizable?: boolean;
+    [key: string]: unknown;
+  }
+  export interface TableProps {
+    columnDefs: TableColumnDef[];
+    rowData?: Record<string, unknown>[];
+    tableHeader?: string;
+    rowHeight?: number;
+    height?: string | number;
+    defaultPageSize?: number;
+    paginationPageSizeSelector?: number[];
+    onRowClicked?: (params: { data: Record<string, unknown> }) => void;
+    showSearch?: boolean;
+    showFilter?: boolean;
+    showDownloadButton?: boolean;
+    cardContainer?: boolean;
+    hideTableSetting?: boolean;
+    topRightOptions?: ReactNode;
+    topLeftOptions?: ReactNode;
+    className?: string;
+    [key: string]: unknown;
+  }
+  export const Table: FC<TableProps>;
+
   export const HomePage: FC<{
     clientName?: string;
     userName?: string;

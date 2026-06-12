@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import WbSunnyOutlined from '@mui/icons-material/WbSunnyOutlined';
 import DarkModeOutlined from '@mui/icons-material/DarkModeOutlined';
 import WbCloudyOutlined from '@mui/icons-material/WbCloudyOutlined';
@@ -46,7 +46,7 @@ import ShowChartOutlined from '@mui/icons-material/ShowChartOutlined';
 import SyncOutlined from '@mui/icons-material/SyncOutlined';
 import GridOnOutlined from '@mui/icons-material/GridOnOutlined';
 import PersonOutlined from '@mui/icons-material/PersonOutlined';
-import { Button, Card } from 'impact-ui';
+import { Button, Card, Loader, Alert, Panel, TextArea, ProgressBar, Menu } from 'impact-ui';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { AudioPlayer } from '../components/common/AudioPlayer';
@@ -526,25 +526,15 @@ interface AssigneeDropdownProps {
 }
 
 const AssigneeDropdown: React.FC<AssigneeDropdownProps> = ({ value, options, onChange, placeholder = 'Select assignee...' }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const onDocClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
-    };
-    document.addEventListener('mousedown', onDocClick);
-    return () => document.removeEventListener('mousedown', onDocClick);
-  }, []);
-
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const selected = options.find(o => o.value === value);
 
   return (
-    <div className="assignee-dropdown" ref={ref}>
+    <div className="assignee-dropdown">
       <button
         type="button"
-        className={`assignee-dropdown-trigger ${isOpen ? 'open' : ''} ${selected ? 'has-value' : ''}`}
-        onClick={() => setIsOpen(!isOpen)}
+        className={`assignee-dropdown-trigger ${anchorEl ? 'open' : ''} ${selected ? 'has-value' : ''}`}
+        onClick={e => anchorEl ? setAnchorEl(null) : setAnchorEl(e.currentTarget)}
       >
         {selected ? (
           <div className="assignee-dropdown-selected">
@@ -557,27 +547,19 @@ const AssigneeDropdown: React.FC<AssigneeDropdownProps> = ({ value, options, onC
         ) : (
           <span className="assignee-dropdown-placeholder">{placeholder}</span>
         )}
-        <KeyboardArrowDown sx={{ fontSize: 16 }} className={`assignee-dropdown-chevron ${isOpen ? 'open' : ''}`}/>
+        <KeyboardArrowDown sx={{ fontSize: 16 }} className={`assignee-dropdown-chevron ${anchorEl ? 'open' : ''}`}/>
       </button>
-      {isOpen && (
-        <div className="assignee-dropdown-menu">
-          {options.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              className={`assignee-dropdown-option ${value === opt.value ? 'selected' : ''}`}
-              onClick={() => { onChange(opt.value); setIsOpen(false); }}
-            >
-              {opt.avatar && <span className="assignee-dropdown-avatar">{opt.avatar}</span>}
-              <div className="assignee-dropdown-option-text">
-                <span className="assignee-dropdown-name">{opt.label}</span>
-                {opt.sublabel && <span className="assignee-dropdown-role">{opt.sublabel}</span>}
-              </div>
-              {value === opt.value && <Check sx={{ fontSize: 16 }} className="assignee-dropdown-check"/>}
-            </button>
-          ))}
-        </div>
-      )}
+      <Menu
+        anchorEl={anchorEl}
+        open={!!anchorEl}
+        onClose={() => setAnchorEl(null)}
+        options={options.map(opt => ({
+          label: opt.label,
+          subLabel: opt.sublabel,
+          value: opt.value,
+          onClick: () => { onChange(opt.value); setAnchorEl(null); },
+        }))}
+      />
     </div>
   );
 };
@@ -1220,7 +1202,7 @@ export const StoreOpsHome: React.FC = () => {
     return (
       <div className="store-ops-home">
         <div className="store-ops-loading">
-          <div className="store-ops-loading-spinner" />
+          <Loader size="large" />
           <p>Loading Dashboard...</p>
         </div>
       </div>
@@ -1834,10 +1816,15 @@ export const StoreOpsHome: React.FC = () => {
       </div>
 
       {/* EAC v2 Drawer */}
-      {eacDrawer && (
-        <>
-          <div className="eac2-drawer-overlay" onClick={() => setEacDrawer(null)}/>
-          <div className="eac2-drawer">
+      <Panel
+        open={!!eacDrawer}
+        setIsOpen={(v) => { if (!v) setEacDrawer(null); }}
+        onClose={() => setEacDrawer(null)}
+        anchor="right"
+        size="large"
+      >
+        {eacDrawer && (
+          <div className="eac2-drawer eac2-drawer--panel">
             {/* ── Hero header ── */}
             <div className="eac2-drawer-header">
               <div className="eac2-drawer-hero-top">
@@ -1868,13 +1855,12 @@ export const StoreOpsHome: React.FC = () => {
                 <div className="eac2-drawer-block-label">
                   <WarningAmberOutlined sx={{ fontSize: 11 }}/> Issue Summary
                 </div>
-                <div className={`eac2-drawer-risk-banner eac2-drawer-risk-banner--${eacDrawer.severityClass}`}>
-                  <WarningAmberOutlined sx={{ fontSize: 15 }} className="eac2-drawer-risk-banner-icon"/>
-                  <div>
-                    <p className="eac2-drawer-risk-title">{eacDrawer.skuCount} SKUs · {eacDrawer.riskValue} inventory at risk</p>
-                    <p className="eac2-drawer-risk-desc">{eacDrawer.desc}</p>
-                  </div>
-                </div>
+                <Alert
+                  severity={eacDrawer.severityClass === 'high' ? 'error' : eacDrawer.severityClass === 'medium' ? 'warning' : 'info'}
+                  title={`${eacDrawer.skuCount} SKUs · ${eacDrawer.riskValue} inventory at risk`}
+                  description={eacDrawer.desc}
+                  subtleBackground
+                />
               </div>
 
               {/* Task Status block */}
@@ -1986,8 +1972,8 @@ export const StoreOpsHome: React.FC = () => {
               <AccessTimeOutlined sx={{ fontSize: 12 }}/> Last detected {eacDrawer.lastDetected} · Auto-assigned to store managers
             </div>
           </div>
-        </>
-      )}
+        )}
+      </Panel>
 
       {/* AI Brief Full Modal */}
       {showBriefModal && (
@@ -2535,7 +2521,7 @@ export const StoreOpsHome: React.FC = () => {
                 </div>
                 <div className="approval-note">
                   <label>Add a note (optional)</label>
-                  <textarea placeholder="Enter any comments or instructions..."></textarea>
+                  <TextArea placeholder="Enter any comments or instructions..." rows={3} />
                 </div>
               </div>
             </div>
@@ -2648,9 +2634,7 @@ export const StoreOpsHome: React.FC = () => {
                       </div>
                     </div>
                     <div className="regional-progress">
-                      <div className="progress-bar">
-                        <div className="progress-fill" style={{ width: `${region.vocScore}%` }}></div>
-                      </div>
+                      <ProgressBar value={region.vocScore} />
                     </div>
                     <div className="regional-top">
                       <StoreOutlined sx={{ fontSize: 12 }}/>
@@ -2873,11 +2857,7 @@ export const StoreOpsHome: React.FC = () => {
             </div>
             
             <div className="context-modal-content">
-              <div className="checklist-progress-bar">
-                <div className="progress-fill" style={{ 
-                  width: `${(Object.values(checklistProgress).filter(s => s === 'completed').length / (selectedChecklistItem.checklistItems?.length || 1)) * 100}%` 
-                }}></div>
-              </div>
+              <ProgressBar value={(Object.values(checklistProgress).filter(s => s === 'completed').length / (selectedChecklistItem.checklistItems?.length || 1)) * 100} />
               <div className="checklist-progress-text">
                 {Object.values(checklistProgress).filter(s => s === 'completed').length} of {selectedChecklistItem.checklistItems?.length} completed
               </div>
@@ -3096,7 +3076,7 @@ export const StoreOpsHome: React.FC = () => {
                     </div>
                     <div className="response-section">
                       <h5>Your Response</h5>
-                      <textarea 
+                      <TextArea
                         placeholder="Type your response to the customer..."
                         value={escalationResponse}
                         onChange={(e) => setEscalationResponse(e.target.value)}
@@ -3281,11 +3261,11 @@ export const StoreOpsHome: React.FC = () => {
               {/* Note */}
               <div className="drawer-section">
                 <h3 className="drawer-section-title">Add a note (optional)</h3>
-                <textarea 
-                  className="drawer-note-input"
+                <TextArea
                   placeholder="Enter comments or instructions for store teams..."
                   value={approvalNote}
                   onChange={(e) => setApprovalNote(e.target.value)}
+                  rows={4}
                 />
               </div>
             </div>
@@ -4230,12 +4210,11 @@ export const StoreOpsHome: React.FC = () => {
 
                 <div className="dp-section">
                   <h3 className="dp-section-title">Your Response</h3>
-                  <textarea
-                    className="dp-assign-search"
+                  <TextArea
                     placeholder="Type your response to the customer..."
                     value={escalationResponse}
                     onChange={(e) => setEscalationResponse(e.target.value)}
-                    style={{ minHeight: '80px', resize: 'vertical', fontFamily: 'var(--ia-font-sans)', padding: '10px 12px' }}
+                    rows={4}
                   />
                 </div>
 

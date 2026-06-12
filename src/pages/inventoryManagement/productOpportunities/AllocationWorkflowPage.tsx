@@ -11,7 +11,7 @@ import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
 import StorefrontOutlined from '@mui/icons-material/StorefrontOutlined';
 import CalendarTodayOutlined from '@mui/icons-material/CalendarTodayOutlined';
 import InfoOutlined from '@mui/icons-material/InfoOutlined';
-import { Button, Badge } from 'impact-ui';
+import { Button, Badge, TextArea } from 'impact-ui';
 import { ImFilterSelect } from '../../../components/common/ImFilterSelect';
 import { OpportunityStatusChip } from './OpportunityStatusChip';
 import { getOpportunityById, addApprovalRequest } from '../../../constants/productOpportunityMock';
@@ -361,8 +361,7 @@ export const AllocationWorkflowPage: React.FC = () => {
                     <span className="aw-required"> * Required — qty differs from recommendation</span>
                   )}
                 </label>
-                <textarea
-                  className="aw-textarea"
+                <TextArea
                   rows={3}
                   placeholder="Add a comment explaining the allocation change..."
                   value={comment}

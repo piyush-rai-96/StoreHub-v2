@@ -28,7 +28,7 @@ import TrendingUpOutlined from '@mui/icons-material/TrendingUpOutlined';
 import RotateLeftOutlined from '@mui/icons-material/RotateLeftOutlined';
 import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined';
 import PrintOutlined from '@mui/icons-material/PrintOutlined';
-import { Button, Card, Chips, Tabs, Modal, EmptyState, Stepper, StepperStep, Badge, Tooltip } from 'impact-ui';
+import { Button, Card, Chips, Tabs, Modal, EmptyState, Stepper, StepperStep, Badge, Tooltip, Loader, Alert, TextArea } from 'impact-ui';
 import { useExecutionTasks, ExecutionTask } from '../context/ExecutionTasksContext';
 import './POGLocalizationEngine.css';
 
@@ -1128,12 +1128,12 @@ export const POGLocalizationEngine: React.FC = () => {
               </div>
             </div>
 
-            <div className="loc-agentic-insight-banner">
-              <BoltOutlined sx={{ fontSize: 18 }} />
-              <span>
-                <strong>Implication:</strong> {generateDemandImplication(categoryDemandIndex[selectedCategory]?.[selectedStoreGroup!] || [])}
-              </span>
-            </div>
+            <Alert
+              severity="info"
+              title="Implication"
+              description={generateDemandImplication(categoryDemandIndex[selectedCategory]?.[selectedStoreGroup!] || [])}
+              subtleBackground
+            />
 
             {/* Pre-Engine Forecast — compact inline */}
             <div className="loc-forecast-strip">
@@ -1221,8 +1221,7 @@ export const POGLocalizationEngine: React.FC = () => {
               </div>
               <span className="loc-prompt-hint">Add natural-language guidance — the engine will factor it into Geometry, Demand &amp; Policy stages.</span>
             </div>
-            <textarea
-              className="loc-prompt-textarea"
+            <TextArea
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
               placeholder="e.g. Prioritize premium SKUs at eye level, cap promotional facings at 30%, and bias toward local brands for this cluster..."
@@ -1273,7 +1272,7 @@ export const POGLocalizationEngine: React.FC = () => {
       <div className="loc-main-panel">
         {isStepLoading ? (
           <div className="loc-step-loading">
-            <RotateRight sx={{ fontSize: 32 }} className="spinning" />
+            <Loader size="large" />
             <h4>Loading next step...</h4>
             <p>Preparing data and validating selections</p>
           </div>
@@ -1717,7 +1716,7 @@ export const POGLocalizationEngine: React.FC = () => {
     return (
       <div className="loc-engine-container">
         <div className="page-loading">
-          <div className="page-loading-spinner" />
+          <Loader size="large" />
           <p>Loading Localization Engine...</p>
         </div>
       </div>

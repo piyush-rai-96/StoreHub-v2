@@ -16,7 +16,7 @@ import LabelOutlined from '@mui/icons-material/LabelOutlined';
 import BuildOutlined from '@mui/icons-material/BuildOutlined';
 import PersonAddAlt1Outlined from '@mui/icons-material/PersonAddAlt1Outlined';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
-import { Chips } from 'impact-ui';
+import { Chips, Loader } from 'impact-ui';
 import { useExecutionTasks, ExecutionTask as SharedExecutionTask } from '../context/ExecutionTasksContext';
 import './StoreExecution.css';
 
@@ -456,7 +456,7 @@ export const StoreExecution: React.FC = () => {
     return (
       <div className="exec-container">
         <div className="page-loading">
-          <div className="page-loading-spinner" />
+          <Loader size="large" />
           <p>Loading Store Execution...</p>
         </div>
       </div>

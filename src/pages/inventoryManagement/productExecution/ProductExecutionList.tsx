@@ -15,7 +15,7 @@ import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import StoreOutlined from '@mui/icons-material/StoreOutlined';
 import CalendarTodayOutlined from '@mui/icons-material/CalendarTodayOutlined';
 import AccessTimeOutlined from '@mui/icons-material/AccessTimeOutlined';
-import { Button, Badge, Tabs } from 'impact-ui';
+import { Button, Badge, Tabs, Loader, Input } from 'impact-ui';
 import { ImFilterSelect } from '../../../components/common/ImFilterSelect';
 import {
   PEX_TASKS,
@@ -172,7 +172,7 @@ export const ProductExecutionList: React.FC = () => {
     return (
       <div className="pex-page">
         <div className="pex-loading">
-          <div className="pex-loading-spinner" />
+          <Loader size="large" />
           <p>Loading Product Execution...</p>
         </div>
       </div>
@@ -264,9 +264,8 @@ export const ProductExecutionList: React.FC = () => {
       {/* ── Premium Filter Bar ── */}
       <div className="sc-inv-premium-filter-bar">
         <div className="sc-inv-search">
-          <SearchOutlined sx={{ fontSize: 15 }}/>
-          <input
-            type="text"
+          <Input
+            leftIcon={<SearchOutlined sx={{ fontSize: 15 }}/>}
             placeholder="Search products, SKU, department…"
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(0); }}

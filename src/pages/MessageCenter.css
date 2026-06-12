@@ -2588,7 +2588,11 @@
   margin-top: 0;
 }
 
-.fs-form-section--primary .fs-form-textarea {
+.fs-form-section--primary .fs-form-textarea,
+.fs-form-section--primary .impact_textarea textarea {
+  width: 100%;
+  min-width: 100%;
+  box-sizing: border-box;
   min-height: 128px;
 }
 

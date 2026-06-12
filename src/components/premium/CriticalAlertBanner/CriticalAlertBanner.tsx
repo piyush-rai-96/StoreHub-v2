@@ -1,47 +1,38 @@
 import React from 'react';
-import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
-import CloseOutlined from '@mui/icons-material/CloseOutlined';
+import { Alert } from 'impact-ui';
 import { CriticalAlert } from '../../../types/home';
-import './CriticalAlertBanner.css';
 
 interface CriticalAlertBannerProps {
   alert: CriticalAlert;
   onDismiss?: () => void;
 }
 
-export const CriticalAlertBanner: React.FC<CriticalAlertBannerProps> = ({ 
-  alert, 
-  onDismiss 
+const SEVERITY_MAP: Record<string, 'error' | 'warning' | 'info' | 'success'> = {
+  critical: 'error',
+  high: 'error',
+  warning: 'warning',
+  medium: 'warning',
+  info: 'info',
+  low: 'info',
+  success: 'success',
+};
+
+export const CriticalAlertBanner: React.FC<CriticalAlertBannerProps> = ({
+  alert,
+  onDismiss,
 }) => {
+  const severity = SEVERITY_MAP[alert.severity] ?? 'warning';
+  const firstAction = alert.actions?.[0];
+
   return (
-    <div className={`critical-alert-banner critical-alert-${alert.severity}`}>
-      <div className="critical-alert-icon">
-        <WarningAmberOutlined sx={{ fontSize: 20 }} />
-      </div>
-      <div className="critical-alert-content">
-        <div className="critical-alert-title">{alert.title}</div>
-        <div className="critical-alert-message">{alert.message}</div>
-      </div>
-      <div className="critical-alert-actions">
-        {alert.actions?.map((action, index) => (
-          <button
-            key={index}
-            className="critical-alert-action-button"
-            onClick={action.onClick}
-          >
-            {action.label}
-          </button>
-        ))}
-      </div>
-      {onDismiss && (
-        <button 
-          className="critical-alert-dismiss"
-          onClick={onDismiss}
-          aria-label="Dismiss alert"
-        >
-          <CloseOutlined sx={{ fontSize: 18 }} />
-        </button>
-      )}
-    </div>
+    <Alert
+      severity={severity}
+      title={alert.title}
+      description={alert.message}
+      onClose={onDismiss}
+      actionName={firstAction?.label}
+      onAction={firstAction?.onClick}
+      subtleBackground
+    />
   );
 };
