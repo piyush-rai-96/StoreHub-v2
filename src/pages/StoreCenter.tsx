@@ -50,7 +50,11 @@ import FlagOutlined from '@mui/icons-material/FlagOutlined';
 import BlockOutlined from '@mui/icons-material/BlockOutlined';
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import LaunchOutlined from '@mui/icons-material/LaunchOutlined';
-import { Button, Badge, Chips, Card, Tabs, Tooltip, Tag } from 'impact-ui';
+import LoyaltyOutlined from '@mui/icons-material/LoyaltyOutlined';
+import CardMembershipOutlined from '@mui/icons-material/CardMembershipOutlined';
+import AddOutlined from '@mui/icons-material/AddOutlined';
+import ForumOutlined from '@mui/icons-material/ForumOutlined';
+import { Button, Badge, Chips, Card, Tabs, Tooltip, Tag, Loader, Alert, Panel, Input, ProgressBar, Slider, Chart } from 'impact-ui';
 import { ImFilterSelect } from '../components/common/ImFilterSelect';
 import { AIDailyBrief, AIDailyBriefData } from '../components/common/AIDailyBrief';
 import { useAuth } from '../context/AuthContext';
@@ -188,6 +192,24 @@ interface VoCItem {
   delta: number;
   topComment: string;
   source: string;
+  sourceMix?: { label: string; pct: number }[];
+}
+
+interface VocFeedbackRow {
+  id: string;
+  date: string;
+  origin: 'Auto-ingested' | 'Store-captured';
+  source: string;
+  signalType: 'Customer Voice' | 'Store Voice';
+  theme: string;
+  sentiment: 'Positive' | 'Neutral' | 'Negative';
+  snippet: string;
+  fullText: string;
+  department: string;
+  sku?: string;
+  urgency: 'High' | 'Medium' | 'Low';
+  status: 'New' | 'Monitoring' | 'Task Created' | 'Escalated' | 'Closed';
+  availableForAssortment: boolean;
 }
 
 interface InventoryItem {
@@ -854,11 +876,22 @@ const getAuditData = (store: StoreMeta): AuditWeek[] => {
 };
 
 const getVoCData = (store: StoreMeta): VoCItem[] => [
-  { theme: 'Staff Helpfulness', sentiment: store.dpi >= 80 ? 'positive' : 'negative', volume: store.dpi >= 80 ? 142 : 89, delta: store.dpi >= 80 ? 12 : -18, topComment: store.dpi >= 80 ? '"Staff was incredibly helpful finding sizes"' : '"Couldn\'t find anyone to help me"', source: 'Google Reviews' },
-  { theme: 'Store Cleanliness', sentiment: store.dpi >= 80 ? 'positive' : 'negative', volume: store.dpi >= 80 ? 98 : 134, delta: store.dpi >= 80 ? 5 : 28, topComment: store.dpi >= 80 ? '"Always tidy and well-organized"' : '"Aisles were messy and cluttered"', source: 'In-App Survey' },
-  { theme: 'Product Availability', sentiment: store.dpi >= 75 ? 'neutral' : 'negative', volume: 76, delta: store.dpi >= 75 ? -3 : 15, topComment: store.dpi >= 75 ? '"Most items were in stock"' : '"Basic sizes constantly out of stock"', source: 'Google Reviews' },
-  { theme: 'Checkout Speed', sentiment: 'positive', volume: 54, delta: -8, topComment: '"Quick checkout, no waiting"', source: 'In-App Survey' },
-  { theme: 'Store Ambience', sentiment: store.dpi >= 85 ? 'positive' : 'neutral', volume: 41, delta: 2, topComment: store.dpi >= 85 ? '"Love the new layout!"' : '"Nothing special but acceptable"', source: 'Social Media' },
+  { theme: 'Staff Helpfulness', sentiment: store.dpi >= 80 ? 'positive' : 'negative', volume: store.dpi >= 80 ? 142 : 89, delta: store.dpi >= 80 ? 12 : -18, topComment: store.dpi >= 80 ? '"Staff was incredibly helpful finding sizes"' : '"Couldn\'t find anyone to help me"', source: 'Google Reviews', sourceMix: [{ label: 'Reviews', pct: 65 }, { label: 'Surveys', pct: 25 }, { label: 'Shopper comments', pct: 10 }] },
+  { theme: 'Store Cleanliness', sentiment: store.dpi >= 80 ? 'positive' : 'negative', volume: store.dpi >= 80 ? 98 : 134, delta: store.dpi >= 80 ? 5 : 28, topComment: store.dpi >= 80 ? '"Always tidy and well-organized"' : '"Aisles were messy and cluttered"', source: 'In-App Survey', sourceMix: [{ label: 'In-app survey', pct: 54 }, { label: 'Google reviews', pct: 32 }, { label: 'Manager notes', pct: 14 }] },
+  { theme: 'Product Availability', sentiment: store.dpi >= 75 ? 'neutral' : 'negative', volume: 76, delta: store.dpi >= 75 ? -3 : 15, topComment: store.dpi >= 75 ? '"Most items were in stock"' : '"Basic sizes constantly out of stock"', source: 'Google Reviews', sourceMix: [{ label: 'Digital reviews', pct: 42 }, { label: 'Staff notes', pct: 38 }, { label: 'Shopper comments', pct: 20 }] },
+  { theme: 'Checkout Speed', sentiment: 'positive', volume: 54, delta: -8, topComment: '"Quick checkout, no waiting"', source: 'In-App Survey', sourceMix: [{ label: 'In-app survey', pct: 70 }, { label: 'Google reviews', pct: 30 }] },
+  { theme: 'Store Ambience', sentiment: store.dpi >= 85 ? 'positive' : 'neutral', volume: 41, delta: 2, topComment: store.dpi >= 85 ? '"Love the new layout!"' : '"Nothing special but acceptable"', source: 'Social Media', sourceMix: [{ label: 'Social media', pct: 50 }, { label: 'Shopper comments', pct: 28 }, { label: 'Staff notes', pct: 22 }] },
+];
+
+const VOC_FEEDBACK_LOG: VocFeedbackRow[] = [
+  { id: 'vf-001', date: 'Jun 10', origin: 'Auto-ingested', source: 'Google Review', signalType: 'Customer Voice', theme: 'Product Availability', sentiment: 'Negative', snippet: 'Sizes were missing in the denim section', fullText: 'Came in looking for slim fit jeans in size 32 and 34 — both were completely missing from the rack. Associate checked the back and said they were out. Has happened twice in the past month.', department: 'Denim', sku: 'MEN-DNM-003', urgency: 'High', status: 'Monitoring', availableForAssortment: true },
+  { id: 'vf-002', date: 'Jun 10', origin: 'Store-captured', source: 'Staff observation', signalType: 'Store Voice', theme: 'Assortment', sentiment: 'Neutral', snippet: 'Multiple shoppers asking for wider fit options in denim', fullText: 'Over the past two weeks, at least 6–8 shoppers specifically asked whether we carry wider leg or relaxed fit denim for men. We only have slim and straight. Multiple people left without buying. Feels like a consistent local demand signal.', department: 'Denim', urgency: 'Medium', status: 'New', availableForAssortment: true },
+  { id: 'vf-003', date: 'Jun 9', origin: 'Auto-ingested', source: 'In-App Survey', signalType: 'Customer Voice', theme: 'Store Cleanliness', sentiment: 'Positive', snippet: 'Store was clean and well-organized this visit', fullText: 'Noticed a big improvement in store organization this week. Aisles are clear, fitting rooms are tidy, and the accessories display near the entrance looks great. The team is doing a good job.', department: 'Store Ops', urgency: 'Low', status: 'Closed', availableForAssortment: false },
+  { id: 'vf-004', date: 'Jun 9', origin: 'Store-captured', source: 'Manager note', signalType: 'Store Voice', theme: 'Local Demand', sentiment: 'Negative', snippet: 'Customers requesting seasonal color palettes we do not carry', fullText: 'During this week\'s store walk, I noticed that customers are repeatedly asking for earth tone and olive color options in our women\'s tops range. We currently only carry the standard palette. Three customers specifically mentioned they had found these shades at a competitor nearby. This could be a localized demand signal worth flagging for the next assortment cycle.', department: "Women's Apparel", urgency: 'High', status: 'Escalated', availableForAssortment: true },
+  { id: 'vf-005', date: 'Jun 8', origin: 'Auto-ingested', source: 'Google Review', signalType: 'Customer Voice', theme: 'Staff Helpfulness', sentiment: 'Positive', snippet: 'Staff went out of their way to find my size', fullText: 'I was looking for a blazer in size 10 and could not find it on the floor. The associate checked the back, found it on the inbound rack, steamed it, and brought it to me. Exceptional service. Will definitely come back.', department: "Women's Apparel", sku: 'WOM-BLZ-001', urgency: 'Low', status: 'Closed', availableForAssortment: false },
+  { id: 'vf-006', date: 'Jun 8', origin: 'Store-captured', source: 'Shopper comment', signalType: 'Store Voice', theme: 'Product Quality', sentiment: 'Negative', snippet: 'Customer returned blazer citing stitching issue after first wash', fullText: 'Customer returned a Women\'s Classic Blazer today — stitching on the left sleeve had come apart after just one wash on cold cycle. This is the third similar return in the past month on this same SKU. May indicate a batch quality issue worth flagging.', department: "Women's Apparel", sku: 'WOM-BLZ-001', urgency: 'High', status: 'Task Created', availableForAssortment: false },
+  { id: 'vf-007', date: 'Jun 7', origin: 'Auto-ingested', source: 'Website Review', signalType: 'Customer Voice', theme: 'Checkout Speed', sentiment: 'Positive', snippet: 'Fastest checkout experience I have had at a mall store', fullText: 'I was dreading the weekend queue but was in and out in under 4 minutes. The self-checkout kiosk was open and the associate helped me right through. Great experience.', department: 'Store Ops', urgency: 'Low', status: 'Closed', availableForAssortment: false },
+  { id: 'vf-008', date: 'Jun 7', origin: 'Store-captured', source: 'Store walk note', signalType: 'Store Voice', theme: 'Assortment', sentiment: 'Neutral', snippet: 'Kids section consistently sparse on weekends by Saturday noon', fullText: 'During Sunday morning walk, Kids section had visible gaps on the tee wall and shorts table. The adjacent BOH area had replenishment stock but associates had not been able to get to it due to weekend traffic. Kids demand on weekends appears higher than our current replenishment cadence supports.', department: 'Kids', urgency: 'Medium', status: 'Monitoring', availableForAssortment: true },
 ];
 
 const getInventoryData = (store: StoreMeta): InventoryItem[] => [
@@ -1756,7 +1789,24 @@ export const StoreCenter: React.FC = () => {
     trend: 'improving' | 'declining' | 'stable';
   } | null>(null);
   const { addTasks } = useExecutionTasks();
-  const [activeTab, setActiveTab] = useState<'voc' | 'inventory' | 'benchmarking' | 'phantom'>('inventory');
+  const [activeTab, setActiveTab] = useState<'voc' | 'inventory' | 'benchmarking' | 'phantom' | 'loyalty_insights' | 'demand_risk'>('inventory');
+  const [loyaltyView, setLoyaltyView] = useState<'cards' | 'table'>('cards');
+  const [loyaltySort, setLoyaltySort] = useState<{ field: string; dir: 'asc' | 'desc' }>({ field: 'loyaltyUnits', dir: 'desc' });
+  const [loyaltyPage, setLoyaltyPage] = useState(0);
+  const [loyaltySearch, setLoyaltySearch] = useState('');
+  const [loyaltyDept, setLoyaltyDept] = useState('All');
+  const [loyaltySegment, setLoyaltySegment] = useState('All');
+  const [loyaltyCategory, setLoyaltyCategory] = useState('All');
+  // ── Demand & Inventory Risk State ──
+  const [dirSearch, setDirSearch] = useState('');
+  const [dirDept, setDirDept] = useState('All');
+  const [dirRiskType, setDirRiskType] = useState('All');
+  const [dirSeverity, setDirSeverity] = useState('All');
+  const [dirSort, setDirSort] = useState<{ field: string; dir: 'asc' | 'desc' }>({ field: 'severity', dir: 'asc' });
+  const [dirPage, setDirPage] = useState(0);
+  const [dirExpandedRows, setDirExpandedRows] = useState<Set<string>>(new Set());
+  const [dirDrawerSku, setDirDrawerSku] = useState<string | null>(null);
+  const operationalBreakdownRef = useRef<HTMLDivElement>(null);
   // ── Phantom Stock State ──
   const [psSearch, setPsSearch] = useState('');
   const [psDeptFilter, setPsDeptFilter] = useState('');
@@ -1775,6 +1825,23 @@ export const StoreCenter: React.FC = () => {
   const [invClass, setInvClass] = useState('All');
   const [invBrand, setInvBrand] = useState('All');
   const [vocExpanded, setVocExpanded] = useState(false);
+  const [vocSourceFilter, setVocSourceFilter] = useState('All Signals');
+  const [vocSearch, setVocSearch] = useState('');
+  const [vocThemeFilter, setVocThemeFilter] = useState('All');
+  const [vocSentimentFilter, setVocSentimentFilter] = useState('All');
+  const [vocCaptureOpen, setVocCaptureOpen] = useState(false);
+  const [vocFeedbackDetail, setVocFeedbackDetail] = useState<string | null>(null);
+  const [vocCapture, setVocCapture] = useState({
+    signalType: 'Store Voice',
+    source: 'Shopper comment',
+    text: '',
+    sentiment: 'Neutral',
+    theme: 'Availability',
+    department: '',
+    sku: '',
+    urgency: 'Medium',
+    action: 'Monitor',
+  });
   // Benchmarking section: view toggle
   const [benchView, setBenchView] = useState<'cards' | 'table'>('cards');
   // Execution Action Center state
@@ -2060,7 +2127,7 @@ export const StoreCenter: React.FC = () => {
     return (
       <div className="sc-container">
         <div className="sc-page-loading">
-          <div className="sc-page-loading-spinner" />
+          <Loader size="large" />
           <p>Loading Store Deep Dive...</p>
         </div>
       </div>
@@ -2598,6 +2665,79 @@ export const StoreCenter: React.FC = () => {
                 </Card>
               );
             })}
+
+            {/* ── Loyalty Engagement KPI Card ── */}
+            {(() => {
+              const loyaltyTrend = [54, 56, 57, 58, 59, 59, 60, 61, 61, 62, 62, 62];
+              const lMin = Math.min(...loyaltyTrend), lMax = Math.max(...loyaltyTrend), lRange = lMax - lMin || 1;
+              const LW = 120, LH = 44, LP = 3;
+              const lPoints = loyaltyTrend.map((v, i) => ({
+                x: (i / (loyaltyTrend.length - 1)) * LW,
+                y: LH - LP - ((v - lMin) / lRange) * (LH - LP * 2),
+              }));
+              const lPath = lPoints.map((p, i) => i === 0 ? `M ${p.x},${p.y}` : `L ${p.x},${p.y}`).join(' ');
+              const lArea = `${lPath} L ${LW},${LH} L 0,${LH} Z`;
+              const lLast = lPoints[lPoints.length - 1];
+              return (
+                <Card
+                  className="kpi-tile--positive"
+                  onClick={() => {
+                    setActiveTab('loyalty_insights');
+                    setTimeout(() => operationalBreakdownRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+                  }}
+                  sx={{
+                    maxWidth: '100%',
+                    minHeight: 'unset',
+                    padding: 0,
+                    width: '100%',
+                    borderRadius: '8px',
+                    border: activeTab === 'loyalty_insights' ? '2px solid var(--ia-color-primary)' : '1px solid var(--ia-color-border)',
+                    boxShadow: activeTab === 'loyalty_insights' ? '0 0 0 3px rgba(99,102,241,0.10), 0 1px 3px rgba(15,23,42,0.04)' : '0 1px 3px rgba(15,23,42,0.04)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'hidden',
+                    position: 'relative',
+                    '&:hover': { borderColor: 'var(--ia-color-primary)', boxShadow: '0 1px 6px rgba(15,23,42,0.10)', transform: 'translateY(-1px)' },
+                  }}
+                >
+                  <div style={{ padding: '14px 16px 0', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                    <div className="kpi-tile-category kpi-tile-category--loyalty">
+                      <LoyaltyOutlined sx={{ fontSize: 12 }}/>
+                      <span>LOYALTY</span>
+                    </div>
+                    <div className="kpi-tile-value-row">
+                      <span className="kpi-tile-primary">62%</span>
+                    </div>
+                    <span className="kpi-tile-label">Loyalty Sales Share</span>
+                    <div className="kpi-tile-insight">
+                      <span className="kpi-tile-insight-dot" />
+                      <span>Metro North Flagship cluster</span>
+                    </div>
+                    <div className="kpi-tile-delta delta-up">
+                      <NorthEast sx={{ fontSize: 12 }}/>
+                      <span>+2.4%</span>
+                      <span className="kpi-delta-ctx">vs LY</span>
+                    </div>
+                    <div className="kpi-tile-sparkline">
+                      <svg viewBox={`0 0 ${LW} ${LH}`} preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient id="sc-spark-loyalty" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.08" />
+                            <stop offset="100%" stopColor="#4f46e5" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+                        <path d={lArea} fill="url(#sc-spark-loyalty)" />
+                        <path d={lPath} fill="none" stroke="#4f46e5" strokeWidth="1.3" strokeLinecap="square" strokeLinejoin="miter" />
+                        <circle cx={lLast.x} cy={lLast.y} r="1.8" fill="#4f46e5" stroke="#ffffff" strokeWidth="1" />
+                      </svg>
+                    </div>
+                    <KeyboardArrowRight sx={{ fontSize: 14 }} className="kpi-tile-arrow"/>
+                  </div>
+                </Card>
+              );
+            })()}
           </div>
         </div>
 
@@ -2752,12 +2892,7 @@ export const StoreCenter: React.FC = () => {
                             <span>Progress</span>
                             <span className="ocv-progress-pct">{bc.completionPct}%</span>
                           </div>
-                          <div className="ocv-progress-bar">
-                            <div
-                              className={`ocv-progress-fill ocv-status--${bc.storeStatus}`}
-                              style={{ width: `${bc.completionPct}%` }}
-                            />
-                          </div>
+                          <ProgressBar value={bc.completionPct} />
                         </div>
                         <Button
                           variant="outlined"
@@ -3144,10 +3279,15 @@ export const StoreCenter: React.FC = () => {
         })()}
 
         {/* ── Store EAC Drawer ── */}
-        {storeEacDrawer && (
-          <>
-            <div className="eac2-drawer-overlay" onClick={() => setStoreEacDrawer(null)}/>
-            <div className="eac2-drawer">
+        <Panel
+          open={!!storeEacDrawer}
+          setIsOpen={(v) => { if (!v) setStoreEacDrawer(null); }}
+          onClose={() => setStoreEacDrawer(null)}
+          anchor="right"
+          size="large"
+        >
+          {storeEacDrawer && (
+            <div className="eac2-drawer eac2-drawer--panel">
               {/* ── Hero header ── */}
               <div className="eac2-drawer-header">
                 <div className="eac2-drawer-hero-top">
@@ -3178,13 +3318,12 @@ export const StoreCenter: React.FC = () => {
                   <div className="eac2-drawer-block-label">
                     <WarningAmberOutlined sx={{ fontSize: 11 }}/> Issue Summary
                   </div>
-                  <div className={`eac2-drawer-risk-banner eac2-drawer-risk-banner--${storeEacDrawer.severityClass}`}>
-                    <WarningAmberOutlined sx={{ fontSize: 15 }} className="eac2-drawer-risk-banner-icon"/>
-                    <div>
-                      <p className="eac2-drawer-risk-title">{storeEacDrawer.skuCount} SKUs · {storeEacDrawer.riskValue} inventory at risk</p>
-                      <p className="eac2-drawer-risk-desc">{storeEacDrawer.desc}</p>
-                    </div>
-                  </div>
+                  <Alert
+                    severity={storeEacDrawer.severityClass === 'high' ? 'error' : storeEacDrawer.severityClass === 'medium' ? 'warning' : 'info'}
+                    title={`${storeEacDrawer.skuCount} SKUs · ${storeEacDrawer.riskValue} inventory at risk`}
+                    description={storeEacDrawer.desc}
+                    subtleBackground
+                  />
                 </div>
 
                 {/* Signal Evidence block */}
@@ -3311,8 +3450,8 @@ export const StoreCenter: React.FC = () => {
                 <AccessTimeOutlined sx={{ fontSize: 12 }}/> Last detected {storeEacDrawer.lastDetected} · Auto-assigned to {store.manager}
               </div>
             </div>
-          </>
-        )}
+          )}
+        </Panel>
 
         {/* ── LEGACY BLOCK REMOVED ── */}
         {alertDrawer != null && null}
@@ -3616,7 +3755,7 @@ export const StoreCenter: React.FC = () => {
         )}
 
         {/* ── Operational Breakdown ──────────────────────── */}
-        <div className="sc-deepdive-section">
+        <div className="sc-deepdive-section" ref={operationalBreakdownRef} id="sc-operational-breakdown">
           <div className="sc-section-header">
             <div className="sc-section-title-row">
               <GridOnOutlined sx={{ fontSize: 20 }}/>
@@ -3630,25 +3769,52 @@ export const StoreCenter: React.FC = () => {
               { value: 'phantom', label: 'Phantom Stock', icon: <ShieldOutlined sx={{ fontSize: 14 }}/> },
               { value: 'voc', label: 'VoC Analysis', icon: <FavoriteOutlined sx={{ fontSize: 14 }}/> },
               { value: 'benchmarking', label: 'Comp Benchmarking', icon: <BarChartOutlined sx={{ fontSize: 14 }}/> },
+              { value: 'loyalty_insights', label: 'Loyalty Insights', icon: <CardMembershipOutlined sx={{ fontSize: 14 }}/> },
+              { value: 'demand_risk', label: 'Demand & Inv. Risk', icon: <TrendingDownOutlined sx={{ fontSize: 14 }}/> },
             ]}
             tabPanels={[]}
             value={activeTab}
-            onChange={(_, val) => setActiveTab(val as 'inventory' | 'phantom' | 'voc' | 'benchmarking')}
+            onChange={(_, val) => setActiveTab(val as 'inventory' | 'phantom' | 'voc' | 'benchmarking' | 'loyalty_insights' | 'demand_risk')}
           />
 
           <div className="sc-deepdive-content">
             {/* VoC Tab — decision-oriented view */}
             {activeTab === 'voc' && (() => {
+              const SOURCE_CHIPS = ['All Signals', 'Customer Feedback', 'Store Feedback', 'Digital Reviews', 'Surveys', 'Staff Notes', 'Shopper Comments'];
+
+              // Map each chip to the sourceMix labels it covers
+              const chipSourceLabels: Record<string, string[]> = {
+                'All Signals':       [],
+                'Customer Feedback': ['reviews', 'survey', 'google', 'in-app', 'social', 'website', 'digital'],
+                'Store Feedback':    ['staff', 'manager', 'shopper', 'store walk', 'walk'],
+                'Digital Reviews':   ['reviews', 'google', 'digital', 'website'],
+                'Surveys':           ['survey'],
+                'Staff Notes':       ['staff', 'manager', 'store walk', 'walk'],
+                'Shopper Comments':  ['shopper'],
+              };
+
+              // Compute filtered volume for a card given the active chip
+              const getFilteredVolume = (item: typeof vocData[0]) => {
+                if (vocSourceFilter === 'All Signals' || !item.sourceMix) return item.volume;
+                const labels = chipSourceLabels[vocSourceFilter] ?? [];
+                const matchPct = item.sourceMix
+                  .filter(s => labels.some(l => s.label.toLowerCase().includes(l)))
+                  .reduce((sum, s) => sum + s.pct, 0);
+                return Math.max(1, Math.round(item.volume * matchPct / 100));
+              };
+
               // Priority score: negative + rising delta is most urgent
               const scored = vocData.map(item => ({
                 ...item,
+                filteredVolume: getFilteredVolume(item),
                 priority:
                   (item.sentiment === 'negative' ? 1000 : item.sentiment === 'neutral' ? 200 : 0) +
                   (item.sentiment === 'negative' ? Math.max(0, item.delta) * 8 : 0) +
                   item.volume * 0.5,
               }));
               const sorted = scored.slice().sort((a, b) => b.priority - a.priority);
-              const totalMentions = sorted.reduce((sum, i) => sum + i.volume, 0);
+
+              const totalMentions = sorted.reduce((sum, i) => sum + i.filteredVolume, 0);
               const negatives = sorted.filter(i => i.sentiment === 'negative');
               const positives = sorted.filter(i => i.sentiment === 'positive');
               const topNegative = negatives[0];
@@ -3658,39 +3824,150 @@ export const StoreCenter: React.FC = () => {
 
               const visible = vocExpanded ? sorted : sorted.slice(0, 3);
 
-              const summaryLine = negatives.length === 0
-                ? `Sentiment is healthy — ${positives.length} positive themes leading customer feedback this period.`
-                : `${negatives.length} negative theme${negatives.length === 1 ? '' : 's'} dominating feedback${topNegative ? `, led by "${topNegative.theme}"` : ''}${topRising && topRising.theme !== topNegative?.theme ? `; "${topRising.theme}" is rising fast (${topRising.delta >= 0 ? '+' : ''}${topRising.delta}%)` : ''}.`;
+              const filteredLog = VOC_FEEDBACK_LOG.filter(r => {
+                // chip / source filter
+                if (vocSourceFilter !== 'All Signals') {
+                  if (vocSourceFilter === 'Customer Feedback' && r.signalType !== 'Customer Voice') return false;
+                  if (vocSourceFilter === 'Store Feedback' && r.signalType !== 'Store Voice') return false;
+                  if (vocSourceFilter === 'Digital Reviews' && !['Google Review', 'Website Review'].includes(r.source)) return false;
+                  if (vocSourceFilter === 'Surveys' && !r.source.toLowerCase().includes('survey')) return false;
+                  if (vocSourceFilter === 'Staff Notes' && !['Staff observation', 'Manager note', 'Store walk note'].includes(r.source)) return false;
+                  if (vocSourceFilter === 'Shopper Comments' && r.source !== 'Shopper comment') return false;
+                }
+                // theme dropdown
+                if (vocThemeFilter !== 'All' && r.theme !== vocThemeFilter) return false;
+                // sentiment dropdown
+                if (vocSentimentFilter !== 'All' && r.sentiment !== vocSentimentFilter) return false;
+                // search
+                if (vocSearch) {
+                  const q = vocSearch.toLowerCase();
+                  return r.theme.toLowerCase().includes(q) || r.snippet.toLowerCase().includes(q) || r.source.toLowerCase().includes(q) || r.department.toLowerCase().includes(q) || (r.fullText || '').toLowerCase().includes(q);
+                }
+                return true;
+              });
+
+              const vocThemeOptions = [
+                { label: 'All Themes', value: 'All' },
+                ...Array.from(new Set(VOC_FEEDBACK_LOG.map(r => r.theme))).map(t => ({ label: t, value: t })),
+              ];
+              const vocSentimentOptions = [
+                { label: 'All Sentiments', value: 'All' },
+                { label: 'Positive', value: 'Positive' },
+                { label: 'Neutral', value: 'Neutral' },
+                { label: 'Negative', value: 'Negative' },
+              ];
+              const vocFiltersActive = vocSearch !== '' || vocThemeFilter !== 'All' || vocSentimentFilter !== 'All' || vocSourceFilter !== 'All Signals';
+
+              // Summary counts for the strip
+              const autoCount = filteredLog.filter(r => r.origin === 'Auto-ingested').length;
+              const storeCount = filteredLog.filter(r => r.origin === 'Store-captured').length;
+              const negCount = filteredLog.filter(r => r.sentiment === 'Negative').length;
+              const posCount = filteredLog.filter(r => r.sentiment === 'Positive').length;
+              const escalatedCount = filteredLog.filter(r => r.status === 'Escalated').length;
+
+              const summaryLine = vocSourceFilter !== 'All Signals'
+                ? `Showing signals from "${vocSourceFilter}" — ${filteredLog.length} matching signal${filteredLog.length === 1 ? '' : 's'} in the feed below.`
+                : negatives.length === 0
+                  ? `Sentiment is healthy — ${positives.length} positive themes leading customer feedback this period.`
+                  : `${negatives.length} negative theme${negatives.length === 1 ? '' : 's'} dominating feedback${topNegative ? `, led by "${topNegative.theme}"` : ''}${topRising && topRising.theme !== topNegative?.theme ? `; "${topRising.theme}" is rising fast (${topRising.delta >= 0 ? '+' : ''}${topRising.delta}%)` : ''}.`;
+
+              const statusColor = (s: VocFeedbackRow['status']) => {
+                if (s === 'New') return 'info';
+                if (s === 'Monitoring') return 'warning';
+                if (s === 'Task Created') return 'primary';
+                if (s === 'Escalated') return 'error';
+                return 'default';
+              };
+              const sentColor = (s: string) => s === 'Positive' ? 'success' : s === 'Negative' ? 'error' : 'default';
+
+              const selectedFb = vocFeedbackDetail ? VOC_FEEDBACK_LOG.find(r => r.id === vocFeedbackDetail) : null;
 
               return (
                 <div className="sc-voc-tab">
-                  {/* Summary narrative */}
-                  <div className="sc-voc-summary">
-                    <div className="sc-voc-summary-icon"><AutoAwesomeOutlined sx={{ fontSize: 14 }}/></div>
-                    <div className="sc-voc-summary-body">
-                      <span className="sc-voc-summary-label">Customer Voice Insight</span>
-                      <p className="sc-voc-summary-line">{summaryLine}</p>
+
+                  {/* ── Summary tiles — matches sc-inv-summary pattern ── */}
+                  <div className="sc-inv-summary">
+                    <div className="sc-inv-summary-tile sc-inv-summary--total">
+                      <span className="sc-inv-summary-label">Total Mentions</span>
+                      <span className="sc-inv-summary-value">{totalMentions}</span>
+                      <span className="sc-inv-summary-sub">{sorted.length} themes tracked</span>
                     </div>
-                    <div className="sc-voc-summary-stats">
-                      <div className="sc-voc-stat">
-                        <span className="sc-voc-stat-value">{totalMentions}</span>
-                        <span className="sc-voc-stat-label">Mentions</span>
-                      </div>
-                      <div className="sc-voc-stat">
-                        <span className="sc-voc-stat-value">{negatives.length}</span>
-                        <span className="sc-voc-stat-label">Negative</span>
-                      </div>
-                      <div className="sc-voc-stat">
-                        <span className="sc-voc-stat-value">{positives.length}</span>
-                        <span className="sc-voc-stat-label">Positive</span>
-                      </div>
+                    <div className="sc-inv-summary-tile sc-inv-summary--critical">
+                      <span className="sc-inv-summary-label">Negative Themes</span>
+                      <span className="sc-inv-summary-value">{negatives.length}</span>
+                      <span className="sc-inv-summary-sub">{negatives.length > 0 ? 'requires attention' : 'none flagged'}</span>
+                    </div>
+                    <div className="sc-inv-summary-tile sc-inv-summary--ok">
+                      <span className="sc-inv-summary-label">Positive Themes</span>
+                      <span className="sc-inv-summary-value">{positives.length}</span>
+                      <span className="sc-inv-summary-sub">leading this period</span>
+                    </div>
+                    <div className="sc-inv-summary-tile sc-inv-summary--info">
+                      <span className="sc-inv-summary-label">Signals Captured</span>
+                      <span className="sc-inv-summary-value">{VOC_FEEDBACK_LOG.length}</span>
+                      <span className="sc-inv-summary-sub">{VOC_FEEDBACK_LOG.filter(r => r.origin === 'Store-captured').length} store-captured</span>
+                    </div>
+                  </div>
+
+                  {/* ── AI Insight banner + Capture Signal — matches sc-inv-insight pattern ── */}
+                  <div className="sc-inv-insight sc-voc-insight-row">
+                    <div className="sc-inv-insight-icon"><AutoAwesomeOutlined sx={{ fontSize: 14 }}/></div>
+                    <div className="sc-inv-insight-body">
+                      <p className="sc-inv-insight-line">{summaryLine}</p>
+                      {topNegative && (
+                        <p className="sc-inv-insight-rec"><strong>Recommended:</strong> Review "{topNegative.theme}" signals — {topNegative.volume} mentions with {topNegative.delta > 0 ? `rising +${topNegative.delta}%` : topNegative.delta < 0 ? `declining ${topNegative.delta}%` : 'flat'} trend. Target cross-category promotions or operational follow-up.</p>
+                      )}
+                    </div>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      size="medium"
+                      startIcon={<AddOutlined sx={{ fontSize: 16 }}/>}
+                      onClick={() => setVocCaptureOpen(true)}
+                      style={{ flexShrink: 0 }}
+                    >
+                      Capture Signal
+                    </Button>
+                  </div>
+
+                  {/* ── Source filter chips ── */}
+                  <div className="sc-voc-chips">
+                    {SOURCE_CHIPS.map(chip => (
+                      <button
+                        key={chip}
+                        className={`sc-voc-chip${vocSourceFilter === chip ? ' active' : ''}`}
+                        onClick={() => setVocSourceFilter(chip)}
+                      >
+                        {chip}
+                        {chip !== 'All Signals' && (
+                          <span className="sc-voc-chip-count">
+                            {chip === 'Customer Feedback' ? VOC_FEEDBACK_LOG.filter(r => r.signalType === 'Customer Voice').length
+                             : chip === 'Store Feedback' ? VOC_FEEDBACK_LOG.filter(r => r.signalType === 'Store Voice').length
+                             : chip === 'Digital Reviews' ? VOC_FEEDBACK_LOG.filter(r => ['Google Review', 'Website Review'].includes(r.source)).length
+                             : chip === 'Surveys' ? VOC_FEEDBACK_LOG.filter(r => r.source.toLowerCase().includes('survey')).length
+                             : chip === 'Staff Notes' ? VOC_FEEDBACK_LOG.filter(r => ['Staff observation', 'Manager note', 'Store walk note'].includes(r.source)).length
+                             : VOC_FEEDBACK_LOG.filter(r => r.source === 'Shopper comment').length
+                            }
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* ── Section title row for theme cards ── */}
+                  <div className="sc-inv-toolbar" style={{ marginBottom: 0 }}>
+                    <div className="sc-inv-toolbar-left">
+                      <span className="sc-inv-toolbar-label">Theme Analysis</span>
+                      <Badge label={`${sorted.length} themes`} color="default" variant="subtle" size="small"/>
                     </div>
                   </div>
 
                   {/* Cards — KPI tile style matching Store KPI cards */}
                   <div className="sc-voc-grid">
                     {visible.map(item => {
-                      const sharePct = totalMentions > 0 ? Math.round((item.volume / totalMentions) * 100) : 0;
+                      const displayVolume = item.filteredVolume ?? item.volume;
+                      const isFiltered = vocSourceFilter !== 'All Signals';
+                      const sharePct = totalMentions > 0 ? Math.round((displayVolume / totalMentions) * 100) : 0;
                       const isTopNegative = topNegative && item.theme === topNegative.theme;
                       const isTopRising = topRising && item.theme === topRising.theme && !isTopNegative;
                       const trendDir = item.delta > 0 ? 'up' : item.delta < 0 ? 'down' : 'flat';
@@ -3702,7 +3979,6 @@ export const StoreCenter: React.FC = () => {
                             : 'neutral';
                       const status = trendSeverity === 'bad' ? 'negative' : trendSeverity === 'good' ? 'positive' : 'neutral';
                       const color = status === 'positive' ? '#047857' : status === 'negative' ? '#991b1b' : 'var(--ia-color-primary-pressed)';
-                      // Synthesize 12-pt sparkline from delta trend
                       const seed = item.theme.length;
                       const sparkData = Array.from({ length: 12 }, (_, i) => {
                         const t = i / 11;
@@ -3727,10 +4003,7 @@ export const StoreCenter: React.FC = () => {
                           key={item.theme}
                           className={`kpi-tile--${status}`}
                           sx={{
-                            maxWidth: '100%',
-                            minHeight: 'unset',
-                            padding: 0,
-                            width: '100%',
+                            maxWidth: '100%', minHeight: 'unset', padding: 0, width: '100%',
                             borderRadius: '8px',
                             border: isTopNegative
                               ? '1px solid var(--ia-color-error-soft)'
@@ -3738,11 +4011,8 @@ export const StoreCenter: React.FC = () => {
                                 ? '1px solid var(--ia-color-warning-bg)'
                                 : '1px solid var(--ia-color-border)',
                             boxShadow: '0 1px 3px rgba(15,23,42,0.04)',
-                            cursor: 'default',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            overflow: 'hidden',
-                            position: 'relative',
+                            cursor: 'default', display: 'flex', flexDirection: 'column',
+                            overflow: 'hidden', position: 'relative',
                           }}
                         >
                           {(isTopNegative || isTopRising) && (
@@ -3751,24 +4021,19 @@ export const StoreCenter: React.FC = () => {
                             </span>
                           )}
                           <div style={{ padding: '14px 16px 0', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                            {/* Category tag = sentiment */}
                             <div className={`kpi-tile-category kpi-tile-category--${item.sentiment === 'positive' ? 'execution' : item.sentiment === 'negative' ? 'operations' : 'customer'}`}>
                               {item.sentiment === 'positive' ? <NorthEast sx={{ fontSize: 12 }}/> : item.sentiment === 'negative' ? <SouthEast sx={{ fontSize: 12 }}/> : <Remove sx={{ fontSize: 12 }}/>}
                               <span>{item.sentiment.charAt(0).toUpperCase() + item.sentiment.slice(1)}</span>
                             </div>
-                            {/* Primary value = volume */}
                             <div className="kpi-tile-value-row">
-                              <span className="kpi-tile-primary">{item.volume}</span>
-                              <span className="kpi-tile-unit">mentions</span>
+                              <span className="kpi-tile-primary">{displayVolume}</span>
+                              <span className="kpi-tile-unit">mentions{isFiltered && item.volume !== displayVolume ? <span style={{ fontSize: 10, fontWeight: 400, marginLeft: 4, color: 'var(--ia-color-text-tertiary)' }}>of {item.volume}</span> : null}</span>
                             </div>
-                            {/* Label = theme */}
                             <span className="kpi-tile-label">{item.theme}</span>
-                            {/* Micro-insight = top comment */}
                             <div className="kpi-tile-insight">
                               <span className="kpi-tile-insight-dot" />
                               <span style={{ fontStyle: 'italic' }}>"{item.topComment}"</span>
                             </div>
-                            {/* Delta */}
                             <div className={`kpi-tile-delta delta-${trendDir}`} style={{ color }}>
                               {trendDir === 'up' && <NorthEast sx={{ fontSize: 12 }}/>}
                               {trendDir === 'down' && <SouthEast sx={{ fontSize: 12 }}/>}
@@ -3777,7 +4042,6 @@ export const StoreCenter: React.FC = () => {
                               <span className="kpi-delta-ctx">vs last period</span>
                             </div>
                           </div>
-                          {/* Sparkline */}
                           <div className="kpi-tile-sparkline">
                             <svg viewBox={`0 0 ${SW} ${SH}`} preserveAspectRatio="none">
                               <defs>
@@ -3791,20 +4055,29 @@ export const StoreCenter: React.FC = () => {
                               <circle cx={sLast.x} cy={sLast.y} r="2.5" fill={color} stroke="#fff" strokeWidth="1.2" />
                             </svg>
                           </div>
-                          {/* Footer */}
-                          <div className="sc-voc-card-footer" style={{ padding: '8px 16px', borderTop: '1px solid var(--ia-color-bg-muted)' }}>
-                            <span className="sc-voc-source">{item.source} · {sharePct}% of feedback</span>
-                            <div className="sc-voc-actions">
-                              {item.sentiment === 'negative' && (
-                                <button
-                                  className="sc-voc-action-btn sc-voc-action--primary"
-                                  onClick={() => setActiveTab('inventory')}
-                                >
-                                  <BoltOutlined sx={{ fontSize: 11 }}/>
-                                  Take Action
-                                </button>
-                              )}
+                          {/* Footer: source + source mix */}
+                          <div className="sc-voc-card-footer" style={{ padding: '8px 16px 10px', borderTop: '1px solid var(--ia-color-bg-muted)' }}>
+                            <div className="sc-voc-footer-top">
+                              <span className="sc-voc-source">{item.source} · {sharePct}% of feedback</span>
+                              <div className="sc-voc-actions">
+                                {item.sentiment === 'negative' && (
+                                  <button className="sc-voc-action-btn sc-voc-action--primary" onClick={() => setActiveTab('inventory')}>
+                                    <BoltOutlined sx={{ fontSize: 11 }}/>
+                                    Take Action
+                                  </button>
+                                )}
+                              </div>
                             </div>
+                            {item.sourceMix && (
+                              <div className="sc-voc-source-mix">
+                                {item.sourceMix.map((s, idx) => (
+                                  <span key={s.label} className="sc-voc-source-mix-item">
+                                    {idx > 0 && <span className="sc-voc-source-mix-sep">·</span>}
+                                    <span className="sc-voc-source-mix-pct">{s.pct}%</span> {s.label}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </Card>
                       );
@@ -3821,6 +4094,263 @@ export const StoreCenter: React.FC = () => {
                       )}
                     </button>
                   )}
+
+                  {/* ── Signal Feed — always visible, filtered by chips ── */}
+                  <div className="sc-voc-log">
+                    {/* Section title row — matches sc-inv-toolbar */}
+                    <div className="sc-inv-toolbar" style={{ marginBottom: 0, borderTop: '1px solid var(--ia-color-border)', paddingTop: 14 }}>
+                      <div className="sc-inv-toolbar-left">
+                        <ForumOutlined sx={{ fontSize: 15 }}/>
+                        <span className="sc-inv-toolbar-label">Signal Feed</span>
+                        <Badge label={`${filteredLog.length} signal${filteredLog.length === 1 ? '' : 's'}`} color={vocFiltersActive ? 'primary' : 'default'} variant="subtle" size="small" />
+                      </div>
+                      <div className="sc-inv-toolbar-right" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span className="sc-voc-log-legend-item"><span className="sc-voc-origin-dot sc-voc-origin-dot--auto"/>Auto-ingested</span>
+                        <span className="sc-voc-log-legend-item"><span className="sc-voc-origin-dot sc-voc-origin-dot--store"/>Store-captured</span>
+                      </div>
+                    </div>
+
+                    {/* Filter bar — exact Inventory & Inbound pattern */}
+                    <div className="sc-inv-premium-filter-bar">
+                      <div className="sc-inv-search">
+                        <Input
+                          leftIcon={<SearchOutlined sx={{ fontSize: 15 }}/>}
+                          placeholder="Search themes, snippets, sources…"
+                          value={vocSearch}
+                          onChange={e => setVocSearch(e.target.value)}
+                        />
+                        {vocSearch && (
+                          <button className="sc-inv-search-clear" onClick={() => setVocSearch('')} aria-label="Clear search">
+                            <CloseOutlined sx={{ fontSize: 13 }}/>
+                          </button>
+                        )}
+                      </div>
+                      <div className="sc-inv-filter-divider" aria-hidden="true"/>
+                      <div className="sc-inv-filter-fields">
+                        <ImFilterSelect
+                          placeholder="Theme"
+                          value={vocThemeFilter}
+                          options={vocThemeOptions}
+                          isClearable={vocThemeFilter !== 'All'}
+                          minWidth={148}
+                          onChange={v => setVocThemeFilter(v || 'All')}
+                        />
+                        <ImFilterSelect
+                          placeholder="Sentiment"
+                          value={vocSentimentFilter}
+                          options={vocSentimentOptions}
+                          isClearable={vocSentimentFilter !== 'All'}
+                          minWidth={140}
+                          onChange={v => setVocSentimentFilter(v || 'All')}
+                        />
+                      </div>
+                      {vocFiltersActive && (
+                        <Chips label="Clear filters" onClick={() => { setVocSearch(''); setVocThemeFilter('All'); setVocSentimentFilter('All'); setVocSourceFilter('All Signals'); }}/>
+                      )}
+                      <Tooltip title="Download signal feed as CSV">
+                        <span className="sc-inv-export-wrap">
+                          <Button
+                            variant="outlined"
+                            color="primary"
+                            size="medium"
+                            className="sc-inv-export-btn"
+                            startIcon={<FileDownloadOutlined sx={{ fontSize: 18 }}/>}
+                            disabled={filteredLog.length === 0}
+                          >
+                            Export
+                          </Button>
+                        </span>
+                      </Tooltip>
+                    </div>
+
+                    {/* Summary strip */}
+                    <div className="sc-voc-feed-summary">
+                      <div className="sc-voc-feed-stat">
+                        <span className="sc-voc-feed-stat-val">{filteredLog.length}</span>
+                        <span className="sc-voc-feed-stat-lbl">Total Signals</span>
+                      </div>
+                      <div className="sc-voc-feed-sep"/>
+                      <div className="sc-voc-feed-stat">
+                        <span className="sc-voc-feed-stat-val" style={{ color: 'var(--ia-color-primary)' }}>{autoCount}</span>
+                        <span className="sc-voc-feed-stat-lbl">Auto-ingested</span>
+                      </div>
+                      <div className="sc-voc-feed-sep"/>
+                      <div className="sc-voc-feed-stat">
+                        <span className="sc-voc-feed-stat-val" style={{ color: '#0891b2' }}>{storeCount}</span>
+                        <span className="sc-voc-feed-stat-lbl">Store-captured</span>
+                      </div>
+                      <div className="sc-voc-feed-sep"/>
+                      <div className="sc-voc-feed-stat">
+                        <span className="sc-voc-feed-stat-val" style={{ color: '#047857' }}>{posCount}</span>
+                        <span className="sc-voc-feed-stat-lbl">Positive</span>
+                      </div>
+                      <div className="sc-voc-feed-sep"/>
+                      <div className="sc-voc-feed-stat">
+                        <span className="sc-voc-feed-stat-val" style={{ color: '#b91c1c' }}>{negCount}</span>
+                        <span className="sc-voc-feed-stat-lbl">Negative</span>
+                      </div>
+                      {escalatedCount > 0 && (
+                        <>
+                          <div className="sc-voc-feed-sep"/>
+                          <div className="sc-voc-feed-stat">
+                            <span className="sc-voc-feed-stat-val" style={{ color: '#b45309' }}>{escalatedCount}</span>
+                            <span className="sc-voc-feed-stat-lbl">Escalated</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <div className="wow-table-wrap">
+                      <table className="wow-table sc-voc-log-tbl">
+                        <thead>
+                          <tr>
+                            <th>Date</th>
+                            <th>Origin</th>
+                            <th>Source</th>
+                            <th>Type</th>
+                            <th>Theme</th>
+                            <th>Sentiment</th>
+                            <th>Feedback Snippet</th>
+                            <th>Department</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredLog.length === 0 ? (
+                            <tr className="wow-row-empty">
+                              <td colSpan={9}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '16px 0' }}>
+                                  <span>No signals match "{vocSourceFilter}".</span>
+                                  <button className="sc-voc-chip-clear" onClick={() => setVocSourceFilter('All Signals')}>Show all signals</button>
+                                </div>
+                              </td>
+                            </tr>
+                          ) : filteredLog.map(row => (
+                            <tr key={row.id} className="sc-voc-log-row" onClick={() => setVocFeedbackDetail(row.id)}>
+                              <td className="sc-voc-log-date">{row.date}</td>
+                              <td>
+                                <span className={`sc-voc-origin-pill sc-voc-origin-pill--${row.origin === 'Auto-ingested' ? 'auto' : 'store'}`}>
+                                  <span className="sc-voc-origin-dot"/>
+                                  {row.origin === 'Auto-ingested' ? 'Auto' : 'Store'}
+                                </span>
+                              </td>
+                              <td className="sc-voc-log-source">{row.source}</td>
+                              <td>
+                                <Badge label={row.signalType === 'Customer Voice' ? 'Customer' : 'Store'} color={row.signalType === 'Customer Voice' ? 'primary' : 'info'} variant="subtle" size="small" />
+                              </td>
+                              <td className="sc-voc-log-theme">{row.theme}</td>
+                              <td>
+                                <Badge label={row.sentiment} color={sentColor(row.sentiment) as 'success'|'error'|'default'} variant="subtle" size="small" />
+                              </td>
+                              <td className="sc-voc-log-snippet">{row.snippet}</td>
+                              <td className="sc-voc-log-dept">{row.department}</td>
+                              <td>
+                                <Badge label={row.status} color={statusColor(row.status) as 'info'|'warning'|'primary'|'error'|'default'} variant="subtle" size="small" />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="sc-voc-assortment-note">
+                      <AutoAwesomeOutlined sx={{ fontSize: 12 }}/>
+                      <span>{filteredLog.filter(r => r.availableForAssortment).length} signals available for assortment intelligence</span>
+                    </div>
+                  </div>
+
+                  {/* ── Feedback Detail Drawer ── */}
+                  {selectedFb && (
+                    <>
+                      <div className="detail-panel-overlay" onClick={() => setVocFeedbackDetail(null)}/>
+                      <div className="detail-panel sc-voc-detail-drawer">
+                        <div className="dp-hero-header">
+                          <div className="dp-hero-top">
+                            <span className={`sc-voc-origin-pill sc-voc-origin-pill--${selectedFb.origin === 'Auto-ingested' ? 'auto' : 'store'}`}>
+                              <span className="sc-voc-origin-dot"/>{selectedFb.origin}
+                            </span>
+                            <Badge label={selectedFb.signalType === 'Customer Voice' ? 'Customer Voice' : 'Store Voice'} color={selectedFb.signalType === 'Customer Voice' ? 'primary' : 'info'} variant="subtle" size="small" />
+                            <Badge label={selectedFb.sentiment} color={sentColor(selectedFb.sentiment) as 'success'|'error'|'default'} variant="subtle" size="small" />
+                          </div>
+                          <h2 className="dp-hero-title">{selectedFb.theme}</h2>
+                          <div className="dp-hero-meta">
+                            <span>{selectedFb.source}</span>
+                            <span className="dp-hero-meta-sep">·</span>
+                            <span>{selectedFb.date}</span>
+                          </div>
+                          <button className="dp-close-btn" onClick={() => setVocFeedbackDetail(null)}>
+                            <CloseOutlined sx={{ fontSize: 16 }}/>
+                          </button>
+                        </div>
+                        <div className="detail-panel-body">
+
+                          {/* Signal Summary */}
+                          <div className="dp-section">
+                            <h3 className="dp-section-title">
+                              <ForumOutlined sx={{ fontSize: 14 }}/>
+                              Signal Summary
+                            </h3>
+                            <div className="sc-voc-drawer-quote">"{selectedFb.fullText}"</div>
+                          </div>
+
+                          {/* Business Context */}
+                          <div className="dp-section">
+                            <h3 className="dp-section-title">
+                              <InfoOutlined sx={{ fontSize: 14 }}/>
+                              Business Context
+                            </h3>
+                            <div className="sc-dir-drawer-kpis">
+                              <div className="sc-dir-drawer-kpi">
+                                <span className="sc-dir-drawer-kpi-label">Department</span>
+                                <span className="sc-dir-drawer-kpi-val" style={{ fontSize: 14 }}>{selectedFb.department}</span>
+                              </div>
+                              <div className="sc-dir-drawer-kpi">
+                                <span className="sc-dir-drawer-kpi-label">Urgency</span>
+                                <span className="sc-dir-drawer-kpi-val" style={{ fontSize: 14 }}>{selectedFb.urgency}</span>
+                              </div>
+                              {selectedFb.sku && (
+                                <div className="sc-dir-drawer-kpi">
+                                  <span className="sc-dir-drawer-kpi-label">SKU / Item</span>
+                                  <span className="sc-loyalty-tbl-sku" style={{ fontSize: 11, alignSelf: 'flex-start', marginTop: 2 }}>{selectedFb.sku}</span>
+                                </div>
+                              )}
+                              <div className="sc-dir-drawer-kpi">
+                                <span className="sc-dir-drawer-kpi-label">Status</span>
+                                <div style={{ marginTop: 2 }}>
+                                  <Badge label={selectedFb.status} color={statusColor(selectedFb.status) as 'info'|'warning'|'primary'|'error'|'default'} variant="subtle" size="small" />
+                                </div>
+                              </div>
+                            </div>
+                            {selectedFb.availableForAssortment && (
+                              <div className="sc-voc-assortment-badge">
+                                <AutoAwesomeOutlined sx={{ fontSize: 12 }}/>
+                                Available for assortment intelligence
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Suggested Follow-Up */}
+                          <div className="dp-section">
+                            <h3 className="dp-section-title">
+                              <AssignmentTurnedInOutlined sx={{ fontSize: 14 }}/>
+                              Suggested Follow-Up
+                            </h3>
+                            <div className="sc-voc-drawer-actions">
+                              {(['Monitor', 'Create Task', 'Link to Inventory Issue', 'Escalate to HQ'] as const).map(a => (
+                                <button key={a} className="sc-voc-followup-btn">
+                                  {a === 'Create Task' && <AssignmentOutlined sx={{ fontSize: 13 }}/>}
+                                  {a === 'Monitor' && <ShowChartOutlined sx={{ fontSize: 13 }}/>}
+                                  {a === 'Link to Inventory Issue' && <LinkOutlined sx={{ fontSize: 13 }}/>}
+                                  {a === 'Escalate to HQ' && <SendOutlined sx={{ fontSize: 13 }}/>}
+                                  {a}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                        </div>
+                      </div>
+                    </>
+                  )}
+
                 </div>
               );
             })()}
@@ -3936,9 +4466,8 @@ export const StoreCenter: React.FC = () => {
                   {/* Filter bar — premium single-row */}
                   <div className="sc-inv-premium-filter-bar">
                     <div className="sc-inv-search">
-                      <SearchOutlined sx={{ fontSize: 15 }}/>
-                      <input
-                        type="text"
+                      <Input
+                        leftIcon={<SearchOutlined sx={{ fontSize: 15 }}/>}
                         placeholder="Search products or SKU…"
                         value={invSearch}
                         onChange={e => {
@@ -4259,9 +4788,8 @@ export const StoreCenter: React.FC = () => {
                   {/* Filter bar — same pattern as Inventory & Inbound */}
                   <div className="sc-inv-premium-filter-bar">
                     <div className="sc-inv-search">
-                      <SearchOutlined sx={{ fontSize: 15 }}/>
-                      <input
-                        type="text"
+                      <Input
+                        leftIcon={<SearchOutlined sx={{ fontSize: 15 }}/>}
                         placeholder="Search department, class…"
                         value={psSearch}
                         onChange={e => { setPsSearch(e.target.value); setPsPage(0); }}
@@ -4428,7 +4956,7 @@ export const StoreCenter: React.FC = () => {
                         {/* Hero Header */}
                         <div className="dp-hero-header">
                           <div className="dp-hero-top">
-                            <div className="dp-hero-icon" style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}>
+                            <div className="dp-hero-icon" style={{ background: '#fef3c7', color: '#92400e' }}>
                               <InventoryOutlined sx={{ fontSize: 16 }}/>
                             </div>
                             <span className="dp-hero-type">PHANTOM STOCK · {psDrawerRow.department}</span>
@@ -4992,6 +5520,899 @@ export const StoreCenter: React.FC = () => {
                       </div>
                     );
                   })()}
+
+                </div>
+              );
+            })()}
+
+            {/* ── Loyalty Insights Tab ── */}
+            {activeTab === 'loyalty_insights' && (() => {
+              const visitFreqWeekly = [2.1,2.2,2.0,2.3,2.4,2.2,2.5,2.6,2.5,2.7,2.6,2.8,2.9,2.8,3.0,2.9,3.0,3.1,3.0,3.2,3.1,3.1,3.0,3.2,3.2,3.3,3.2,3.1,3.2,3.0,3.1,3.2,3.3,3.2,3.1,3.2,3.0,3.1,3.2,3.1,3.2,3.3,3.2,3.1,3.2,3.2,3.3,3.2,3.1,3.2,3.2,3.2];
+              const weekLabels = Array.from({ length: 52 }, (_, i) => `W${i + 1}`);
+
+              // ── SKU-level loyalty dataset ──
+              const ALL_SKU_ROWS = [
+                { sku: 'DNM-001', product: 'Slim Fit Denim — Dark Wash',       dept: "Women's Apparel", category: 'Denim',      segment: 'Core', loyaltyUnits: 4820, penetration: 68.4, yoy: 11.2, attachRate: 38.6 },
+                { sku: 'DNM-002', product: 'Stretch Jean — Mid Rise',          dept: "Women's Apparel", category: 'Denim',      segment: 'Core', loyaltyUnits: 4190, penetration: 62.1, yoy: 7.8,  attachRate: 34.2 },
+                { sku: 'DNM-003', product: 'Vintage Wash Relaxed Fit',         dept: "Men's Apparel",   category: 'Denim',      segment: 'Core', loyaltyUnits: 3830, penetration: 58.7, yoy: 5.4,  attachRate: 29.8 },
+                { sku: 'FTW-001', product: 'Court Sneaker — White/Navy',       dept: 'Footwear',        category: 'Footwear',   segment: 'Core', loyaltyUnits: 3640, penetration: 54.2, yoy: 9.1,  attachRate: 31.5 },
+                { sku: 'FTW-002', product: 'Trail Runner — All Terrain',       dept: 'Footwear',        category: 'Footwear',   segment: 'Core', loyaltyUnits: 3210, penetration: 48.9, yoy: 3.2,  attachRate: 26.7 },
+                { sku: 'FTW-003', product: 'Logo Slide — Comfort Fit',         dept: 'Footwear',        category: 'Footwear',   segment: 'Core', loyaltyUnits: 2570, penetration: 41.3, yoy: -1.8, attachRate: 19.4 },
+                { sku: 'ACC-001', product: 'Crossbody Bag — Canvas Black',     dept: 'Accessories',     category: 'Accessories',segment: 'Tier1',loyaltyUnits: 2340, penetration: 44.6, yoy: 6.3,  attachRate: 48.2 },
+                { sku: 'ACC-002', product: 'Logo Cap — Structured Twill',      dept: 'Accessories',     category: 'Accessories',segment: 'Tier1',loyaltyUnits: 2100, penetration: 39.8, yoy: -4.1, attachRate: 42.7 },
+                { sku: 'ACC-003', product: 'Leather Belt — Reversible',        dept: 'Accessories',     category: 'Accessories',segment: 'Tier1',loyaltyUnits: 1740, penetration: 33.5, yoy: -2.1, attachRate: 37.9 },
+                { sku: 'SEA-001', product: 'Holiday Fleece — Full Zip',        dept: 'Seasonal',        category: 'Seasonal',   segment: 'Tier2',loyaltyUnits: 1980, penetration: 52.3, yoy: 14.8, attachRate: 41.3 },
+                { sku: 'SEA-002', product: 'Thermal Set — Base Layer',         dept: 'Seasonal',        category: 'Seasonal',   segment: 'Tier2',loyaltyUnits: 1620, penetration: 44.1, yoy: 9.6,  attachRate: 36.8 },
+                { sku: 'SEA-003', product: 'Gift Socks — 3-Pack Assorted',     dept: 'Seasonal',        category: 'Seasonal',   segment: 'Tier2',loyaltyUnits: 1330, penetration: 38.7, yoy: 10.2, attachRate: 28.4 },
+                { sku: 'WOM-001', product: 'Summer Midi Dress — Floral',       dept: "Women's Apparel", category: "Women's Apparel", segment: 'Core', loyaltyUnits: 1490, penetration: 36.2, yoy: 12.4, attachRate: 44.1 },
+                { sku: 'WOM-002', product: 'Linen Blazer — Oversized',        dept: "Women's Apparel", category: "Women's Apparel", segment: 'Core', loyaltyUnits: 1280, penetration: 31.8, yoy: 6.7,  attachRate: 39.6 },
+                { sku: 'MEN-001', product: 'Polo Classic — Piqué Cotton',     dept: "Men's Apparel",   category: "Men's Apparel", segment: 'Core', loyaltyUnits: 1540, penetration: 34.9, yoy: 4.2,  attachRate: 33.1 },
+                { sku: 'MEN-002', product: 'Oxford Shirt — Regular Fit',       dept: "Men's Apparel",   category: "Men's Apparel", segment: 'Core', loyaltyUnits: 1370, penetration: 29.6, yoy: 1.8,  attachRate: 27.5 },
+                { sku: 'KID-001', product: 'Color Block Tee — Kids',          dept: 'Kids',            category: 'Kids',       segment: 'Tier2',loyaltyUnits:  520, penetration: 22.4, yoy: 5.1,  attachRate: 22.8 },
+                { sku: 'KID-002', product: 'Cargo Shorts — Kids Active',      dept: 'Kids',            category: 'Kids',       segment: 'Tier2',loyaltyUnits:  370, penetration: 18.9, yoy: 2.3,  attachRate: 16.2 },
+                { sku: 'SAC-001', product: 'Puffer Jacket — Lightweight',     dept: 'Outerwear',       category: 'Seasonal Accessories', segment: 'Tier2', loyaltyUnits:  380, penetration: 28.1, yoy: -3.4, attachRate: 32.4 },
+                { sku: 'SAC-002', product: 'Holiday Dress — Festive',         dept: "Women's Apparel", category: 'Seasonal Accessories', segment: 'Tier2', loyaltyUnits:  240, penetration: 21.6, yoy: -7.1, attachRate: 24.9 },
+              ];
+
+              // ── Filter helpers ──
+              const loyaltyDeptOptions = [
+                { value: 'All', label: 'All Departments' },
+                ...Array.from(new Set(ALL_SKU_ROWS.map(r => r.dept))).map(d => ({ value: d, label: d })),
+              ];
+              const loyaltySegmentOptions = [
+                { value: 'All', label: 'All Segments' },
+                { value: 'Core',  label: 'Core Members' },
+                { value: 'Tier1', label: 'Tier 1' },
+                { value: 'Tier2', label: 'Tier 2' },
+              ];
+              const loyaltyCategoryOptions = [
+                { value: 'All', label: 'All Categories' },
+                ...Array.from(new Set(ALL_SKU_ROWS.map(r => r.category))).map(c => ({ value: c, label: c })),
+              ];
+
+              const filteredSkuRows = ALL_SKU_ROWS.filter(r => {
+                const q = loyaltySearch.trim().toLowerCase();
+                if (q && !r.product.toLowerCase().includes(q) && !r.sku.toLowerCase().includes(q)) return false;
+                if (loyaltyDept !== 'All' && r.dept !== loyaltyDept) return false;
+                if (loyaltySegment !== 'All' && r.segment !== loyaltySegment) return false;
+                if (loyaltyCategory !== 'All' && r.category !== loyaltyCategory) return false;
+                return true;
+              });
+
+              return (
+                <div className="sc-loyalty-tab">
+
+                  {/* ── Controls Row: View Toggle (matches Comp Benchmarking style) ── */}
+                  <div className="sc-bench-controls">
+                    <div className="sc-bench-view-toggle">
+                      <button
+                        type="button"
+                        className={`sc-bench-view-btn${loyaltyView === 'cards' ? ' active' : ''}`}
+                        onClick={() => setLoyaltyView('cards')}
+                      >
+                        Cards
+                      </button>
+                      <button
+                        type="button"
+                        className={`sc-bench-view-btn${loyaltyView === 'table' ? ' active' : ''}`}
+                        onClick={() => setLoyaltyView('table')}
+                      >
+                        Table
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* ── CARDS VIEW ── */}
+                  {loyaltyView === 'cards' && <>
+
+                  {/* ── Loyalty KPI Summary Strip ── */}
+                  <div className="sc-loyalty-kpi-strip">
+                    <div className="sc-loyalty-kpi-tile">
+                      <span className="sc-loyalty-kpi-label">Loyalty Sales Share</span>
+                      <div className="sc-loyalty-kpi-value">62<span className="sc-loyalty-kpi-unit">%</span></div>
+                      <span className="sc-loyalty-kpi-trend pos">↑ +2.4% vs LY</span>
+                    </div>
+                    <div className="sc-loyalty-kpi-sep" />
+                    <div className="sc-loyalty-kpi-tile">
+                      <span className="sc-loyalty-kpi-label">Active Members</span>
+                      <div className="sc-loyalty-kpi-value">8,420</div>
+                      <span className="sc-loyalty-kpi-trend pos">↑ +310 vs LY</span>
+                    </div>
+                    <div className="sc-loyalty-kpi-sep" />
+                    <div className="sc-loyalty-kpi-tile">
+                      <span className="sc-loyalty-kpi-label">Visit Frequency</span>
+                      <div className="sc-loyalty-kpi-value">3.2<span className="sc-loyalty-kpi-unit"> /mo</span></div>
+                      <span className="sc-loyalty-kpi-trend pos">↑ #2 of 8 in cluster</span>
+                    </div>
+                    <div className="sc-loyalty-kpi-sep" />
+                    <div className="sc-loyalty-kpi-tile">
+                      <span className="sc-loyalty-kpi-label">Avg Basket Size</span>
+                      <div className="sc-loyalty-kpi-value">$48<span className="sc-loyalty-kpi-unit">.50</span></div>
+                      <span className="sc-loyalty-kpi-trend neg">↓ −$3.60 vs cluster</span>
+                    </div>
+                    <div className="sc-loyalty-kpi-sep" />
+                    <div className="sc-loyalty-kpi-tile">
+                      <span className="sc-loyalty-kpi-label">Redemption Rate</span>
+                      <div className="sc-loyalty-kpi-value">38<span className="sc-loyalty-kpi-unit">%</span></div>
+                      <span className="sc-loyalty-kpi-trend neu">→ Stable vs LY</span>
+                    </div>
+                  </div>
+
+                  {/* ── Context Alert Banner ── */}
+                  <Alert
+                    severity="warning"
+                    title="Loyalty cluster insights diverge"
+                    description={<span><strong>Nashville Flagship</strong> holds the <strong>#2 spot</strong> for customer visit frequency within the Metro North Flagship peer set, but shows a <strong>−$3.60 average basket size gap</strong> against the cluster median. Target cross-category promotions to close the margin.</span>}
+                    className="sc-loyalty-alert"
+                  />
+
+                  {/* ── Peer Cluster Benchmarking ── */}
+                  <div className="sc-loyalty-section-label">
+                    <TrackChangesOutlined sx={{ fontSize: 13 }}/>
+                    <span>Peer Cluster Benchmarking</span>
+                  </div>
+                  <div className="sc-loyalty-bench-grid">
+
+                        {/* Panel A — Visit Frequency */}
+                        <Card
+                          size="extraSmall"
+                          sx={{
+                            maxWidth: '100%', minHeight: 0,
+                            padding: '18px 20px 14px',
+                            borderRadius: '12px',
+                            borderTop: '3px solid var(--ia-color-success)',
+                            display: 'flex', flexDirection: 'column', gap: '0',
+                          }}
+                        >
+                          <div className="sc-loyalty-bench-header">
+                            <span className="sc-loyalty-bench-eyebrow">OVERALL CLUSTER RANK</span>
+                            <div className="sc-loyalty-bench-rank-row">
+                              <span className="sc-loyalty-bench-rank">#2 of 8</span>
+                              <Badge label="2nd Quartile" color="primary" variant="subtle" size="small" />
+                            </div>
+                          </div>
+                          <div className="sc-bench-snap">
+                            <div className="sc-bench-snap-item">
+                              <span className="sc-bench-snap-lbl">STORE TY</span>
+                              <span className="sc-bench-snap-val">3.2 visits/mo</span>
+                              <span className="sc-bench-snap-yoy pos">+0.4 vs LY</span>
+                            </div>
+                            <div className="sc-bench-snap-sep">vs</div>
+                            <div className="sc-bench-snap-item sc-bench-snap-item--cluster">
+                              <span className="sc-bench-snap-lbl">CLUSTER AVG</span>
+                              <span className="sc-bench-snap-val">2.8 visits/mo</span>
+                              <span className="sc-bench-snap-yoy pos">+0.2 vs LY</span>
+                            </div>
+                          </div>
+                          <div className="sc-loyalty-slider-wrap">
+                            <Slider value={72} min={0} max={100} disabled colorChangeThreshold={50} className="sc-loyalty-slider sc-loyalty-slider--positive" />
+                            <div className="sc-loyalty-slider-axis">
+                              <span>1.0 visits/mo</span>
+                              <span className="sc-loyalty-slider-mid">Median: 2.8</span>
+                              <span>4.5 visits/mo</span>
+                            </div>
+                          </div>
+                          <div className="sc-loyalty-bench-footer">
+                            <Badge label="↑ Outperforming cluster" color="success" variant="subtle" size="small" />
+                            <span className="sc-loyalty-bench-gap">+0.4 above median</span>
+                          </div>
+                        </Card>
+
+                        {/* Panel B — Basket Size */}
+                        <Card
+                          size="extraSmall"
+                          sx={{
+                            maxWidth: '100%', minHeight: 0,
+                            padding: '18px 20px 14px',
+                            borderRadius: '12px',
+                            borderTop: '3px solid var(--ia-color-warning)',
+                            display: 'flex', flexDirection: 'column', gap: '0',
+                          }}
+                        >
+                          <div className="sc-loyalty-bench-header">
+                            <span className="sc-loyalty-bench-eyebrow">OVERALL CLUSTER RANK</span>
+                            <div className="sc-loyalty-bench-rank-row">
+                              <span className="sc-loyalty-bench-rank">#4 of 8</span>
+                              <Badge label="2nd Quartile" color="primary" variant="subtle" size="small" />
+                            </div>
+                          </div>
+                          <div className="sc-bench-snap">
+                            <div className="sc-bench-snap-item">
+                              <span className="sc-bench-snap-lbl">STORE TY</span>
+                              <span className="sc-bench-snap-val">$48.50</span>
+                              <span className="sc-bench-snap-yoy neg">−$1.20 vs LY</span>
+                            </div>
+                            <div className="sc-bench-snap-sep">vs</div>
+                            <div className="sc-bench-snap-item sc-bench-snap-item--cluster">
+                              <span className="sc-bench-snap-lbl">CLUSTER AVG</span>
+                              <span className="sc-bench-snap-val">$52.10</span>
+                              <span className="sc-bench-snap-yoy pos">+$0.80 vs LY</span>
+                            </div>
+                          </div>
+                          <div className="sc-loyalty-slider-wrap">
+                            <Slider value={46} min={0} max={100} disabled colorChangeThreshold={56} className="sc-loyalty-slider sc-loyalty-slider--warning" />
+                            <div className="sc-loyalty-slider-axis">
+                              <span>$32.00</span>
+                              <span className="sc-loyalty-slider-mid">Median: $52.10</span>
+                              <span>$68.00</span>
+                            </div>
+                          </div>
+                          <div className="sc-loyalty-bench-footer">
+                            <Badge label="↓ −$3.60 gap vs cluster" color="warning" variant="subtle" size="small" />
+                            <span className="sc-loyalty-bench-gap">Below median — gap to close</span>
+                          </div>
+                        </Card>
+                  </div>
+
+                  {/* ── Deep Dive Trend Charts ── */}
+                  <div className="sc-loyalty-section-label">
+                    <ShowChartOutlined sx={{ fontSize: 13 }}/>
+                    <span>Deep Dive Trend Analysis</span>
+                  </div>
+                  <div className="sc-loyalty-charts-grid">
+                        <Card size="extraSmall" sx={{ maxWidth: '100%', minHeight: 0, padding: '18px 20px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          <div className="sc-loyalty-chart-header">
+                            <div className="sc-loyalty-chart-title-row">
+                              <ShowChartOutlined sx={{ fontSize: 15, color: 'var(--ia-color-primary)' }}/>
+                              <span className="sc-loyalty-chart-title">Visit Frequency Trends</span>
+                              <span className="sc-loyalty-chart-period">52-Week View</span>
+                            </div>
+                            <div className="sc-loyalty-chart-kpis">
+                              <span className="sc-loyalty-chart-kpi sc-loyalty-chart-kpi--pos">3.2 <small>visits/mo current</small></span>
+                              <span className="sc-loyalty-chart-kpi-sep">·</span>
+                              <span className="sc-loyalty-chart-kpi">+14% <small>YoY growth</small></span>
+                            </div>
+                          </div>
+                          <Chart graphType="line" xAxisCategories={weekLabels} xAxisTitle="" yAxisTitle="Visits / Month"
+                            seriesData={[
+                              { name: 'This Store', data: visitFreqWeekly, color: '#4f46e5' },
+                              { name: 'Cluster Avg', data: visitFreqWeekly.map(() => 2.8), color: '#94a3b8', dashStyle: 'Dash' },
+                            ]}
+                            cardContainer={false} showHeader={false} showDownloadButton={false} showExpandButton={false} height={220}
+                            additionalOptions={{
+                              plotOptions: { series: { marker: { enabled: false }, lineWidth: 2 } },
+                              legend: { enabled: true, align: 'right', verticalAlign: 'top', itemStyle: { fontSize: '11px', fontWeight: '500', color: '#475569' } },
+                            }}
+                          />
+                        </Card>
+                        <Card size="extraSmall" sx={{ maxWidth: '100%', minHeight: 0, padding: '18px 20px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          <div className="sc-loyalty-chart-header">
+                            <div className="sc-loyalty-chart-title-row">
+                              <BarChartOutlined sx={{ fontSize: 15, color: 'var(--ia-color-primary)' }}/>
+                              <span className="sc-loyalty-chart-title">Loyalty Basket Mix Analysis</span>
+                              <span className="sc-loyalty-chart-period">% Share by Category</span>
+                            </div>
+                            <div className="sc-loyalty-chart-kpis">
+                              <span className="sc-loyalty-chart-kpi">$48.50 <small>avg basket</small></span>
+                              <span className="sc-loyalty-chart-kpi-sep">·</span>
+                              <span className="sc-loyalty-chart-kpi sc-loyalty-chart-kpi--warn">$3.60 <small>below cluster</small></span>
+                            </div>
+                          </div>
+                          <Chart graphType="bar" stackedColumn xAxisCategories={['Loyalty Basket Mix']} xAxisTitle="" yAxisTitle="%"
+                            seriesData={[
+                              { name: "Women's Apparel", data: [32], color: '#4f46e5' },
+                              { name: "Men's Apparel",   data: [24], color: '#818cf8' },
+                              { name: 'Footwear',        data: [18], color: '#a5b4fc' },
+                              { name: 'Accessories',     data: [14], color: '#c7d2fe' },
+                              { name: 'Kids',            data: [8],  color: '#e0e7ff' },
+                              { name: 'Other',           data: [4],  color: '#f1f5f9' },
+                            ]}
+                            cardContainer={false} showHeader={false} showDownloadButton={false} showExpandButton={false} height={220}
+                            additionalOptions={{
+                              plotOptions: { bar: { stacking: 'percent', borderRadius: 4 }, series: { dataLabels: { enabled: true, format: '{point.percentage:.0f}%', style: { fontSize: '10px', fontWeight: '500' } } } },
+                              legend: { enabled: true, align: 'right', verticalAlign: 'middle', layout: 'vertical', itemStyle: { fontSize: '11px', fontWeight: '500', color: '#475569' } },
+                            }}
+                          />
+                        </Card>
+                  </div>
+
+                  </> /* end cards view */}
+
+                  {/* ── TABLE VIEW ── */}
+                  {loyaltyView === 'table' && (() => {
+                    const PAGE_SIZE = 10;
+                    const sorted = [...filteredSkuRows].sort((a, b) => {
+                      const va = a[loyaltySort.field as keyof typeof a] as number;
+                      const vb = b[loyaltySort.field as keyof typeof b] as number;
+                      return loyaltySort.dir === 'asc' ? (va < vb ? -1 : va > vb ? 1 : 0) : (va > vb ? -1 : va < vb ? 1 : 0);
+                    });
+                    const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+                    const page = Math.min(loyaltyPage, totalPages - 1);
+                    const paged = sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+                    const handleSort = (field: string) => {
+                      setLoyaltySort(prev => prev.field === field ? { field, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { field, dir: 'desc' });
+                      setLoyaltyPage(0);
+                    };
+                    const sortIcon = (field: string) => {
+                      if (loyaltySort.field !== field) return <span className="sc-loyalty-sort-icon sc-loyalty-sort-icon--idle">↕</span>;
+                      return <span className="sc-loyalty-sort-icon sc-loyalty-sort-icon--active">{loyaltySort.dir === 'asc' ? '↑' : '↓'}</span>;
+                    };
+                    return (
+                    <div className="sc-loyalty-table-view">
+
+                      {/* ── Filter Bar ── */}
+                      <div className="sc-inv-premium-filter-bar sc-loyalty-filter-bar">
+                        <div className={`sc-inv-search${loyaltySearch ? ' sc-inv-search--active' : ''}`}>
+                          <SearchOutlined sx={{ fontSize: 16 }}/>
+                          <input
+                            type="text"
+                            placeholder="Search products or SKU…"
+                            value={loyaltySearch}
+                            onChange={e => { setLoyaltySearch(e.target.value); setLoyaltyPage(0); }}
+                          />
+                          {loyaltySearch && (
+                            <button className="sc-inv-search-clear" onClick={() => { setLoyaltySearch(''); setLoyaltyPage(0); }}>
+                              <CloseOutlined sx={{ fontSize: 13 }}/>
+                            </button>
+                          )}
+                        </div>
+                        <div className="sc-inv-filter-divider" aria-hidden="true"/>
+                        <div className="sc-inv-filter-fields">
+                          <ImFilterSelect placeholder="All Departments" value={loyaltyDept} options={loyaltyDeptOptions} isClearable={loyaltyDept !== 'All'} minWidth={168} onChange={v => { setLoyaltyDept(v || 'All'); setLoyaltyPage(0); }} />
+                          <ImFilterSelect placeholder="All Segments"    value={loyaltySegment} options={loyaltySegmentOptions} isClearable={loyaltySegment !== 'All'} minWidth={148} onChange={v => { setLoyaltySegment(v || 'All'); setLoyaltyPage(0); }} />
+                          <ImFilterSelect placeholder="All Categories"  value={loyaltyCategory} options={loyaltyCategoryOptions} isClearable={loyaltyCategory !== 'All'} minWidth={168} onChange={v => { setLoyaltyCategory(v || 'All'); setLoyaltyPage(0); }} />
+                        </div>
+                    <div style={{ flex: 1 }}/>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      size="medium"
+                      className="sc-inv-export-btn"
+                      startIcon={<FileDownloadOutlined sx={{ fontSize: 18 }}/>}
+                      onClick={() => {}}
+                    >
+                      Export
+                    </Button>
+                  </div>
+
+                  <div className="wow-table-wrap">
+                    <table className="wow-table sc-loyalty-tbl">
+                          <thead>
+                            <tr>
+                              <th>SKU</th>
+                              <th>Product Name</th>
+                              <th>Department</th>
+                              <th>Segment</th>
+                              <th className="wow-th-sortable sc-loyalty-th-num" onClick={() => handleSort('loyaltyUnits')}>
+                                Loyalty Units {sortIcon('loyaltyUnits')}
+                              </th>
+                              <th className="wow-th-sortable sc-loyalty-th-num" onClick={() => handleSort('penetration')}>
+                                Penetration % {sortIcon('penetration')}
+                              </th>
+                              <th className="wow-th-sortable sc-loyalty-th-num" onClick={() => handleSort('yoy')}>
+                                YoY % {sortIcon('yoy')}
+                              </th>
+                              <th className="wow-th-sortable sc-loyalty-th-num" onClick={() => handleSort('attachRate')}>
+                                Attach Rate {sortIcon('attachRate')}
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {paged.length === 0 ? (
+                              <tr className="wow-row-empty">
+                                <td colSpan={8}>No SKUs match the selected filters.</td>
+                              </tr>
+                            ) : paged.map(row => (
+                              <tr key={row.sku}>
+                                <td><span className="sc-loyalty-tbl-sku">{row.sku}</span></td>
+                                <td><span className="sc-loyalty-tbl-cat">{row.product}</span></td>
+                                <td><span className="sc-loyalty-tbl-dept">{row.dept}</span></td>
+                                <td>
+                                  <Badge
+                                    label={row.segment}
+                                    color={row.segment === 'Core' ? 'primary' : row.segment === 'Tier1' ? 'info' : 'default'}
+                                    variant="subtle"
+                                    size="small"
+                                  />
+                                </td>
+                                <td className="sc-loyalty-th-num">{row.loyaltyUnits.toLocaleString()}</td>
+                                <td className="sc-loyalty-th-num">{row.penetration.toFixed(1)}%</td>
+                                <td className="sc-loyalty-th-num">
+                                  <Badge
+                                    label={`${row.yoy > 0 ? '+' : ''}${row.yoy.toFixed(1)}%`}
+                                    color={row.yoy > 0 ? 'success' : row.yoy < 0 ? 'error' : 'default'}
+                                    variant="subtle"
+                                    size="small"
+                                  />
+                                </td>
+                                <td className="sc-loyalty-th-num sc-loyalty-tbl-attach">{row.attachRate.toFixed(1)}%</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        <div className="wow-table-footer">
+                          <span>
+                            {sorted.length === 0 ? 'No results' : `${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, sorted.length)} of ${sorted.length} SKUs`}
+                            {(loyaltySearch || loyaltyDept !== 'All' || loyaltySegment !== 'All' || loyaltyCategory !== 'All') && (
+                              <button className="sc-inv-clear-filters" onClick={() => { setLoyaltySearch(''); setLoyaltyDept('All'); setLoyaltySegment('All'); setLoyaltyCategory('All'); setLoyaltyPage(0); }}>
+                                Clear filters
+                              </button>
+                            )}
+                          </span>
+                          {totalPages > 1 && (
+                            <div className="wow-table-pager">
+                              <button onClick={() => setLoyaltyPage(p => Math.max(0, p - 1))} disabled={page === 0}>
+                                <ChevronLeftOutlined sx={{ fontSize: 14 }}/>
+                              </button>
+                              <span>{page + 1} / {totalPages}</span>
+                              <button onClick={() => setLoyaltyPage(p => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1}>
+                                <ChevronRightOutlined sx={{ fontSize: 14 }}/>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    );
+                  })()}
+
+                </div>
+              );
+            })()}
+
+            {/* ── Demand & Inventory Risk Tab ── */}
+            {activeTab === 'demand_risk' && (() => {
+              // ── Mock dataset: department → sub-dept → class → SKU hierarchy ──
+              type RiskType = 'Overstock Risk' | 'Inbound Risk' | 'Demand Gap' | 'Monitor' | 'Healthy';
+              type Severity = 'High' | 'Medium' | 'Low' | 'None';
+              interface DirRow {
+                id: string; level: 'dept' | 'subdept' | 'class' | 'sku';
+                parentId?: string;
+                label: string; dept: string; subDept: string; itemClass: string; sku?: string;
+                currentOH: number; forecastDemand: number; expectedInbound: number;
+                inboundDate: string; projectedEOH: number; projectedWOS: number;
+                riskType: RiskType; severity: Severity;
+                riskReason: string; suggestedAction: string;
+              }
+
+              const DIR_DATA: DirRow[] = [
+                // ── Women's Apparel ──
+                { id:'d-wom', level:'dept', label:"Women's Apparel", dept:"Women's Apparel", subDept:'', itemClass:'', currentOH:1840, forecastDemand:1200, expectedInbound:920, inboundDate:'Jun 16–18', projectedEOH:1560, projectedWOS:5.2, riskType:'Overstock Risk', severity:'High', riskReason:'Combined OH + inbound exceeds 4-wk forecast by 53%', suggestedAction:'Review future inbound; consider transfer candidates' },
+                { id:'d-wom-tops', level:'subdept', parentId:'d-wom', label:'Tops', dept:"Women's Apparel", subDept:'Tops', itemClass:'', currentOH:620, forecastDemand:380, expectedInbound:310, inboundDate:'Jun 16', projectedEOH:550, projectedWOS:5.8, riskType:'Overstock Risk', severity:'High', riskReason:'Inbound exceeds 4-wk forecast by 47%', suggestedAction:'Hold replenishment; review allocation' },
+                { id:'d-wom-tops-bsc', level:'class', parentId:'d-wom-tops', label:'Basics', dept:"Women's Apparel", subDept:'Tops', itemClass:'Basics', currentOH:280, forecastDemand:160, expectedInbound:180, inboundDate:'Jun 16', projectedEOH:300, projectedWOS:7.5, riskType:'Overstock Risk', severity:'High', riskReason:'Projected WOS of 7.5 wks is above 4-wk target; inbound arriving soon', suggestedAction:'Hold allocation; consider markdown or transfer' },
+                { id:'sku-WOM-TOP-001', level:'sku', parentId:'d-wom-tops-bsc', label:"Women's V-Neck Tee — White", dept:"Women's Apparel", subDept:'Tops', itemClass:'Basics', sku:'WOM-TOP-001', currentOH:120, forecastDemand:62, expectedInbound:96, inboundDate:'Jun 16', projectedEOH:154, projectedWOS:9.9, riskType:'Overstock Risk', severity:'High', riskReason:'Inbound exceeds 4-wk forecast by 55%; projected WOS reaches 9.9 wks', suggestedAction:'Hold replenishment; flag for markdown review' },
+                { id:'sku-WOM-TOP-002', level:'sku', parentId:'d-wom-tops-bsc', label:"Women's Racerback Tank — Black", dept:"Women's Apparel", subDept:'Tops', itemClass:'Basics', sku:'WOM-TOP-002', currentOH:88, forecastDemand:52, expectedInbound:60, inboundDate:'Jun 16', projectedEOH:96, projectedWOS:7.4, riskType:'Overstock Risk', severity:'Medium', riskReason:'Inbound + OH above demand but within 6-wk cover range', suggestedAction:'Monitor; revisit in 2 weeks' },
+                { id:'d-wom-tops-sta', level:'class', parentId:'d-wom-tops', label:'Statement Tops', dept:"Women's Apparel", subDept:'Tops', itemClass:'Statement Tops', currentOH:160, forecastDemand:120, expectedInbound:72, inboundDate:'Jun 18', projectedEOH:112, projectedWOS:3.7, riskType:'Monitor', severity:'Low', riskReason:'Coverage slightly below 4-wk target but no immediate gap risk', suggestedAction:'Monitor weekly' },
+                { id:'d-wom-dress', level:'subdept', parentId:'d-wom', label:'Dresses', dept:"Women's Apparel", subDept:'Dresses', itemClass:'', currentOH:420, forecastDemand:360, expectedInbound:180, inboundDate:'Jun 17', projectedEOH:240, projectedWOS:2.7, riskType:'Demand Gap', severity:'Medium', riskReason:'Projected EOH may fall below safety stock; demand slightly exceeds supply plan', suggestedAction:'Review inbound; expedite if possible' },
+                { id:'sku-WOM-DRS-014', level:'sku', parentId:'d-wom-dress', label:'Floral Midi Dress — Navy', dept:"Women's Apparel", subDept:'Dresses', itemClass:'Casual Dresses', sku:'WOM-DRS-014', currentOH:80, forecastDemand:110, expectedInbound:40, inboundDate:'Jun 17', projectedEOH:10, projectedWOS:0.4, riskType:'Demand Gap', severity:'High', riskReason:'Forecast demand exceeds available inventory by 37%; stockout risk within 1 week', suggestedAction:'Expedite inbound; explore store-to-store transfer' },
+                { id:'sku-WOM-DRS-021', level:'sku', parentId:'d-wom-dress', label:'Linen Wrap Dress — White', dept:"Women's Apparel", subDept:'Dresses', itemClass:'Casual Dresses', sku:'WOM-DRS-021', currentOH:60, forecastDemand:72, expectedInbound:30, inboundDate:'Jun 20', projectedEOH:18, projectedWOS:1.0, riskType:'Demand Gap', severity:'Medium', riskReason:'Demand slightly outpaces supply; risk manageable if inbound arrives on schedule', suggestedAction:'Monitor; expedite if inbound delayed' },
+                // ── Men's Apparel ──
+                { id:'d-men', level:'dept', label:"Men's Apparel", dept:"Men's Apparel", subDept:'', itemClass:'', currentOH:1420, forecastDemand:1100, expectedInbound:680, inboundDate:'Jun 17–19', projectedEOH:1000, projectedWOS:3.6, riskType:'Inbound Risk', severity:'Medium', riskReason:'Inbound velocity high relative to recent sales trend; risk of overstocking 2 classes', suggestedAction:'Review inbound volumes against store capacity' },
+                { id:'d-men-btm', level:'subdept', parentId:'d-men', label:'Bottoms', dept:"Men's Apparel", subDept:'Bottoms', itemClass:'', currentOH:540, forecastDemand:320, expectedInbound:380, inboundDate:'Jun 17', projectedEOH:600, projectedWOS:7.5, riskType:'Overstock Risk', severity:'High', riskReason:'Low sales velocity with high inbound; projected WOS of 7.5 wks', suggestedAction:'Hold replenishment; review allocation plan' },
+                { id:'d-men-btm-dnm', level:'class', parentId:'d-men-btm', label:'Denim', dept:"Men's Apparel", subDept:'Bottoms', itemClass:'Denim', currentOH:280, forecastDemand:140, expectedInbound:200, inboundDate:'Jun 17', projectedEOH:340, projectedWOS:9.7, riskType:'Overstock Risk', severity:'High', riskReason:'Projected WOS of 9.7 wks; 16 consecutive days of near-zero sales', suggestedAction:'Hold inbound; flag for transfer review' },
+                { id:'sku-MEN-DNM-003', level:'sku', parentId:'d-men-btm-dnm', label:'Slim Fit Denim — Dark Wash', dept:"Men's Apparel", subDept:'Bottoms', itemClass:'Denim', sku:'MEN-DNM-003', currentOH:140, forecastDemand:60, expectedInbound:120, inboundDate:'Jun 17', projectedEOH:200, projectedWOS:13.3, riskType:'Overstock Risk', severity:'High', riskReason:'Inbound exceeds 4-wk forecast demand by 100%; projected WOS of 13.3 wks', suggestedAction:'Hold replenishment; review for transfer or markdown' },
+                { id:'sku-MEN-DNM-011', level:'sku', parentId:'d-men-btm-dnm', label:'Straight Leg Jeans — Black', dept:"Men's Apparel", subDept:'Bottoms', itemClass:'Denim', sku:'MEN-DNM-011', currentOH:80, forecastDemand:50, expectedInbound:60, inboundDate:'Jun 18', projectedEOH:90, projectedWOS:7.2, riskType:'Overstock Risk', severity:'Medium', riskReason:'OH + inbound above 6-wk demand; monitor closely', suggestedAction:'Monitor; review in 2 weeks' },
+                // ── Footwear ──
+                { id:'d-ftw', level:'dept', label:'Footwear', dept:'Footwear', subDept:'', itemClass:'', currentOH:980, forecastDemand:820, expectedInbound:420, inboundDate:'Jun 19–20', projectedEOH:580, projectedWOS:2.8, riskType:'Healthy', severity:'None', riskReason:'SKU has healthy coverage and no immediate risk', suggestedAction:'No action needed' },
+                { id:'d-ftw-cas', level:'subdept', parentId:'d-ftw', label:'Casual', dept:'Footwear', subDept:'Casual', itemClass:'', currentOH:480, forecastDemand:400, expectedInbound:220, inboundDate:'Jun 19', projectedEOH:300, projectedWOS:3.0, riskType:'Healthy', severity:'None', riskReason:'Coverage in healthy range; demand and supply balanced', suggestedAction:'No action needed' },
+                { id:'sku-FTW-001', level:'sku', parentId:'d-ftw-cas', label:'Court Sneaker — White/Navy', dept:'Footwear', subDept:'Casual', itemClass:'Sneakers', sku:'FTW-001', currentOH:180, forecastDemand:160, expectedInbound:80, inboundDate:'Jun 19', projectedEOH:100, projectedWOS:2.5, riskType:'Healthy', severity:'None', riskReason:'SKU has healthy coverage and no immediate risk', suggestedAction:'No action needed' },
+                { id:'sku-FTW-002', level:'sku', parentId:'d-ftw-cas', label:'Trail Runner — All Terrain', dept:'Footwear', subDept:'Casual', itemClass:'Sneakers', sku:'FTW-002', currentOH:140, forecastDemand:100, expectedInbound:60, inboundDate:'Jun 20', projectedEOH:100, projectedWOS:4.0, riskType:'Monitor', severity:'Low', riskReason:'Coverage slightly above target; watch inbound timing', suggestedAction:'Monitor weekly' },
+                // ── Accessories ──
+                { id:'d-acc', level:'dept', label:'Accessories', dept:'Accessories', subDept:'', itemClass:'', currentOH:740, forecastDemand:480, expectedInbound:360, inboundDate:'Jun 16–17', projectedEOH:620, projectedWOS:5.2, riskType:'Overstock Risk', severity:'Medium', riskReason:'Current OH + inbound combined exceed expected demand by 45%', suggestedAction:'Review inbound; consider allocation adjustment' },
+                { id:'d-acc-bags', level:'subdept', parentId:'d-acc', label:'Bags', dept:'Accessories', subDept:'Bags', itemClass:'', currentOH:320, forecastDemand:180, expectedInbound:200, inboundDate:'Jun 16', projectedEOH:340, projectedWOS:7.6, riskType:'Overstock Risk', severity:'High', riskReason:'Inbound exceeds 4-wk forecast by 42%; low sales velocity confirmed', suggestedAction:'Hold inbound; review allocation' },
+                { id:'sku-ACC-BAG-005', level:'sku', parentId:'d-acc-bags', label:'Canvas Tote Bag — Black', dept:'Accessories', subDept:'Bags', itemClass:'Totes', sku:'ACC-BAG-005', currentOH:140, forecastDemand:72, expectedInbound:120, inboundDate:'Jun 16', projectedEOH:188, projectedWOS:10.4, riskType:'Overstock Risk', severity:'High', riskReason:'Projected WOS of 10.4 wks after inbound; current OH already above target range', suggestedAction:'Hold replenishment; flag for markdown review' },
+                { id:'sku-ACC-BAG-011', level:'sku', parentId:'d-acc-bags', label:'Leather Crossbody Bag', dept:'Accessories', subDept:'Bags', itemClass:'Crossbody', sku:'ACC-BAG-011', currentOH:100, forecastDemand:60, expectedInbound:60, inboundDate:'Jun 17', projectedEOH:100, projectedWOS:6.7, riskType:'Monitor', severity:'Medium', riskReason:'Coverage above 6-wk target; monitor before next replenishment', suggestedAction:'Monitor; review if inbound delayed' },
+                // ── Seasonal ──
+                { id:'d-sea', level:'dept', label:'Seasonal', dept:'Seasonal', subDept:'', itemClass:'', currentOH:560, forecastDemand:680, expectedInbound:240, inboundDate:'Jun 18', projectedEOH:120, projectedWOS:0.7, riskType:'Demand Gap', severity:'High', riskReason:'Forecast demand exceeds combined OH and inbound; significant stockout risk', suggestedAction:'Expedite inbound; review transfer candidates' },
+                { id:'d-sea-out', level:'subdept', parentId:'d-sea', label:'Outerwear', dept:'Seasonal', subDept:'Outerwear', itemClass:'', currentOH:280, forecastDemand:380, expectedInbound:120, inboundDate:'Jun 18', projectedEOH:20, projectedWOS:0.2, riskType:'Demand Gap', severity:'High', riskReason:'Demand outpaces available inventory by 33%; near stockout projected', suggestedAction:'Expedite inbound; explore transfer from nearby stores' },
+                { id:'sku-SEA-JKT-004', level:'sku', parentId:'d-sea-out', label:'Seasonal Rain Jacket', dept:'Seasonal', subDept:'Outerwear', itemClass:'Jackets', sku:'SEA-JKT-004', currentOH:140, forecastDemand:200, expectedInbound:60, inboundDate:'Jun 18', projectedEOH:0, projectedWOS:0.0, riskType:'Demand Gap', severity:'High', riskReason:'Forecast demand higher than available inventory; stockout projected before inbound arrives', suggestedAction:'Expedite inbound; request store-to-store transfer' },
+              ];
+
+              // ── Severity sort order ──
+              const sevOrder: Record<string, number> = { High: 0, Medium: 1, Low: 2, None: 3 };
+              const riskOrder: Record<string, number> = { 'Overstock Risk': 0, 'Inbound Risk': 1, 'Demand Gap': 2, Monitor: 3, Healthy: 4 };
+
+              // ── Filter logic (dept-level rows only for top-level display) ──
+              const deptRows = DIR_DATA.filter(r => r.level === 'dept');
+              const filteredDepts = deptRows.filter(r => {
+                if (dirDept !== 'All' && r.dept !== dirDept) return false;
+                if (dirRiskType !== 'All' && r.riskType !== dirRiskType) return false;
+                if (dirSeverity !== 'All' && r.severity !== dirSeverity) return false;
+                return true;
+              });
+
+              // ── All visible rows (dept + expanded children) ──
+              const buildVisibleRows = () => {
+                const rows: DirRow[] = [];
+                for (const dr of filteredDepts) {
+                  rows.push(dr);
+                  if (dirExpandedRows.has(dr.id)) {
+                    const children = DIR_DATA.filter(r => r.parentId === dr.id);
+                    for (const child of children) {
+                      rows.push(child);
+                      if (dirExpandedRows.has(child.id)) {
+                        const grandchildren = DIR_DATA.filter(r => r.parentId === child.id);
+                        for (const gc of grandchildren) {
+                          rows.push(gc);
+                          if (dirExpandedRows.has(gc.id)) {
+                            rows.push(...DIR_DATA.filter(r => r.parentId === gc.id));
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+                // apply search
+                if (dirSearch.trim()) {
+                  const q = dirSearch.trim().toLowerCase();
+                  return rows.filter(r => r.label.toLowerCase().includes(q) || (r.sku ?? '').toLowerCase().includes(q));
+                }
+                return rows;
+              };
+
+              const visibleRows = buildVisibleRows();
+
+              // Sort visible rows respecting hierarchy
+              const sortedRows = [...visibleRows].sort((a, b) => {
+                if (dirSort.field === 'severity') {
+                  const diff = sevOrder[a.severity] - sevOrder[b.severity];
+                  if (diff !== 0) return dirSort.dir === 'asc' ? diff : -diff;
+                  return riskOrder[a.riskType] - riskOrder[b.riskType];
+                }
+                const va = a[dirSort.field as keyof DirRow] as number;
+                const vb = b[dirSort.field as keyof DirRow] as number;
+                return dirSort.dir === 'asc' ? (va < vb ? -1 : va > vb ? 1 : 0) : (va > vb ? -1 : va < vb ? 1 : 0);
+              });
+
+              const PAGE_SIZE = 12;
+              const totalPages = Math.max(1, Math.ceil(sortedRows.length / PAGE_SIZE));
+              const page = Math.min(dirPage, totalPages - 1);
+              const pagedRows = sortedRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+              const handleDirSort = (field: string) => {
+                setDirSort(prev => prev.field === field ? { field, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { field, dir: field === 'severity' ? 'asc' : 'desc' });
+                setDirPage(0);
+              };
+              const sortIcon = (field: string) => {
+                if (dirSort.field !== field) return <span className="sc-loyalty-sort-icon sc-loyalty-sort-icon--idle">↕</span>;
+                return <span className="sc-loyalty-sort-icon sc-loyalty-sort-icon--active">{dirSort.dir === 'asc' ? '↑' : '↓'}</span>;
+              };
+
+              const toggleExpand = (id: string) => {
+                setDirExpandedRows(prev => {
+                  const next = new Set(prev);
+                  if (next.has(id)) next.delete(id); else next.add(id);
+                  return next;
+                });
+                setDirPage(0);
+              };
+
+              // Risk badge color mapping
+              const riskColor = (rt: RiskType) => {
+                if (rt === 'Overstock Risk') return 'warning';
+                if (rt === 'Demand Gap') return 'error';
+                if (rt === 'Inbound Risk') return 'info';
+                if (rt === 'Monitor') return 'default';
+                return 'success';
+              };
+              const sevColor = (s: Severity) => s === 'High' ? 'error' : s === 'Medium' ? 'warning' : s === 'Low' ? 'info' : 'success';
+
+              // Summary KPI computations
+              const totalForecast = deptRows.reduce((s, r) => s + r.forecastDemand, 0);
+              const totalInbound = deptRows.reduce((s, r) => s + r.expectedInbound, 0);
+              const overstockSkus = DIR_DATA.filter(r => r.level === 'sku' && r.riskType === 'Overstock Risk').length;
+              const demandGapSkus = DIR_DATA.filter(r => r.level === 'sku' && r.riskType === 'Demand Gap').length;
+              const avgWOS = (DIR_DATA.filter(r => r.level === 'sku').reduce((s, r) => s + r.projectedWOS, 0) / Math.max(1, DIR_DATA.filter(r => r.level === 'sku').length)).toFixed(1);
+
+              // Drawer SKU row
+              const drawerRow = dirDrawerSku ? DIR_DATA.find(r => r.id === dirDrawerSku) : null;
+
+              const dirDeptOptions = [{ value: 'All', label: 'All Departments' }, ...Array.from(new Set(DIR_DATA.filter(r => r.level === 'dept').map(r => r.dept))).map(d => ({ value: d, label: d }))];
+              const dirRiskTypeOptions = [{ value: 'All', label: 'All Risk Types' }, ...(['Demand Gap', 'Inbound Risk', 'Overstock Risk', 'Monitor', 'Healthy'] as const).map(t => ({ value: t, label: t }))];
+              const dirSeverityOptions = [{ value: 'All', label: 'All Severities' }, { value: 'High', label: 'High' }, { value: 'Medium', label: 'Medium' }, { value: 'Low', label: 'Low' }];
+
+              // Indent level helper
+              const indentLevel = (row: DirRow) => {
+                if (row.level === 'dept') return 0;
+                if (row.level === 'subdept') return 1;
+                if (row.level === 'class') return 2;
+                return 3;
+              };
+
+              return (
+                <div className="sc-dir-tab">
+
+                  {/* ── KPI Summary Strip ── */}
+                  <div className="sc-dir-kpi-strip">
+                    <div className="sc-dir-kpi-tile">
+                      <span className="sc-dir-kpi-label">Forecast Demand</span>
+                      <div className="sc-dir-kpi-value">{totalForecast.toLocaleString()}<span className="sc-dir-kpi-unit"> units</span></div>
+                      <span className="sc-dir-kpi-sub">4-week window</span>
+                    </div>
+                    <div className="sc-dir-kpi-sep"/>
+                    <div className="sc-dir-kpi-tile">
+                      <span className="sc-dir-kpi-label">Expected Inbound</span>
+                      <div className="sc-dir-kpi-value">{totalInbound.toLocaleString()}<span className="sc-dir-kpi-unit"> units</span></div>
+                      <span className="sc-dir-kpi-sub">DC + vendor pipeline</span>
+                    </div>
+                    <div className="sc-dir-kpi-sep"/>
+                    <div className="sc-dir-kpi-tile sc-dir-kpi-tile--warn">
+                      <span className="sc-dir-kpi-label">Overstock Risk</span>
+                      <div className="sc-dir-kpi-value">{overstockSkus}<span className="sc-dir-kpi-unit"> SKUs at risk</span></div>
+                      <span className="sc-dir-kpi-sub">Exceeding target WOS</span>
+                    </div>
+                    <div className="sc-dir-kpi-sep"/>
+                    <div className="sc-dir-kpi-tile">
+                      <span className="sc-dir-kpi-label">Projected WOS</span>
+                      <div className="sc-dir-kpi-value">{avgWOS}<span className="sc-dir-kpi-unit"> weeks</span></div>
+                      <span className="sc-dir-kpi-sub">Avg across SKUs</span>
+                    </div>
+                    <div className="sc-dir-kpi-sep"/>
+                    <div className="sc-dir-kpi-tile sc-dir-kpi-tile--danger">
+                      <span className="sc-dir-kpi-label">Demand Gap</span>
+                      <div className="sc-dir-kpi-value">{demandGapSkus}<span className="sc-dir-kpi-unit"> SKUs below demand</span></div>
+                      <span className="sc-dir-kpi-sub">Potential stockouts</span>
+                    </div>
+                  </div>
+
+                  {/* ── Filter Bar ── */}
+                  <div className="sc-inv-premium-filter-bar sc-dir-filter-bar">
+                    <div className={`sc-inv-search${dirSearch ? ' sc-inv-search--active' : ''}`}>
+                      <SearchOutlined sx={{ fontSize: 16 }}/>
+                      <input
+                        type="text"
+                        placeholder="Search department, class or SKU…"
+                        value={dirSearch}
+                        onChange={e => { setDirSearch(e.target.value); setDirPage(0); }}
+                      />
+                      {dirSearch && (
+                        <button className="sc-inv-search-clear" onClick={() => { setDirSearch(''); setDirPage(0); }}>
+                          <CloseOutlined sx={{ fontSize: 13 }}/>
+                        </button>
+                      )}
+                    </div>
+                    <div className="sc-inv-filter-divider" aria-hidden="true"/>
+                    <div className="sc-inv-filter-fields">
+                      <ImFilterSelect placeholder="All Departments" value={dirDept} options={dirDeptOptions} isClearable={dirDept !== 'All'} minWidth={160} onChange={v => { setDirDept(v || 'All'); setDirPage(0); }} />
+                      <ImFilterSelect placeholder="All Risk Types"  value={dirRiskType} options={dirRiskTypeOptions} isClearable={dirRiskType !== 'All'} minWidth={158} onChange={v => { setDirRiskType(v || 'All'); setDirPage(0); }} />
+                      <ImFilterSelect placeholder="All Severities"  value={dirSeverity} options={dirSeverityOptions} isClearable={dirSeverity !== 'All'} minWidth={140} onChange={v => { setDirSeverity(v || 'All'); setDirPage(0); }} />
+                    </div>
+                    <div style={{ flex: 1 }}/>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      size="medium"
+                      className="sc-inv-export-btn"
+                      startIcon={<FileDownloadOutlined sx={{ fontSize: 18 }}/>}
+                      onClick={() => {}}
+                    >
+                      Export
+                    </Button>
+                  </div>
+
+                  {/* ── Risk Table ── */}
+                  <div className="wow-table-wrap sc-dir-table-wrap">
+                    <table className="wow-table sc-dir-tbl">
+                      <thead>
+                        <tr>
+                          <th className="sc-dir-col-hier">Hierarchy / SKU</th>
+                          <th className="wow-th-sortable sc-dir-col-num" onClick={() => handleDirSort('currentOH')}>Current OH {sortIcon('currentOH')}</th>
+                          <th className="wow-th-sortable sc-dir-col-num" onClick={() => handleDirSort('forecastDemand')}>Forecast Demand {sortIcon('forecastDemand')}</th>
+                          <th className="wow-th-sortable sc-dir-col-num" onClick={() => handleDirSort('expectedInbound')}>Expected Inbound {sortIcon('expectedInbound')}</th>
+                          <th className="sc-dir-col-date">Inbound Date</th>
+                          <th className="wow-th-sortable sc-dir-col-num" onClick={() => handleDirSort('projectedEOH')}>Proj. EOH {sortIcon('projectedEOH')}</th>
+                          <th className="wow-th-sortable sc-dir-col-num" onClick={() => handleDirSort('projectedWOS')}>Proj. WOS {sortIcon('projectedWOS')}</th>
+                          <th className="sc-dir-col-risk">Risk Type</th>
+                          <th className="wow-th-sortable sc-dir-col-sev" onClick={() => handleDirSort('severity')}>Severity {sortIcon('severity')}</th>
+                          <th className="sc-dir-col-reason">Risk Reason</th>
+                          <th className="sc-dir-col-action">Suggested Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pagedRows.length === 0 ? (
+                          <tr className="wow-row-empty">
+                            <td colSpan={11}>
+                              <div className="sc-dir-empty">
+                                <TrendingDownOutlined sx={{ fontSize: 28, color: 'var(--ia-color-text-tertiary)' }}/>
+                                <strong>No demand or inventory risk found for the selected filters.</strong>
+                                <span>Try changing the forecast window, hierarchy level, or risk type filter.</span>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : pagedRows.map(row => {
+                          const indent = indentLevel(row);
+                          const hasChildren = DIR_DATA.some(r => r.parentId === row.id);
+                          const isExpanded = dirExpandedRows.has(row.id);
+                          const isSkuRow = row.level === 'sku';
+                          return (
+                            <tr
+                              key={row.id}
+                              className={`sc-dir-row sc-dir-row--${row.level}${isSkuRow ? ' sc-dir-row--clickable' : ''}`}
+                              onClick={isSkuRow ? () => setDirDrawerSku(row.id) : undefined}
+                            >
+                              <td className="sc-dir-col-hier">
+                                <div className="sc-dir-hier-cell" style={{ paddingLeft: `${indent * 18 + 4}px` }}>
+                                  {hasChildren ? (
+                                    <button
+                                      className={`sc-dir-expand-btn${isExpanded ? ' expanded' : ''}`}
+                                      onClick={e => { e.stopPropagation(); toggleExpand(row.id); }}
+                                      aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                                    >
+                                      {isExpanded ? '▾' : '▸'}
+                                    </button>
+                                  ) : (
+                                    <span className="sc-dir-expand-placeholder" />
+                                  )}
+                                  <div className="sc-dir-label-group">
+                                    {isSkuRow && row.sku && <span className="sc-loyalty-tbl-sku">{row.sku}</span>}
+                                    <span className={`sc-dir-label${isSkuRow ? ' sc-dir-label--sku' : ' sc-dir-label--group'}`}>{row.label}</span>
+                                    {isSkuRow && <span className="sc-dir-dept-pill">{row.itemClass}</span>}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="sc-dir-col-num">{row.currentOH.toLocaleString()}</td>
+                              <td className="sc-dir-col-num">{row.forecastDemand.toLocaleString()}</td>
+                              <td className="sc-dir-col-num">{row.expectedInbound.toLocaleString()}</td>
+                              <td className="sc-dir-col-date">{row.inboundDate}</td>
+                              <td className={`sc-dir-col-num${row.projectedEOH <= 0 ? ' sc-dir-val--danger' : row.projectedEOH > row.currentOH * 1.4 ? ' sc-dir-val--warn' : ''}`}>{row.projectedEOH.toLocaleString()}</td>
+                              <td className={`sc-dir-col-num${row.projectedWOS <= 1 ? ' sc-dir-val--danger' : row.projectedWOS >= 8 ? ' sc-dir-val--warn' : ''}`}>{row.projectedWOS.toFixed(1)}</td>
+                              <td className="sc-dir-col-risk">
+                                <Badge label={row.riskType} color={riskColor(row.riskType) as 'warning'|'error'|'info'|'default'|'success'} variant="subtle" size="small" />
+                              </td>
+                              <td className="sc-dir-col-sev">
+                                {row.severity === 'None'
+                                  ? <Badge label="Healthy" color="success" variant="subtle" size="small" />
+                                  : <Badge label={row.severity} color={sevColor(row.severity) as 'error'|'warning'|'info'} variant="subtle" size="small" />
+                                }
+                              </td>
+                              <td className="sc-dir-col-reason">
+                                <span className="sc-dir-reason-text" title={row.riskReason}>{row.riskReason}</span>
+                              </td>
+                              <td className="sc-dir-col-action">
+                                <span className="sc-dir-action-text">{row.suggestedAction}</span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                    <div className="wow-table-footer">
+                      <span>
+                        {sortedRows.length === 0 ? 'No results' : `${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, sortedRows.length)} of ${sortedRows.length} rows`}
+                        {(dirSearch || dirDept !== 'All' || dirRiskType !== 'All' || dirSeverity !== 'All') && (
+                          <button className="sc-inv-clear-filters" onClick={() => { setDirSearch(''); setDirDept('All'); setDirRiskType('All'); setDirSeverity('All'); setDirPage(0); setDirExpandedRows(new Set()); }}>
+                            Clear filters
+                          </button>
+                        )}
+                      </span>
+                      {totalPages > 1 && (
+                        <div className="wow-table-pager">
+                          <button onClick={() => setDirPage(p => Math.max(0, p - 1))} disabled={page === 0}><ChevronLeftOutlined sx={{ fontSize: 14 }}/></button>
+                          <span>{page + 1} / {totalPages}</span>
+                          <button onClick={() => setDirPage(p => Math.min(totalPages - 1, p + 1))} disabled={page === totalPages - 1}><ChevronRightOutlined sx={{ fontSize: 14 }}/></button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* ── SKU Detail Drawer ── */}
+                  {drawerRow && (
+                    <>
+                      <div className="detail-panel-overlay" onClick={() => setDirDrawerSku(null)}/>
+                      <div className="detail-panel sc-dir-drawer">
+                        {/* Drawer Header */}
+                        <div className="dp-hero-header">
+                          <div className="dp-hero-top">
+                            <div className="dp-hero-icon" style={{ background: drawerRow.riskType === 'Demand Gap' ? '#fee2e2' : drawerRow.riskType === 'Overstock Risk' ? '#fef3c7' : '#dbeafe', color: drawerRow.riskType === 'Demand Gap' ? '#b91c1c' : drawerRow.riskType === 'Overstock Risk' ? '#b45309' : '#1d4ed8' }}>
+                              <TrendingDownOutlined sx={{ fontSize: 16 }}/>
+                            </div>
+                            <span className="dp-hero-type">{drawerRow.riskType.toUpperCase()}</span>
+                            <Badge label={drawerRow.severity === 'None' ? 'Healthy' : drawerRow.severity} color={drawerRow.severity === 'None' ? 'success' : sevColor(drawerRow.severity) as 'error'|'warning'|'info'} variant="subtle" size="small" />
+                          </div>
+                          <h2 className="dp-hero-title">{drawerRow.label}</h2>
+                          <div className="dp-hero-meta">
+                            {drawerRow.sku && <span className="sc-loyalty-tbl-sku" style={{ fontSize: 11 }}>{drawerRow.sku}</span>}
+                            <span className="dp-hero-meta-sep">·</span>
+                            <span>{drawerRow.dept}</span>
+                            {drawerRow.subDept && <><span className="dp-hero-meta-sep">›</span><span>{drawerRow.subDept}</span></>}
+                            {drawerRow.itemClass && <><span className="dp-hero-meta-sep">›</span><span>{drawerRow.itemClass}</span></>}
+                          </div>
+                          <button className="dp-close-btn" onClick={() => setDirDrawerSku(null)}>
+                            <CloseOutlined sx={{ fontSize: 16 }}/>
+                          </button>
+                        </div>
+
+                        <div className="detail-panel-body">
+
+                          {/* ── Inventory Position ── */}
+                          <div className="dp-section">
+                            <h3 className="dp-section-title">
+                              <InventoryOutlined sx={{ fontSize: 14 }}/>
+                              Inventory Position
+                            </h3>
+                            <div className="sc-dir-drawer-kpis">
+                              <div className="sc-dir-drawer-kpi">
+                                <span className="sc-dir-drawer-kpi-label">Current OH</span>
+                                <span className="sc-dir-drawer-kpi-val">{drawerRow.currentOH.toLocaleString()} <small>units</small></span>
+                              </div>
+                              <div className="sc-dir-drawer-kpi">
+                                <span className="sc-dir-drawer-kpi-label">Expected Inbound</span>
+                                <span className="sc-dir-drawer-kpi-val">{drawerRow.expectedInbound.toLocaleString()} <small>units</small></span>
+                              </div>
+                              <div className="sc-dir-drawer-kpi">
+                                <span className="sc-dir-drawer-kpi-label">Inbound Date</span>
+                                <span className="sc-dir-drawer-kpi-val">{drawerRow.inboundDate}</span>
+                              </div>
+                              <div className={`sc-dir-drawer-kpi${drawerRow.projectedEOH <= 0 ? ' sc-dir-drawer-kpi--danger' : drawerRow.projectedWOS >= 8 ? ' sc-dir-drawer-kpi--warn' : ''}`}>
+                                <span className="sc-dir-drawer-kpi-label">Projected EOH</span>
+                                <span className="sc-dir-drawer-kpi-val">{drawerRow.projectedEOH.toLocaleString()} <small>units</small></span>
+                              </div>
+                              <div className={`sc-dir-drawer-kpi${drawerRow.projectedWOS <= 1 ? ' sc-dir-drawer-kpi--danger' : drawerRow.projectedWOS >= 8 ? ' sc-dir-drawer-kpi--warn' : ''}`}>
+                                <span className="sc-dir-drawer-kpi-label">Projected WOS</span>
+                                <span className="sc-dir-drawer-kpi-val">{drawerRow.projectedWOS.toFixed(1)} <small>weeks</small></span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* ── Demand Forecast ── */}
+                          <div className="dp-section">
+                            <h3 className="dp-section-title">
+                              <ShowChartOutlined sx={{ fontSize: 14 }}/>
+                              Demand Forecast
+                            </h3>
+                            <div className="sc-dir-drawer-kpis">
+                              <div className="sc-dir-drawer-kpi sc-dir-drawer-kpi--wide">
+                                <span className="sc-dir-drawer-kpi-label">4-Week Forecast Demand</span>
+                                <span className="sc-dir-drawer-kpi-val">{drawerRow.forecastDemand.toLocaleString()} <small>units</small></span>
+                              </div>
+                              <div className="sc-dir-drawer-kpi sc-dir-drawer-kpi--wide">
+                                <span className="sc-dir-drawer-kpi-label">Inbound vs Forecast</span>
+                                <span className={`sc-dir-drawer-kpi-val${drawerRow.expectedInbound > drawerRow.forecastDemand * 1.2 ? ' sc-dir-drawer-kpi-val--warn' : drawerRow.expectedInbound < drawerRow.forecastDemand * 0.8 ? ' sc-dir-drawer-kpi-val--danger' : ''}`}>
+                                  {drawerRow.forecastDemand > 0
+                                    ? `${((drawerRow.expectedInbound / drawerRow.forecastDemand) * 100).toFixed(0)}%`
+                                    : 'N/A'} <small>of forecast</small>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* ── Inbound Pipeline ── */}
+                          <div className="dp-section">
+                            <h3 className="dp-section-title">
+                              <TrendingUpOutlined sx={{ fontSize: 14 }}/>
+                              Inbound Pipeline
+                            </h3>
+                            <div className="sc-dir-inbound-row">
+                              <div className="sc-dir-inbound-source">
+                                <Badge label="DC" color="info" variant="subtle" size="small" />
+                                <span className="sc-dir-inbound-qty">{Math.round(drawerRow.expectedInbound * 0.7).toLocaleString()} units</span>
+                                <span className="sc-dir-inbound-eta">ETA {drawerRow.inboundDate}</span>
+                              </div>
+                              <div className="sc-dir-inbound-source">
+                                <Badge label="Vendor" color="default" variant="subtle" size="small" />
+                                <span className="sc-dir-inbound-qty">{Math.round(drawerRow.expectedInbound * 0.3).toLocaleString()} units</span>
+                                <span className="sc-dir-inbound-eta">ETA +3 days</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* ── Risk Explanation ── */}
+                          <div className={`sc-dir-risk-callout sc-dir-risk-callout--${drawerRow.severity.toLowerCase()}`}>
+                            <div className="sc-dir-risk-callout-icon">
+                              {drawerRow.severity === 'High' ? '⚠' : drawerRow.severity === 'Medium' ? 'ℹ' : '✓'}
+                            </div>
+                            <div className="sc-dir-risk-callout-body">
+                              <strong>Risk Explanation</strong>
+                              <span>{drawerRow.riskReason}.</span>
+                            </div>
+                          </div>
+
+                          {/* ── Suggested Next Step ── */}
+                          <div className="dp-section">
+                            <h3 className="dp-section-title">
+                              <AssignmentTurnedInOutlined sx={{ fontSize: 14 }}/>
+                              Suggested Next Step
+                            </h3>
+                            <div className="sc-dir-next-step">
+                              <p>{drawerRow.suggestedAction}.</p>
+                              <Tag label="Read-only — no actions available in this version" variant="stroke" size="small" />
+                            </div>
+                          </div>
+
+                        </div>
+                      </div>
+                    </>
+                  )}
 
                 </div>
               );
@@ -5638,6 +7059,189 @@ export const StoreCenter: React.FC = () => {
           </>
         );
       })()}
+
+      {/* ── Capture Signal Drawer ── */}
+      {vocCaptureOpen && (
+        <>
+          <div className="detail-panel-overlay" onClick={() => setVocCaptureOpen(false)}/>
+          <div className="detail-panel sc-voc-capture-drawer">
+            <div className="dp-hero-header">
+              <div className="dp-hero-top">
+                <div className="dp-hero-icon" style={{ background: '#eff6ff', color: '#1d4ed8' }}>
+                  <ForumOutlined sx={{ fontSize: 16 }}/>
+                </div>
+                <span className="dp-hero-type">VOICE OF STORE</span>
+              </div>
+              <h2 className="dp-hero-title">Capture Voice Signal</h2>
+              <p className="dp-hero-subtitle">Log store-floor feedback, shopper comments, or manager observations for this store.</p>
+              <button className="dp-close-btn" onClick={() => setVocCaptureOpen(false)}>
+                <CloseOutlined sx={{ fontSize: 16 }}/>
+              </button>
+            </div>
+            <div className="detail-panel-body">
+
+              {/* Signal Type */}
+              <div className="sc-voc-field-group">
+                <label className="sc-voc-field-label">Signal Type</label>
+                <div className="sc-voc-radio-row">
+                  {(['Customer Voice', 'Store Voice'] as const).map(t => (
+                    <button
+                      key={t}
+                      className={`sc-voc-radio-btn${vocCapture.signalType === t ? ' active' : ''}`}
+                      onClick={() => setVocCapture(p => ({ ...p, signalType: t }))}
+                    >
+                      {t === 'Customer Voice' ? <PersonOutlined sx={{ fontSize: 14 }}/> : <StoreOutlined sx={{ fontSize: 14 }}/>}
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Source */}
+              <div className="sc-voc-field-group">
+                <label className="sc-voc-field-label">Source</label>
+                <div className="sc-voc-select-wrap">
+                  <select
+                    className="sc-voc-native-select"
+                    value={vocCapture.source}
+                    onChange={e => setVocCapture(p => ({ ...p, source: e.target.value }))}
+                  >
+                    {['Shopper comment', 'Staff observation', 'Manager note', 'Store walk note', 'Digital review', 'Survey', 'Website / app feedback'].map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Feedback Text */}
+              <div className="sc-voc-field-group">
+                <label className="sc-voc-field-label">Feedback</label>
+                <textarea
+                  className="sc-voc-textarea"
+                  placeholder="Example: Multiple shoppers asked for wider fit options in denim this week."
+                  value={vocCapture.text}
+                  rows={4}
+                  onChange={e => setVocCapture(p => ({ ...p, text: e.target.value }))}
+                />
+              </div>
+
+              {/* Sentiment + Theme row */}
+              <div className="sc-voc-field-row-2">
+                <div className="sc-voc-field-group">
+                  <label className="sc-voc-field-label">Sentiment</label>
+                  <div className="sc-voc-radio-row sc-voc-radio-row--sm">
+                    {(['Positive', 'Neutral', 'Negative'] as const).map(s => (
+                      <button
+                        key={s}
+                        className={`sc-voc-radio-btn sc-voc-radio-btn--sm${vocCapture.sentiment === s ? ' active' : ''} sc-voc-radio-btn--${s.toLowerCase()}`}
+                        onClick={() => setVocCapture(p => ({ ...p, sentiment: s }))}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="sc-voc-field-group">
+                  <label className="sc-voc-field-label">Theme</label>
+                  <div className="sc-voc-select-wrap">
+                    <select
+                      className="sc-voc-native-select"
+                      value={vocCapture.theme}
+                      onChange={e => setVocCapture(p => ({ ...p, theme: e.target.value }))}
+                    >
+                      {['Availability', 'Assortment', 'Pricing', 'Service', 'Cleanliness', 'Product Quality', 'Checkout', 'Local Demand', 'Other'].map(t => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Department + SKU row */}
+              <div className="sc-voc-field-row-2">
+                <div className="sc-voc-field-group">
+                  <label className="sc-voc-field-label">Department / Category</label>
+                  <div className="sc-voc-select-wrap">
+                    <select
+                      className="sc-voc-native-select"
+                      value={vocCapture.department}
+                      onChange={e => setVocCapture(p => ({ ...p, department: e.target.value }))}
+                    >
+                      <option value="">Select department</option>
+                      {["Women's Apparel", "Men's Apparel", 'Footwear', 'Accessories', 'Seasonal', 'Kids', 'Activewear', 'Store Ops'].map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="sc-voc-field-group">
+                  <label className="sc-voc-field-label">SKU / Item <span className="sc-voc-field-optional">(optional)</span></label>
+                  <input
+                    className="sc-voc-input"
+                    type="text"
+                    placeholder="e.g. MEN-DNM-003"
+                    value={vocCapture.sku}
+                    onChange={e => setVocCapture(p => ({ ...p, sku: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              {/* Urgency + Action row */}
+              <div className="sc-voc-field-row-2">
+                <div className="sc-voc-field-group">
+                  <label className="sc-voc-field-label">Urgency</label>
+                  <div className="sc-voc-radio-row sc-voc-radio-row--sm">
+                    {(['Low', 'Medium', 'High'] as const).map(u => (
+                      <button
+                        key={u}
+                        className={`sc-voc-radio-btn sc-voc-radio-btn--sm${vocCapture.urgency === u ? ' active' : ''}`}
+                        onClick={() => setVocCapture(p => ({ ...p, urgency: u }))}
+                      >
+                        {u}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="sc-voc-field-group">
+                  <label className="sc-voc-field-label">Action Needed</label>
+                  <div className="sc-voc-select-wrap">
+                    <select
+                      className="sc-voc-native-select"
+                      value={vocCapture.action}
+                      onChange={e => setVocCapture(p => ({ ...p, action: e.target.value }))}
+                    >
+                      {['None', 'Monitor', 'Create Task', 'Escalate to HQ'].map(a => (
+                        <option key={a} value={a}>{a}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit row */}
+              <div className="sc-voc-capture-footer">
+                <Button variant="outlined" size="medium" onClick={() => setVocCaptureOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="medium"
+                  disabled={!vocCapture.text.trim()}
+                  onClick={() => {
+                    setVocCaptureOpen(false);
+                    setVocCapture({ signalType: 'Store Voice', source: 'Shopper comment', text: '', sentiment: 'Neutral', theme: 'Availability', department: '', sku: '', urgency: 'Medium', action: 'Monitor' });
+                  }}
+                >
+                  Submit Signal
+                </Button>
+              </div>
+
+            </div>
+          </div>
+        </>
+      )}
+
     </div>
   );
 };

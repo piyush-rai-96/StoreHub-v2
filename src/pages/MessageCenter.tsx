@@ -28,7 +28,7 @@ import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined';
 import LayersOutlined from '@mui/icons-material/LayersOutlined';
 import ForumOutlined from '@mui/icons-material/ForumOutlined';
 import SensorsOutlined from '@mui/icons-material/SensorsOutlined';
-import { Button, Chips, Badge, EmptyState } from 'impact-ui';
+import { Button, Chips, Badge, EmptyState, Loader } from 'impact-ui';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { openAskAlan } from '../utils/openAskAlan';
@@ -37,7 +37,6 @@ import { EMPTY_LOG_SIGNAL_FORM } from '../types/fieldSignal';
 import { MOCK_FIELD_SIGNALS, FIELD_SIGNAL_NOTIFY_CONTACTS, STORE_OPTIONS, DISTRICT_OPTIONS } from '../constants/fieldSignals';
 import {
   LogFieldSignalDrawer,
-  FieldSignalChatCard,
   ActiveSignalsPill,
   FieldSignalDetailDrawer,
   FieldSignalSidebarList,
@@ -587,7 +586,7 @@ export const MessageCenter: React.FC = () => {
   const roleChats = getChatsByRole(user?.role || 'DM');
   const [isLoading, setIsLoading]           = useState(true);
   const [chats, setChats]                   = useState<Chat[]>(roleChats);
-  const [activeChat, setActiveChat]         = useState<string | null>(roleChats[0]?.id || null);
+  const [activeChat, setActiveChat]         = useState<string | null>(roleChats.find(c => c.id !== 'c-fs-pinned')?.id || null);
   const [inputValue, setInputValue]         = useState('');
   const [searchQuery, setSearchQuery]       = useState('');
   const [activeTab, setActiveTab]           = useState<Tab>('all');
@@ -612,7 +611,7 @@ export const MessageCenter: React.FC = () => {
   const chatEndRef  = useRef<HTMLDivElement>(null);
   const inputRef    = useRef<HTMLTextAreaElement>(null);
 
-  const selectedChat = chats.find(c => c.id === activeChat);
+  const selectedChat = chats.find(c => c.id === activeChat && (section !== 'messages' || c.id !== 'c-fs-pinned'));
   const visibleSignals = useMemo(() => filterSignalsForRole(fieldSignals, user), [fieldSignals, user]);
   const activeSignal = activeSignalId ? fieldSignals.find(s => s.id === activeSignalId) ?? null : null;
   const storeOptions = useMemo(
@@ -927,7 +926,7 @@ export const MessageCenter: React.FC = () => {
 
 
   const totalUnread = useMemo(
-    () => chats.filter(c => c.unread > 0).length,
+    () => chats.filter(c => c.id !== 'c-fs-pinned' && c.unread > 0).length,
     [chats],
   );
 
@@ -939,6 +938,7 @@ export const MessageCenter: React.FC = () => {
     .filter(c => {
       if (section === 'broadcasts') return c.type === 'broadcast';
       if (section === 'messages') {
+        if (c.id === 'c-fs-pinned') return false;
         if (activeTab === 'direct') return c.type === 'direct';
         if (activeTab === 'groups') return c.type === 'group';
         if (activeTab === 'unread')  return c.unread > 0;
@@ -1134,7 +1134,7 @@ export const MessageCenter: React.FC = () => {
     return (
       <div className="mc-container mc-container--loading">
         <div className="page-loading">
-          <div className="page-loading-spinner" />
+          <Loader size="large" />
           <p>Loading Communications...</p>
         </div>
       </div>
@@ -1447,24 +1447,12 @@ export const MessageCenter: React.FC = () => {
                   {renderDateSeparator(new Date(group.date))}
                   {group.messages.map((msg, idx) => {
                     if (threadSignalFilter && !msg.fieldSignalId) return null;
-                    if (msg.fieldSignalId) {
-                      const signal = fieldSignals.find(s => s.id === msg.fieldSignalId);
-                      if (!signal) return null;
-                      return (
-                        <FieldSignalChatCard
-                          key={msg.id}
-                          signal={signal}
-                          onViewDetails={() => setActiveSignalId(signal.id)}
-                          onOpenLog={() => { setSection('field_signals'); setActiveSignalId(signal.id); }}
-                        />
-                      );
-                    }
                     const isMe     = msg.senderId === 'me';
                     const sender   = contacts.find(c => c.id === msg.senderId);
                     const showAv   = !isMe && selectedChat.type !== 'direct' && (idx === 0 || group.messages[idx - 1].senderId !== msg.senderId);
                     const isConsec = idx > 0 && group.messages[idx - 1].senderId === msg.senderId;
                     const sav      = sender ? getAvatarGradient(sender.avatar) : { bg: '', ink: '' };
-
+                    const attachedSignal = msg.fieldSignalId ? (fieldSignals.find(s => s.id === msg.fieldSignalId) ?? null) : null;
                     return (
                       <div key={msg.id} className={`mc-msg ${isMe ? 'mc-msg--me' : 'mc-msg--them'} ${isConsec ? 'mc-msg--consecutive' : ''}`}>
                         {!isMe && selectedChat.type !== 'direct' && (
@@ -1491,6 +1479,17 @@ export const MessageCenter: React.FC = () => {
                             </span>
                           )}
                           <p className="mc-msg-text">{msg.content}</p>
+                          {attachedSignal && (
+                            <button
+                              type="button"
+                              className="mc-msg-context mc-msg-context--task"
+                              onClick={() => { setSection('field_signals'); setActiveSignalId(attachedSignal.id); }}
+                            >
+                              <span className="mc-msg-context-icon"><SensorsOutlined sx={{ fontSize: 12 }} /></span>
+                              <span className="mc-msg-context-label">View Field Signal: {attachedSignal.title}</span>
+                              <OpenInNewOutlined sx={{ fontSize: 10 }} className="mc-msg-context-arrow" />
+                            </button>
+                          )}
                           {msg.context && (
                             <button
                               type="button"
