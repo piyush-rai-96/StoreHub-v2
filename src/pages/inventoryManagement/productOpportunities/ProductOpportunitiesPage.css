@@ -305,3 +305,24 @@
   color: var(--ia-color-text-secondary);
   white-space: nowrap;
 }
+
+.po-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid var(--ia-color-primary);
+  border-radius: var(--ia-border-radius-sm);
+  background: transparent;
+  color: var(--ia-color-primary);
+  font-size: var(--ia-text-xs);
+  font-weight: var(--ia-font-weight-medium);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+.po-edit-btn:hover {
+  background: var(--ia-color-primary);
+  color: #fff;
+}

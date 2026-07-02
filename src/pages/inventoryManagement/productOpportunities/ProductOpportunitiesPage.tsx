@@ -5,6 +5,7 @@ import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import TrendingUpOutlined from '@mui/icons-material/TrendingUpOutlined';
 import AutoAwesomeOutlined from '@mui/icons-material/AutoAwesomeOutlined';
 import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
+import EditOutlined from '@mui/icons-material/EditOutlined';
 import ChevronLeftOutlined from '@mui/icons-material/ChevronLeftOutlined';
 import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined';
 import StoreOutlined from '@mui/icons-material/StoreOutlined';
@@ -241,12 +242,13 @@ export const ProductOpportunitiesPage: React.FC = () => {
               <th>Status</th>
               <th>Owner / Stage</th>
               <th>Updated</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             {pageData.length === 0 && (
               <tr className="wow-row-empty">
-                <td colSpan={14}>No opportunities found for the selected filters.</td>
+                <td colSpan={15}>No opportunities found for the selected filters.</td>
               </tr>
             )}
             {pageData.map(opp => (
@@ -292,6 +294,16 @@ export const ProductOpportunitiesPage: React.FC = () => {
                 </td>
                 <td className="po-date">
                   {new Date(opp.lastUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </td>
+                <td onClick={e => e.stopPropagation()}>
+                  <button
+                    className="po-edit-btn"
+                    onClick={() => handleGoToWorkflow(opp)}
+                    title="Edit Allocation"
+                  >
+                    <EditOutlined sx={{ fontSize: 14 }} />
+                    Edit
+                  </button>
                 </td>
               </tr>
             ))}
